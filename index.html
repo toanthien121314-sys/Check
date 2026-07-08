@@ -393,7 +393,7 @@
     </div>
 
     <script>
-        // ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
+        // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (Dán URL của bạn vào đây)
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxGDT5vFFH9wnVEab_QjvrqEfciZXJjNlXlL10ZTbrXkHHlLj-po0ZG88P8GpuvPheX/exec";
 
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
@@ -458,7 +458,6 @@
             iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] 
         });
 
-        // TỌA ĐỘ TRUNG TÂM CHUẨN CỦA 63 TỈNH THÀNH (Dùng để ép tọa độ tâm khi vẽ Chấm Neon lớn)
         const VN_PROVINCES = [
             { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 }, { name: "Hà Nội", lat: 21.0285, lng: 105.8542 }, { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
             { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 }, { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 }, { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
@@ -482,35 +481,25 @@
 
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
-        
-        // Tích hợp bộ đếm các khu vực đã vẽ để CHỐNG TRÙNG LẶP 100%
         const activeRegionsTracker = new Set();
 
-        // 🚀 HÀM VẼ CHẤM NEON LỚN ĐÃ NÂNG CẤP: CHỐNG TRÙNG VÀ ÉP TỌA ĐỘ TÂM
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
-            
-            // 1. CHỐNG TRÙNG LẶP: Nếu tỉnh này đã vẽ rồi thì gộp luôn, không vẽ thêm cái thứ 2
             if (activeRegionsTracker.has(regionKey)) return;
 
-            // 2. ÉP TỌA ĐỘ TRUNG TÂM: Quét 63 tỉnh thành để lấy tọa độ chuẩn
             let finalLat = lat;
             let finalLng = lng;
-            
             const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
             if (standardProv) {
                 finalLat = standardProv.lat;
                 finalLng = standardProv.lng;
             }
 
-            // Vẽ marker với tọa độ tâm đã được nắn chuẩn
             const marker = L.marker([finalLat, finalLng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
             marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
             marker.on('click', () => {
                 map.flyTo([finalLat, finalLng], 11, { duration: 1.5 });
             });
-            
-            // Đánh dấu tỉnh này đã hoàn thành vẽ
             activeRegionsTracker.add(regionKey);
         }
 
@@ -530,18 +519,14 @@
         function renderDataToMap(data) {
             regionalLayer.clearLayers();
             spotLayer.clearLayers();
-            activeRegionsTracker.clear(); // Reset bộ đếm trước khi vẽ mới toàn bộ
+            activeRegionsTracker.clear(); 
 
-            let regCount = 0, spotCount = 0;
-            
-            // Vẽ các tỉnh thành lớn trước
+            let spotCount = 0;
             if (data && data.regions) {
                 data.regions.forEach(function(reg) {
                     addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
-                    regCount++; // Dù có bị trùng gộp lại thì vẫn tính là 1 vùng trong bộ đếm hiển thị
                 });
             }
-            // Vẽ các cờ đỏ chi tiết
             if (data && data.spots) {
                 data.spots.forEach(function(spot) {
                     addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
@@ -549,9 +534,7 @@
                 });
             }
             
-            // Đếm lại số vùng thực tế đã vẽ sau khi chống trùng lặp
             const uniqueRegionsCount = activeRegionsTracker.size;
-            
             updateLayerVisibility();
             return { regCount: uniqueRegionsCount, spotCount };
         }
@@ -573,6 +556,7 @@
             }
         }
 
+        // CẢI TIẾN FETCH BẰNG REDIRECT 'FOLLOW' ĐỂ VƯỢT RÀO CẢN BẢO MẬT TRÌNH DUYỆT DI ĐỘNG
         function loadDataFromGoogleSheets() {
             const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
             let hasCache = false;
@@ -589,8 +573,12 @@
 
             setTimeout(hideLoadingScreen, 4000);
 
-            fetch(`${GAS_API_URL}?action=get`)
-                .then(res => res.json())
+            // Thêm { redirect: "follow" } để đảm bảo trình duyệt tự đi theo link chuyển hướng của Google
+            fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
+                .then(res => {
+                    if (!res.ok) throw new Error("Mạng lỗi hoặc sai link");
+                    return res.json();
+                })
                 .then(data => {
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
                     const counts = renderDataToMap(data);
@@ -598,6 +586,7 @@
                     showToast(`✅ Đã đồng bộ: ${counts.regCount} vùng & ${counts.spotCount} điểm`);
                 })
                 .catch(err => {
+                    console.error("Lỗi fetch:", err);
                     if (!hasCache) hideLoadingScreen();
                     showToast(`⚠️ Lỗi kết nối. Đang xem dữ liệu offline.`);
                 });
@@ -618,7 +607,6 @@
 
         let myLocationMarker = null, myCurrentLat = 0, myCurrentLng = 0;
         
-        // NÂNG CẤP TỐC ĐỘ BẮT GPS DI ĐỘNG CỰC NHANH
         function goToMyLocation() {
             if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
             const btn = document.querySelector('.location-btn');
@@ -693,7 +681,6 @@
             autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang quét tọa độ...</span>'; 
             currentDetectedRegion = "Việt Nam";
             
-            // Lớp 1: Gọi thẳng API siêu tốc trên Github Pages
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
                 headers: { 'Accept-Language': 'vi' }
             })
@@ -707,23 +694,21 @@
                         return; 
                     }
                 }
-                throw new Error("Không có dữ liệu chi tiết");
+                throw new Error("Không có chi tiết");
             })
             .catch(() => {
-                // Lớp 2: Gọi về Google Apps Script
                 if (GAS_API_URL !== "" && !GAS_API_URL.includes("ĐIỀN_URL")) {
-                    fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`)
+                    fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`, { redirect: "follow" })
                         .then(res => res.json())
                         .then(data => { 
                             if (data.province && data.province !== "Khu vực mới") {
                                 currentDetectedRegion = data.province; 
                                 autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; 
                             } else {
-                                throw new Error("GAS trả về rỗng");
+                                throw new Error("GAS rỗng");
                             }
                         })
                         .catch(() => { 
-                            // Lớp 3: Gọi toán học nội bộ (Chống mù đường 100%)
                             currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
                             autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
                         });
@@ -756,9 +741,7 @@
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
-            const regionKey = regionName.trim().toLowerCase();
             
-            // Vẽ khu vực lớn (sẽ đi qua bộ lọc để chống trùng lặp và nắn tọa độ tự động)
             addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
             
             const t = new Date();
@@ -769,14 +752,14 @@
             updateLayerVisibility(); 
             newMarker.openPopup();
 
-            fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`)
+            fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`, { redirect: "follow" })
                 .then(res => res.json())
                 .then(() => {
                     btnSubmit.innerHTML = oldText; 
                     btnSubmit.disabled = false;
                     showToast(`⚡ Đã lưu "${name}" đồng bộ mây thành công!`);
                     
-                    fetch(`${GAS_API_URL}?action=get`).then(r => r.json()).then(newData => {
+                    fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" }).then(r => r.json()).then(newData => {
                         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
                     });
                 })

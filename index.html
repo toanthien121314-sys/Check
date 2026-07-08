@@ -343,7 +343,7 @@
 
     <script>
         // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (SAU KHI ĐÃ CẤP QUYỀN DRIVE)
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyqMAFDUU_gWefuhBS-kkwEOmXMOZpK_yW8ijUyplA8DrFo5MsGcoLSK3ZYY66NzWvO/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwErQJpDv_hXFCP1IaI2yGFW00y3KeS_d7yliByUJ1b0-iyNkB2wRq8pNnTe0Z_buFM/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
 
         if ('serviceWorker' in navigator) {
@@ -485,6 +485,7 @@
         }
 
         // TÍNH NĂNG MỞ ALBUM ẢNH GOOGLE DRIVE
+// TÍNH NĂNG MỞ ALBUM ẢNH GOOGLE DRIVE
         function renderPhotoLayer() {
             photoLayer.clearLayers();
             
@@ -505,10 +506,12 @@
                 const marker = L.marker([spot.lat, spot.lng], { icon: photoIcon }).addTo(photoLayer);
                 
                 marker.on('click', () => {
-                    if (spot.folderUrl && spot.folderUrl !== "" && spot.folderUrl !== "Lỗi Drive") {
-                        window.open(spot.folderUrl, '_blank'); // Mở Tab tới thẳng Folder Drive
+                    // CHỐT CHẶN BẢO VỆ: Chỉ mở tab nếu nó là Link (bắt đầu bằng http)
+                    if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
+                        window.open(spot.folderUrl, '_blank'); 
                     } else {
-                        alert(`Album của [${spot.name}] đang được đồng bộ hoặc gặp lỗi khi tạo. Hãy kiểm tra lại Google Drive của bạn!`);
+                        // Nếu là dòng text báo lỗi, hiện thông báo chứ không mở tab gây lỗi 404
+                        alert(`Album của [${spot.name}] đang bị lỗi tạo link: \n${spot.folderUrl}`);
                     }
                 });
             });

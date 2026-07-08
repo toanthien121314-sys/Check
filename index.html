@@ -350,7 +350,7 @@
 
     <script>
         // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxGDT5vFFH9wnVEab_QjvrqEfciZXJjNlXlL10ZTbrXkHHlLj-po0ZG88P8GpuvPheX/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxi1zleHFDMAOzao3qv5T3tgrcFyInm6YonNUTQOeixlHt-4cWr1LyUmnP5HeDfsuzi/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
 
         if ('serviceWorker' in navigator) {
@@ -517,9 +517,14 @@
 
                 const marker = L.marker([spot.lat, spot.lng], { icon: photoIcon }).addTo(photoLayer);
                 
+                // THAY BẰNG ĐOẠN NÀY:
                 marker.on('click', () => {
-                    // Tạm thời báo khung Alert chờ hướng dẫn lấy dữ liệu từ bạn
-                    alert(`Đang mở Album của [${spot.name}]\nBạn sẽ hướng dẫn tôi cách liên kết ảnh sau nhé!`);
+                    if (spot.folderUrl && spot.folderUrl !== "") {
+                        // Mở thẳng link thư mục Google Drive trong Tab mới
+                        window.open(spot.folderUrl, '_blank');
+                    } else {
+                        alert(`Album của [${spot.name}] đang được đồng bộ, vui lòng thử lại sau ít giây!`);
+                    }
                 });
             });
         }
@@ -696,8 +701,8 @@
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
             
-            // Lưu vào mảng tạm để lỡ đang xem Photo thì có Data
-            globalSpotsData.push({ region: regionName, name: name, lat: currentClickLat, lng: currentClickLng, date: todayStr, note: note });
+// THAY BẰNG ĐOẠN NÀY (Thêm folderUrl rỗng chờ đồng bộ):
+            globalSpotsData.push({ region: regionName, name: name, lat: currentClickLat, lng: currentClickLng, date: todayStr, note: note, folderUrl: "" });
             
             const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note);
             

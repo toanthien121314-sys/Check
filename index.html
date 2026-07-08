@@ -373,7 +373,10 @@
             animation: spin 1s linear infinite;
             box-shadow: 0 0 15px #ff007f;
         }
-        @shadow keyframes spin { 100% { transform: rotate(360deg); } }
+        /* ĐÃ SỬA LỖI TỪ KHÓA ĐỂ VÒNG XOAY HOẠT ĐỘNG */
+        @keyframes spin { 
+            100% { transform: rotate(360deg); } 
+        }
     </style>
 </head>
 <body>
@@ -520,11 +523,18 @@
 
         // 5. Đồng bộ và tải dữ liệu từ Google Sheets
         function loadDataFromGoogleSheets() {
+            // TỰ ĐỘNG GIẢI PHÓNG MÀN HÌNH SAU 4 GIÂY (SAFETY TIMEOUT) CHỐNG ĐỨNG HÌNH VĨNH VIỄN
+            setTimeout(function() {
+                const loader = document.getElementById('loadingOverlay');
+                if (loader && loader.style.display !== 'none') {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                    console.log("Đã kích hoạt chế độ tải an toàn.");
+                }
+            }, 4000);
+
             if (GAS_API_URL === "" || GAS_API_URL.includes("ĐIỀN_URL")) {
-                // Chế độ chạy thử nếu chưa có link
                 addRegionalMarker("Vĩnh Long", 10.2537, 105.9722, "Hệ thống đang chạy chế độ Local cấu hình.");
-                document.getElementById('loadingOverlay').style.display = 'none';
-                updateLayerVisibility();
                 return;
             }
 
@@ -554,13 +564,14 @@
                     setTimeout(() => { toast.style.opacity = '0'; }, 3000);
                     
                     const loader = document.getElementById('loadingOverlay');
-                    loader.style.opacity = '0'; 
-                    setTimeout(() => loader.style.display = 'none', 500);
+                    if (loader) {
+                        loader.style.opacity = '0'; 
+                        setTimeout(() => loader.style.display = 'none', 500);
+                    }
                     updateLayerVisibility();
                 })
                 .catch(err => {
-                    console.error("Lỗi đồng bộ:", err);
-                    document.getElementById('loadingOverlay').style.display = 'none';
+                    console.error("Lỗi đồng bộ mạng:", err);
                 });
         }
 

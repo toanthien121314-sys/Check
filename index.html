@@ -466,6 +466,7 @@
             grid-column: 1 / -1;
         }
         
+        /* GIAO DIỆN LIGHTBOX (XEM ẢNH FULL SCREEN) */
         .lightbox-overlay {
             position: fixed;
             top: 0;
@@ -488,12 +489,7 @@
             pointer-events: auto;
         }
 
-        .lightbox-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
+        /* Nút Tắt và Chuyển ảnh trong Lightbox */
         .lightbox-close {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -511,6 +507,58 @@
             border: none;
             cursor: pointer;
             backdrop-filter: blur(5px);
+            z-index: 25002;
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            z-index: 25001;
+            transition: background 0.3s;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .lightbox-prev { left: 15px; }
+        .lightbox-next { right: 15px; }
+
+        /* Khung ảnh trong Lightbox (hỗ trợ Zoom mượt) */
+        .lightbox-img-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Không cho ảnh zoom tràn ra ngoài */
+        }
+
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.2s ease-out; /* Mượt mà khi zoom */
+            transform-origin: center center;
+            touch-action: none; /* Khóa thao tác mặc định để tự quản lý touch */
+        }
+
+        /* Ẩn nút điều hướng trên điện thoại (vì điện thoại vuốt được) */
+        @media (max-width: 768px) {
+            .lightbox-nav { display: none; }
         }
 
         /* =========================================
@@ -688,9 +736,14 @@
             </div>
     </div>
 
-    <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
-        <button class="lightbox-close">✕</button>
-        <img src="" class="lightbox-img" id="lightboxImg" onclick="event.stopPropagation()">
+    <div class="lightbox-overlay" id="lightboxOverlay">
+        <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
+        <button class="lightbox-nav lightbox-prev" onclick="prevImage(event)">❮</button>
+        <button class="lightbox-nav lightbox-next" onclick="nextImage(event)">❯</button>
+        
+        <div class="lightbox-img-container" id="lightboxContainer">
+            <img src="" class="lightbox-img" id="lightboxImg" draggable="false">
+        </div>
     </div>
 
     <div class="modal-overlay" id="checkinModal">
@@ -982,7 +1035,6 @@
                 
                 marker.on('click', () => {
                     if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
-                        // Gọi hàm mở lưới ảnh In-App
                         openInAppGallery(spot.name, spot.folderUrl); 
                     } else {
                         alert(`Chưa có Album cho [${spot.name}] hoặc đang đồng bộ!`);
@@ -992,15 +1044,27 @@
         }
 
         // ==========================================
-        // 4. QUẢN LÝ GIAO DIỆN IN-APP GALLERY (LƯỚI ẢNH DRIVE)
+        // 4. QUẢN LÝ GIAO DIỆN IN-APP GALLERY VÀ LIGHTBOX CẢM ỨNG
         // ==========================================
         const galleryContainer = document.getElementById('inAppGallery');
         const galleryGrid = document.getElementById('galleryGrid');
         const galleryTitle = document.getElementById('galleryTitle');
         const lightboxOverlay = document.getElementById('lightboxOverlay');
         const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxContainer = document.getElementById('lightboxContainer');
 
-function openInAppGallery(name, folderUrl) {
+        let currentAlbumImages = [];
+        let currentImageIndex = 0;
+
+        // Biến phục vụ cảm ứng (Zoom, Pan, Swipe)
+        let currentScale = 1;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let lastTapTime = 0;
+
+        function openInAppGallery(name, folderUrl) {
             galleryTitle.innerText = name;
             galleryGrid.innerHTML = '<div class="empty-gallery">⏳ Đang tải ảnh từ vệ tinh...</div>';
             galleryContainer.classList.add('active');
@@ -1012,11 +1076,14 @@ function openInAppGallery(name, folderUrl) {
                     
                     if (!data.images || data.images.length === 0) {
                         galleryGrid.innerHTML = '<div class="empty-gallery">📭 Album này chưa có ảnh nào.<br><br>Hãy vào Drive tải ảnh lên nhé!</div>';
+                        currentAlbumImages = [];
                         return;
                     }
 
-                    data.images.forEach(imgId => {
-                        // 🔴 DÒNG ĐÃ SỬA: Dùng API Thumbnail của Google để vượt tường lửa chặn ảnh (sz=w1000 là độ phân giải HD)
+                    currentAlbumImages = data.images;
+
+                    currentAlbumImages.forEach((imgId, index) => {
+                        // SỬ DỤNG LINK THUMBNAIL CHỐNG CHẶN TỪ GOOGLE DRIVE
                         const imgUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w1000`;
                         
                         const imgElem = document.createElement('img');
@@ -1024,7 +1091,7 @@ function openInAppGallery(name, folderUrl) {
                         imgElem.className = 'gallery-item';
                         imgElem.loading = 'lazy';
                         
-                        imgElem.onclick = () => openLightbox(imgUrl);
+                        imgElem.onclick = () => openLightbox(index);
                         galleryGrid.appendChild(imgElem);
                     });
                 })
@@ -1037,15 +1104,102 @@ function openInAppGallery(name, folderUrl) {
             galleryContainer.classList.remove('active');
         }
 
-        function openLightbox(imgUrl) {
-            lightboxImg.src = imgUrl;
+        // Mở ảnh Full Screen theo Index
+        function openLightbox(index) {
+            currentImageIndex = index;
+            updateLightboxImage();
             lightboxOverlay.classList.add('active');
         }
 
-        function closeLightbox() {
+        function updateLightboxImage() {
+            const imgId = currentAlbumImages[currentImageIndex];
+            lightboxImg.src = `https://drive.google.com/thumbnail?id=${imgId}&sz=w1000`;
+            resetZoom();
+        }
+
+        function closeLightbox(event) {
+            if(event) event.stopPropagation();
             lightboxOverlay.classList.remove('active');
             lightboxImg.src = '';
+            resetZoom();
         }
+
+        // Chuyển ảnh kế tiếp/trước đó
+        function nextImage(event) {
+            if(event) event.stopPropagation();
+            if (currentAlbumImages.length === 0) return;
+            currentImageIndex = (currentImageIndex + 1) % currentAlbumImages.length;
+            updateLightboxImage();
+        }
+
+        function prevImage(event) {
+            if(event) event.stopPropagation();
+            if (currentAlbumImages.length === 0) return;
+            currentImageIndex = (currentImageIndex - 1 + currentAlbumImages.length) % currentAlbumImages.length;
+            updateLightboxImage();
+        }
+
+        // --- THUẬT TOÁN CẢM ỨNG: SWIPE, ZOOM, PAN ---
+        function resetZoom() {
+            currentScale = 1;
+            currentTranslateX = 0;
+            currentTranslateY = 0;
+            applyTransform();
+        }
+
+        function applyTransform() {
+            lightboxImg.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`;
+        }
+
+        lightboxContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX - currentTranslateX;
+                touchStartY = e.touches[0].clientY - currentTranslateY;
+
+                // Thuật toán phát hiện Double Tap (chạm 2 lần)
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTapTime;
+                
+                if (tapLength < 300 && tapLength > 0) {
+                    // Nếu chạm 2 lần -> Zoom hoặc Reset
+                    if (currentScale === 1) {
+                        currentScale = 2.5; // Phóng to 2.5 lần
+                    } else {
+                        currentScale = 1; // Thu nhỏ lại bình thường
+                        currentTranslateX = 0;
+                        currentTranslateY = 0;
+                    }
+                    applyTransform();
+                    e.preventDefault();
+                }
+                lastTapTime = currentTime;
+            }
+        });
+
+        lightboxContainer.addEventListener('touchmove', (e) => {
+            // Nếu đang Zoom thì cho phép kéo ảnh (Pan)
+            if (currentScale > 1 && e.touches.length === 1) {
+                currentTranslateX = e.touches[0].clientX - touchStartX;
+                currentTranslateY = e.touches[0].clientY - touchStartY;
+                applyTransform();
+                e.preventDefault(); // Tránh cuộn trang của trình duyệt
+            }
+        });
+
+        lightboxContainer.addEventListener('touchend', (e) => {
+            // Nếu KHÔNG Zoom, thì ngón tay nhấc lên sẽ tính là Swipe trái/phải
+            if (currentScale === 1 && e.changedTouches.length === 1) {
+                let touchEndX = e.changedTouches[0].clientX;
+                // Khoảng cách vuốt thực tế (vuốt > 50px mới tính là chuyển ảnh)
+                let diffX = touchEndX - touchStartX; 
+                
+                if (diffX < -50) {
+                    nextImage(); // Vuốt sang trái -> Ảnh tiếp theo
+                } else if (diffX > 50) {
+                    prevImage(); // Vuốt sang phải -> Ảnh trước đó
+                }
+            }
+        });
 
         // ==========================================
         // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ

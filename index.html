@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     
-    <!-- CÔNG NGHỆ TRÀN VIỀN -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- TỐI ƯU HÓA PWA APP -->
     <meta name="theme-color" content="#03050a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,7 +12,6 @@
     
     <title>Vietnam Neon Check-in Map</title>
     
-    <!-- THƯ VIỆN BẢN ĐỒ -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -389,7 +386,7 @@
         }
 
         /* =========================================
-           THƯ VIỆN ẢNH IN-APP VÀ LIGHTBOX
+           THƯ VIỆN ẢNH IN-APP MASONRY GIAO DIỆN (NEW)
         ========================================= */
         .gallery-container {
             position: fixed;
@@ -436,29 +433,52 @@
             cursor: pointer;
         }
         
+        /* Giao diện lưới Masonry chống gãy ảnh */
         .gallery-grid {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
-            gap: 4px;
-            align-content: start;
+            column-count: 4; /* Mặc định PC là 4 cột */
+            column-gap: 12px;
+        }
+
+        /* Tablet hoặc máy tính vừa */
+        @media (max-width: 1024px) {
+            .gallery-grid { column-count: 3; }
+        }
+
+        /* Tối ưu màn hình dọc Điện thoại (Mobile) */
+        @media (max-width: 768px) {
+            .gallery-grid { 
+                column-count: 2; 
+                column-gap: 8px; 
+                padding: 8px; 
+            }
         }
 
         .gallery-item {
             width: 100%;
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            border-radius: 6px;
+            height: auto; /* Ảnh tự điều chỉnh độ dài/ngang giữ tỷ lệ gốc */
+            margin-bottom: 12px;
+            border-radius: 8px;
             background: #111;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.2s;
+            break-inside: avoid; /* Bắt buộc để ảnh không bị đứt làm đôi ở mép cột */
+            display: block; /* Sửa lỗi viền trắng dưới ảnh */
+        }
+
+        @media (max-width: 768px) {
+            .gallery-item { margin-bottom: 8px; }
         }
 
         .gallery-item:active {
             opacity: 0.6;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02); /* Phóng to nhẹ khi lia chuột */
         }
         
         .empty-gallery {
@@ -466,7 +486,7 @@
             color: #64748b;
             margin-top: 50px;
             width: 100%;
-            grid-column: 1 / -1;
+            column-span: all; /* Text trải dài 100% khi trống */
         }
         
         /* GIAO DIỆN LIGHTBOX (XEM ẢNH FULL SCREEN) */
@@ -709,24 +729,19 @@
 </head>
 <body>
 
-    <!-- MÀN HÌNH TẢI -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
         <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
     </div>
 
-    <!-- THÔNG BÁO TOAST -->
     <div id="syncToast">🔄 Đang đồng bộ dữ liệu ngầm...</div>
 
-    <!-- NÚT PWA -->
     <button id="pwaInstallBtn" class="install-btn">
         📲 Tải Ứng Dụng
     </button>
 
-    <!-- BẢN ĐỒ LEAFLET -->
     <div id="map"></div>
 
-    <!-- CÁC NÚT ĐIỀU KHIỂN CHÍNH (GÓC DƯỚI) -->
     <button id="togglePhotoBtn" class="photo-btn" onclick="togglePhotoView()">
         📸 Ảnh
     </button>
@@ -735,18 +750,15 @@
         🎯 Vị Trí Của Tôi
     </button>
 
-    <!-- THƯ VIỆN ẢNH IN-APP -->
     <div class="gallery-container" id="inAppGallery">
         <div class="gallery-header">
             <div class="gallery-title" id="galleryTitle">Album Ảnh</div>
             <button class="close-gallery-btn" onclick="closeInAppGallery()">Đóng</button>
         </div>
         <div class="gallery-grid" id="galleryGrid">
-            <!-- Ảnh sẽ được hiển thị ở đây -->
-        </div>
+            </div>
     </div>
 
-    <!-- TRÌNH XEM ẢNH FULL SCREEN LIGHTBOX CÓ ĐIỀU HƯỚNG VÀ CẢM ỨNG -->
     <div class="lightbox-overlay" id="lightboxOverlay">
         <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
         <button class="lightbox-nav lightbox-prev" onclick="prevImage(event)">❮</button>
@@ -757,7 +769,6 @@
         </div>
     </div>
 
-    <!-- HỘP THOẠI NHẬP LIỆU CHECK-IN -->
     <div class="modal-overlay" id="checkinModal">
         <div class="modal-box">
             <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
@@ -1095,8 +1106,8 @@
                     currentAlbumImages = data.images;
 
                     data.images.forEach((imgId, index) => {
-                        // HIỆN ẢNH THUMBNAIL (w400) TRÊN LƯỚI ĐỂ TẢI NHANH VÀ MƯỢT
-                        const thumbUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w400`;
+                        // HIỆN ẢNH THUMBNAIL (w800) TRÊN LƯỚI ĐỂ TẢI NHANH VÀ MƯỢT TRÊN PC LẪN MOBILE
+                        const thumbUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w800`;
                         
                         const imgElem = document.createElement('img');
                         imgElem.src = thumbUrl;

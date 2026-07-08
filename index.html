@@ -939,7 +939,7 @@
         let globalSpotsData = []; 
         let isPhotoView = false; 
 
-        // Vẽ Khu vực lớn (Có chức năng gộp và ép tọa độ trung tâm)
+// Vẽ Khu vực lớn (Có chức năng gộp và ép tọa độ trung tâm)
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
             
@@ -957,6 +957,30 @@
             const marker = L.marker([finalLat, finalLng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
             
             marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
+            
+            // --- TÍNH NĂNG MỚI: TÀNG HÌNH CHỮ NHỎ KHI MỞ BẢNG THÔNG TIN ---
+            marker.on('popupopen', function(e) {
+                const iconElement = e.target.getElement();
+                if (iconElement) {
+                    const label = iconElement.querySelector('.neon-label');
+                    if (label) {
+                        label.style.transition = 'opacity 0.2s'; // Hiệu ứng mờ đi mượt mà
+                        label.style.opacity = '0'; // Tàng hình chữ nhỏ
+                    }
+                }
+            });
+
+            marker.on('popupclose', function(e) {
+                const iconElement = e.target.getElement();
+                if (iconElement) {
+                    const label = iconElement.querySelector('.neon-label');
+                    if (label) {
+                        label.style.opacity = '1'; // Hiện lại khi đóng bảng
+                    }
+                }
+            });
+            // --------------------------------------------------------
+
             marker.on('click', () => {
                 map.flyTo([finalLat, finalLng], 11, { duration: 1.5 });
             });

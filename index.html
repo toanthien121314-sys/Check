@@ -374,7 +374,7 @@
             <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
             
             <div class="auto-region-badge">
-                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang giải mã tọa độ...</span>
+                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang quét tọa độ...</span>
             </div>
 
             <div class="form-group">
@@ -458,17 +458,60 @@
             iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] 
         });
 
+        // TỌA ĐỘ TRUNG TÂM CHUẨN CỦA 63 TỈNH THÀNH (Dùng để ép tọa độ tâm khi vẽ Chấm Neon lớn)
+        const VN_PROVINCES = [
+            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 }, { name: "Hà Nội", lat: 21.0285, lng: 105.8542 }, { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
+            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 }, { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 }, { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
+            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 }, { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 }, { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
+            { name: "Huế", lat: 16.4637, lng: 107.5909 }, { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 }, { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
+            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 }, { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 }, { name: "Hội An", lat: 15.8801, lng: 108.3380 },
+            { name: "An Giang", lat: 10.5216, lng: 105.1259 }, { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 }, { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
+            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 }, { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 }, { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
+            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 }, { name: "Bến Tre", lat: 10.2333, lng: 106.3833 }, { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
+            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 }, { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 }, { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
+            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 }, { name: "Sa Pa", lat: 22.3364, lng: 103.8438 }, { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
+            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 }, { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 }, { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
+            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 }, { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 }, { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
+            { name: "Bình Định", lat: 14.1667, lng: 108.9000 }, { name: "Phú Yên", lat: 14.0500, lng: 109.0167 }, { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
+            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 }, { name: "Gia Lai", lat: 13.9833, lng: 108.0000 }, { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
+            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 }, { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 }, { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
+            { name: "Long An", lat: 10.6667, lng: 106.1667 }, { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 }, { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
+            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 }, { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 }, { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
+            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 }, { name: "Nam Định", lat: 20.9333, lng: 106.3167 }, { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
+        ];
+
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
+        
+        // Tích hợp bộ đếm các khu vực đã vẽ để CHỐNG TRÙNG LẶP 100%
         const activeRegionsTracker = new Set();
 
+        // 🚀 HÀM VẼ CHẤM NEON LỚN ĐÃ NÂNG CẤP: CHỐNG TRÙNG VÀ ÉP TỌA ĐỘ TÂM
         function addRegionalMarker(name, lat, lng, desc) {
-            const marker = L.marker([lat, lng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
+            const regionKey = name.trim().toLowerCase();
+            
+            // 1. CHỐNG TRÙNG LẶP: Nếu tỉnh này đã vẽ rồi thì gộp luôn, không vẽ thêm cái thứ 2
+            if (activeRegionsTracker.has(regionKey)) return;
+
+            // 2. ÉP TỌA ĐỘ TRUNG TÂM: Quét 63 tỉnh thành để lấy tọa độ chuẩn
+            let finalLat = lat;
+            let finalLng = lng;
+            
+            const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
+            if (standardProv) {
+                finalLat = standardProv.lat;
+                finalLng = standardProv.lng;
+            }
+
+            // Vẽ marker với tọa độ tâm đã được nắn chuẩn
+            const marker = L.marker([finalLat, finalLng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
             marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
             marker.on('click', () => {
-                map.flyTo([lat, lng], 11, { duration: 1.5 });
+                map.flyTo([finalLat, finalLng], 11, { duration: 1.5 });
             });
-            activeRegionsTracker.add(name.trim().toLowerCase());
+            
+            // Đánh dấu tỉnh này đã hoàn thành vẽ
+            activeRegionsTracker.add(regionKey);
         }
 
         function addSpotMarker(name, lat, lng, date, note) {
@@ -487,23 +530,30 @@
         function renderDataToMap(data) {
             regionalLayer.clearLayers();
             spotLayer.clearLayers();
-            activeRegionsTracker.clear();
+            activeRegionsTracker.clear(); // Reset bộ đếm trước khi vẽ mới toàn bộ
 
             let regCount = 0, spotCount = 0;
+            
+            // Vẽ các tỉnh thành lớn trước
             if (data && data.regions) {
                 data.regions.forEach(function(reg) {
                     addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
-                    regCount++;
+                    regCount++; // Dù có bị trùng gộp lại thì vẫn tính là 1 vùng trong bộ đếm hiển thị
                 });
             }
+            // Vẽ các cờ đỏ chi tiết
             if (data && data.spots) {
                 data.spots.forEach(function(spot) {
                     addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
                     spotCount++;
                 });
             }
+            
+            // Đếm lại số vùng thực tế đã vẽ sau khi chống trùng lặp
+            const uniqueRegionsCount = activeRegionsTracker.size;
+            
             updateLayerVisibility();
-            return { regCount, spotCount };
+            return { regCount: uniqueRegionsCount, spotCount };
         }
 
         function hideLoadingScreen() {
@@ -568,11 +618,13 @@
 
         let myLocationMarker = null, myCurrentLat = 0, myCurrentLng = 0;
         
+        // NÂNG CẤP TỐC ĐỘ BẮT GPS DI ĐỘNG CỰC NHANH
         function goToMyLocation() {
             if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
             const btn = document.querySelector('.location-btn');
             const originTxt = btn.innerHTML; 
-            btn.innerHTML = "⏳ Đang quét...";
+            btn.innerHTML = "📡 Đang quét...";
+            btn.style.opacity = "0.7";
             
             const options = {
                 enableHighAccuracy: true,
@@ -590,13 +642,15 @@
                     myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
                     myLocationMarker.bindPopup(`<div class="popup-title">🎯 Vị Trí Của Bạn</div><button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>`);
                     
-                    map.flyTo([myCurrentLat, myCurrentLng], 14, { duration: 1 });
-                    setTimeout(() => myLocationMarker.openPopup(), 1000);
+                    map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1 });
+                    setTimeout(() => myLocationMarker.openPopup(), 500);
                     btn.innerHTML = originTxt;
+                    btn.style.opacity = "1";
                 },
                 err => { 
                     alert("Không thể nhận tín hiệu GPS! Vui lòng bật vị trí."); 
-                    btn.innerHTML = originTxt; 
+                    btn.innerHTML = originTxt;
+                    btn.style.opacity = "1";
                 },
                 options
             );
@@ -608,28 +662,6 @@
             if (myLocationMarker) myLocationMarker.closePopup(); 
             openCheckInModal(); 
         }
-
-        // --- CƠ SỞ DỮ LIỆU OFFLINE: CHỐNG MÙ ĐƯỜNG 100% ---
-        const VN_PROVINCES = [
-            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 }, { name: "Hà Nội", lat: 21.0285, lng: 105.8542 }, { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 }, { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 }, { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
-            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 }, { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 }, { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
-            { name: "Huế", lat: 16.4637, lng: 107.5909 }, { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 }, { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
-            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 }, { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 }, { name: "Hội An", lat: 15.8801, lng: 108.3380 },
-            { name: "An Giang", lat: 10.5216, lng: 105.1259 }, { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 }, { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
-            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 }, { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 }, { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
-            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 }, { name: "Bến Tre", lat: 10.2333, lng: 106.3833 }, { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
-            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 }, { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 }, { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
-            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 }, { name: "Sa Pa", lat: 22.3364, lng: 103.8438 }, { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
-            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 }, { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 }, { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
-            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 }, { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 }, { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
-            { name: "Bình Định", lat: 14.1667, lng: 108.9000 }, { name: "Phú Yên", lat: 14.0500, lng: 109.0167 }, { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
-            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 }, { name: "Gia Lai", lat: 13.9833, lng: 108.0000 }, { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
-            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 }, { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 }, { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
-            { name: "Long An", lat: 10.6667, lng: 106.1667 }, { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 }, { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
-            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 }, { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 }, { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
-            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 }, { name: "Nam Định", lat: 20.9333, lng: 106.3167 }, { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
-        ];
 
         function findNearestProvinceOffline(lat, lng) {
             let minDistance = Infinity;
@@ -652,7 +684,6 @@
         const placeNameInput = document.getElementById('placeName');
         const placeNoteInput = document.getElementById('placeNote');
 
-        // LƯỚI ĐỊNH VỊ 3 LỚP: TRÌNH DUYỆT (0.2s) -> GAS (DỰ PHÒNG) -> TOÁN HỌC (OFFLINE)
         function openCheckInModal() {
             placeNameInput.value = ''; 
             placeNoteInput.value = ''; 
@@ -727,9 +758,8 @@
             const regionName = currentDetectedRegion;
             const regionKey = regionName.trim().toLowerCase();
             
-            if (!activeRegionsTracker.has(regionKey)) {
-                addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
-            }
+            // Vẽ khu vực lớn (sẽ đi qua bộ lọc để chống trùng lặp và nắn tọa độ tự động)
+            addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
             
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();

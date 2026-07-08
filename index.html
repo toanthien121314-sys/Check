@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="theme-color" content="#03050a">
@@ -15,6 +16,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
+        /* =========================================
+           RESET & BASIC SETUP
+        ========================================= */
         * {
             margin: 0;
             padding: 0;
@@ -51,6 +55,9 @@
             visibility: hidden !important;
         }
 
+        /* =========================================
+           CÁC NÚT ĐIỀU KHIỂN (BUTTONS)
+        ========================================= */
         .location-btn {
             position: absolute;
             bottom: max(30px, env(safe-area-inset-bottom)); 
@@ -135,6 +142,9 @@
             transform: scale(1.05);
         }
 
+        /* =========================================
+           CÁC THÔNG BÁO VÀ LOADING
+        ========================================= */
         #syncToast {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -154,6 +164,47 @@
             pointer-events: none;
         }
 
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #03050a;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.4s ease;
+        }
+
+        .loading-text {
+            color: #00f3ff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00f3ff;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(0, 243, 255, 0.2);
+            border-top: 4px solid #ff007f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 15px #ff007f;
+        }
+
+        @keyframes spin { 
+            100% { transform: rotate(360deg); } 
+        }
+
+        /* =========================================
+           THIẾT KẾ MARKERS TRÊN BẢN ĐỒ
+        ========================================= */
         .neon-marker-container {
             position: relative;
             width: 28px;
@@ -213,10 +264,37 @@
             transition: transform 0.2s;
             cursor: pointer;
         }
+
         .red-flag-marker:hover {
             transform: scale(1.3) translateY(-3px);
         }
 
+        .gps-dot {
+            width: 16px;
+            height: 16px;
+            background: #00f3ff;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            box-shadow: 0 0 15px #00f3ff, 0 0 30px #00f3ff;
+            z-index: 2;
+        }
+
+        .gps-pulse {
+            width: 28px;
+            height: 28px;
+            background: rgba(0, 243, 255, 0.6);
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: ripple 1.5s infinite ease-out;
+            z-index: 1;
+        }
+
+        /* Marker Album Ảnh */
         .photo-album-marker {
             width: 65px;
             height: 65px;
@@ -230,10 +308,12 @@
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
+
         .photo-album-marker:hover {
             transform: scale(1.15);
             z-index: 2000 !important;
         }
+
         .photo-album-badge {
             position: absolute;
             bottom: 4px;
@@ -247,52 +327,333 @@
             backdrop-filter: blur(3px);
         }
 
-        .gps-dot {
-            width: 16px; height: 16px;
-            background: #00f3ff;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            position: absolute; top: 6px; left: 6px;
-            box-shadow: 0 0 15px #00f3ff, 0 0 30px #00f3ff;
-            z-index: 2;
-        }
-        .gps-pulse {
-            width: 28px; height: 28px;
-            background: rgba(0, 243, 255, 0.6);
-            border-radius: 50%;
-            position: absolute; top: 0; left: 0;
-            animation: ripple 1.5s infinite ease-out;
-            z-index: 1;
+        /* =========================================
+           POPUP TRÊN BẢN ĐỒ
+        ========================================= */
+        .leaflet-popup-content-wrapper {
+            background: rgba(8, 12, 28, 0.95) !important;
+            color: #fff !important;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            border-radius: 12px !important;
+            backdrop-filter: blur(8px);
+            padding: 5px;
         }
 
-        .leaflet-popup-content-wrapper { background: rgba(8, 12, 28, 0.95) !important; color: #fff !important; border: 1px solid #00f3ff; box-shadow: 0 0 20px rgba(0, 243, 255, 0.5); border-radius: 12px !important; backdrop-filter: blur(8px); padding: 5px; }
-        .leaflet-popup-tip { background: rgba(8, 12, 28, 0.95) !important; border-bottom: 1px solid #00f3ff; border-right: 1px solid #00f3ff; }
-        .popup-title { color: #00f3ff; font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; text-shadow: 0 0 8px rgba(0, 243, 255, 0.6); border-bottom: 1px dashed rgba(0, 243, 255, 0.3); padding-bottom: 5px; }
-        .popup-info { font-size: 0.9rem; line-height: 1.5; color: #d1d5db; }
-        .popup-info b { color: #ff007f; }
+        .leaflet-popup-tip {
+            background: rgba(8, 12, 28, 0.95) !important;
+            border-bottom: 1px solid #00f3ff;
+            border-right: 1px solid #00f3ff;
+        }
 
-        .btn-gps-checkin { margin-top: 8px; width: 100%; padding: 8px; background: linear-gradient(90deg, #ff007f, #ff00ff); color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px rgba(255, 0, 127, 0.5); transition: all 0.2s; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-box { background: linear-gradient(135deg, rgba(10, 16, 38, 0.95), rgba(5, 8, 20, 0.98)); width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; border: 2px solid #00f3ff; box-shadow: 0 0 25px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2); transform: translateY(-20px); transition: transform 0.3s ease; }
-        .modal-overlay.active .modal-box { transform: translateY(0); }
-        .modal-title { font-size: 1.3rem; font-weight: bold; color: #00f3ff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.85rem; color: #a5b4fc; margin-bottom: 6px; font-weight: 600; }
-        .form-control { width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 0.95rem; outline: none; transition: all 0.3s; }
-        .form-control:focus { border-color: #ff007f; box-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
-        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
-        .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
-        .btn-cancel { background: transparent; color: #94a3b8; border: 1px solid #475569; }
-        .btn-submit { background: linear-gradient(90deg, #00f3ff, #0077ff); color: #000; box-shadow: 0 0 15px rgba(0, 243, 255, 0.5); }
+        .popup-title {
+            color: #00f3ff;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+            border-bottom: 1px dashed rgba(0, 243, 255, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .popup-info {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #d1d5db;
+        }
+
+        .popup-info b {
+            color: #ff007f;
+        }
+
+        .btn-gps-checkin {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(90deg, #ff007f, #ff00ff);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-gps-checkin:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.8);
+        }
+
+        /* =========================================
+           THƯ VIỆN ẢNH IN-APP VÀ LIGHTBOX
+        ========================================= */
+        .gallery-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            background-color: #03050a;
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .gallery-container.active {
+            transform: translateY(0);
+        }
         
-        .auto-region-badge { background: rgba(0, 243, 255, 0.08); border: 1px dashed rgba(0, 243, 255, 0.5); padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; color: #a5b4fc; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
-        .auto-region-badge span { color: #00f3ff; font-weight: bold; text-shadow: 0 0 5px rgba(0, 243, 255, 0.5); }
+        .gallery-header {
+            padding: max(20px, env(safe-area-inset-top)) 20px 15px 20px;
+            background: linear-gradient(180deg, rgba(3,5,10,1) 0%, rgba(3,5,10,0.8) 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
 
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #03050a; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
-        .loading-text { color: #00f3ff; font-size: 1.2rem; font-weight: bold; text-shadow: 0 0 15px #00f3ff; margin-top: 15px; letter-spacing: 1px; }
-        .spinner { width: 45px; height: 45px; border: 4px solid rgba(0, 243, 255, 0.2); border-top: 4px solid #ff007f; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px #ff007f; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .gallery-title {
+            color: #00f3ff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+        }
+
+        .close-gallery-btn {
+            background: rgba(255, 0, 127, 0.2);
+            color: #ff007f;
+            border: 1px solid #ff007f;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .gallery-grid {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 4px;
+            align-content: start;
+        }
+
+        .gallery-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #111;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            transition: opacity 0.2s;
+        }
+
+        .gallery-item:active {
+            opacity: 0.6;
+        }
+        
+        .empty-gallery {
+            text-align: center;
+            color: #64748b;
+            margin-top: 50px;
+            width: 100%;
+            grid-column: 1 / -1;
+        }
+        
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 25000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .lightbox-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: max(20px, env(safe-area-inset-top));
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+
+        /* =========================================
+           HỘP THOẠI NHẬP LIỆU CHECK-IN (MODAL)
+        ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: linear-gradient(135deg, rgba(10, 16, 38, 0.95), rgba(5, 8, 20, 0.98));
+            width: 90%;
+            max-width: 400px;
+            padding: 25px;
+            border-radius: 16px;
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #ff007f;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #475569;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-submit {
+            background: linear-gradient(90deg, #00f3ff, #0077ff);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(90deg, #ff007f, #ff00ff);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
+        }
+
+        .auto-region-badge {
+            background: rgba(0, 243, 255, 0.08);
+            border: 1px dashed rgba(0, 243, 255, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .auto-region-badge span {
+            color: #00f3ff;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -318,6 +679,20 @@
         🎯 Vị Trí Của Tôi
     </button>
 
+    <div class="gallery-container" id="inAppGallery">
+        <div class="gallery-header">
+            <div class="gallery-title" id="galleryTitle">Album Ảnh</div>
+            <button class="close-gallery-btn" onclick="closeInAppGallery()">Đóng</button>
+        </div>
+        <div class="gallery-grid" id="galleryGrid">
+            </div>
+    </div>
+
+    <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+        <button class="lightbox-close">✕</button>
+        <img src="" class="lightbox-img" id="lightboxImg" onclick="event.stopPropagation()">
+    </div>
+
     <div class="modal-overlay" id="checkinModal">
         <div class="modal-box">
             <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
@@ -342,16 +717,20 @@
     </div>
 
     <script>
-        // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (SAU KHI ĐÃ CẤP QUYỀN DRIVE)
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwErQJpDv_hXFCP1IaI2yGFW00y3KeS_d7yliByUJ1b0-iyNkB2wRq8pNnTe0Z_buFM/exec";
+        // ==========================================
+        // 1. CẤU HÌNH HỆ THỐNG VÀ API
+        // ==========================================
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzrUySSsMIwedNWgSarTdCPoZpqe_aYfuVvpIBhLZDCAiP5TSTZGm83S6h-K7SiA16L/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
 
+        // Khởi chạy Service Worker cho PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Lỗi SW:', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Lỗi khởi chạy SW:', err));
             });
         }
 
+        // Xử lý nút Tải ứng dụng PWA
         let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
 
@@ -370,73 +749,159 @@
             }
         });
 
-        window.addEventListener('appinstalled', () => { installBtn.style.display = 'none'; });
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+        });
 
+        // ==========================================
+        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET VÀ CÁC LỚP
+        // ==========================================
         const map = L.map('map', {
             center: [16.047079, 108.206230],
-            zoom: 6, minZoom: 5, maxZoom: 18, 
+            zoom: 6,
+            minZoom: 5,
+            maxZoom: 18, 
             zoomControl: false, 
             attributionControl: false 
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
+            maxZoom: 20 
+        }).addTo(map);
 
+        // Định nghĩa các biểu tượng (Icons)
         function createRegionalIcon(regionName) {
-            return L.divIcon({ className: 'custom-div-icon', html: `<div class="neon-marker-container"><div class="neon-label">${regionName}</div><div class="neon-pulse"></div><div class="neon-dot"></div></div>`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
+            return L.divIcon({ 
+                className: 'custom-div-icon', 
+                html: `<div class="neon-marker-container"><div class="neon-label">${regionName}</div><div class="neon-pulse"></div><div class="neon-dot"></div></div>`, 
+                iconSize: [28, 28], 
+                iconAnchor: [14, 14], 
+                popupAnchor: [0, -14] 
+            });
         }
         
-        const redFlagIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="red-flag-marker">🚩</div>`, iconSize: [28, 28], iconAnchor: [5, 25], popupAnchor: [8, -25] });
-        const gpsIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
+        const redFlagIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: `<div class="red-flag-marker">🚩</div>`, 
+            iconSize: [28, 28], 
+            iconAnchor: [5, 25], 
+            popupAnchor: [8, -25] 
+        });
+        
+        const gpsIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`, 
+            iconSize: [28, 28], 
+            iconAnchor: [14, 14], 
+            popupAnchor: [0, -14] 
+        });
 
+        // Dữ liệu chuẩn tọa độ của 63 Tỉnh Thành Việt Nam
         const VN_PROVINCES = [
-            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 }, { name: "Hà Nội", lat: 21.0285, lng: 105.8542 }, { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 }, { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 }, { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
-            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 }, { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 }, { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
-            { name: "Huế", lat: 16.4637, lng: 107.5909 }, { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 }, { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
-            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 }, { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 }, { name: "Hội An", lat: 15.8801, lng: 108.3380 },
-            { name: "An Giang", lat: 10.5216, lng: 105.1259 }, { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 }, { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
-            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 }, { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 }, { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
-            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 }, { name: "Bến Tre", lat: 10.2333, lng: 106.3833 }, { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
-            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 }, { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 }, { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
-            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 }, { name: "Sa Pa", lat: 22.3364, lng: 103.8438 }, { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
-            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 }, { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 }, { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
-            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 }, { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 }, { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
-            { name: "Bình Định", lat: 14.1667, lng: 108.9000 }, { name: "Phú Yên", lat: 14.0500, lng: 109.0167 }, { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
-            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 }, { name: "Gia Lai", lat: 13.9833, lng: 108.0000 }, { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
-            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 }, { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 }, { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
-            { name: "Long An", lat: 10.6667, lng: 106.1667 }, { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 }, { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
-            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 }, { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 }, { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
-            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 }, { name: "Nam Định", lat: 20.9333, lng: 106.3167 }, { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
+            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
+            { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
+            { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
+            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 },
+            { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 },
+            { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
+            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
+            { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 },
+            { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
+            { name: "Huế", lat: 16.4637, lng: 107.5909 },
+            { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 },
+            { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
+            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 },
+            { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 },
+            { name: "Hội An", lat: 15.8801, lng: 108.3380 },
+            { name: "An Giang", lat: 10.5216, lng: 105.1259 },
+            { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 },
+            { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
+            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 },
+            { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 },
+            { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
+            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 },
+            { name: "Bến Tre", lat: 10.2333, lng: 106.3833 },
+            { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
+            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 },
+            { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 },
+            { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
+            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 },
+            { name: "Sa Pa", lat: 22.3364, lng: 103.8438 },
+            { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
+            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 },
+            { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 },
+            { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
+            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 },
+            { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 },
+            { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
+            { name: "Bình Định", lat: 14.1667, lng: 108.9000 },
+            { name: "Phú Yên", lat: 14.0500, lng: 109.0167 },
+            { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
+            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 },
+            { name: "Gia Lai", lat: 13.9833, lng: 108.0000 },
+            { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
+            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 },
+            { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 },
+            { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
+            { name: "Long An", lat: 10.6667, lng: 106.1667 },
+            { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 },
+            { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
+            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 },
+            { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 },
+            { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
+            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 },
+            { name: "Nam Định", lat: 20.9333, lng: 106.3167 },
+            { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
+        // Khởi tạo các Lớp dữ liệu
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
-        const photoLayer = L.layerGroup(); 
+        const photoLayer = L.layerGroup();
         
         const activeRegionsTracker = new Set();
         let globalSpotsData = []; 
         let isPhotoView = false; 
 
+        // Vẽ Khu vực lớn (Có chức năng gộp và ép tọa độ trung tâm)
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
+            
             if (activeRegionsTracker.has(regionKey)) return;
 
-            let finalLat = lat, finalLng = lng;
+            let finalLat = lat;
+            let finalLng = lng;
+            
             const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
-            if (standardProv) { finalLat = standardProv.lat; finalLng = standardProv.lng; }
+            if (standardProv) {
+                finalLat = standardProv.lat;
+                finalLng = standardProv.lng;
+            }
 
             const marker = L.marker([finalLat, finalLng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
+            
             marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
-            marker.on('click', () => map.flyTo([finalLat, finalLng], 11, { duration: 1.5 }));
+            marker.on('click', () => {
+                map.flyTo([finalLat, finalLng], 11, { duration: 1.5 });
+            });
+            
             activeRegionsTracker.add(regionKey);
         }
 
+        // Vẽ Điểm chi tiết (Lá cờ đỏ)
         function addSpotMarker(name, lat, lng, date, note) {
             const marker = L.marker([lat, lng], { icon: redFlagIcon }).addTo(spotLayer);
-            marker.bindPopup(`<div class="popup-title">🚩 ${name}</div><div class="popup-info"><p><b>⏰ Thời gian:</b> ${date}</p><p><b>📝 Ghi chú:</b> ${note || 'Không có'}</p></div>`);
+            marker.bindPopup(`
+                <div class="popup-title">🚩 ${name}</div>
+                <div class="popup-info">
+                    <p><b>⏰ Thời gian:</b> ${date}</p>
+                    <p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p>
+                </div>
+            `);
             return marker;
         }
 
+        // Đổ dữ liệu tổng hợp ra bản đồ
         function renderDataToMap(data) {
             regionalLayer.clearLayers();
             spotLayer.clearLayers();
@@ -444,24 +909,35 @@
             globalSpotsData = []; 
 
             let spotCount = 0;
+            
             if (data && data.regions) {
-                data.regions.forEach(reg => addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc));
+                data.regions.forEach(function(reg) {
+                    addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
+                });
             }
+            
             if (data && data.spots) {
                 globalSpotsData = data.spots; 
-                data.spots.forEach(spot => {
+                data.spots.forEach(function(spot) {
                     addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
                     spotCount++;
                 });
             }
             
-            if (isPhotoView) renderPhotoLayer();
-            else updateLayerVisibility();
+            const uniqueRegionsCount = activeRegionsTracker.size;
+            
+            if (isPhotoView) {
+                renderPhotoLayer();
+            } else {
+                updateLayerVisibility();
+            }
 
-            return { regCount: activeRegionsTracker.size, spotCount };
+            return { regCount: uniqueRegionsCount, spotCount };
         }
 
-        // TÍNH NĂNG CHUYỂN ĐỔI CHẾ ĐỘ MAP <-> PHOTO ALBUM
+        // ==========================================
+        // 3. TÍNH NĂNG CHUYỂN ĐỔI CHẾ ĐỘ ẢNH (PHOTO MODE)
+        // ==========================================
         function togglePhotoView() {
             isPhotoView = !isPhotoView;
             const btn = document.getElementById('togglePhotoBtn');
@@ -484,8 +960,7 @@
             }
         }
 
-        // TÍNH NĂNG MỞ ALBUM ẢNH GOOGLE DRIVE
-// TÍNH NĂNG MỞ ALBUM ẢNH GOOGLE DRIVE
+        // Vẽ các Khung Album lên bản đồ
         function renderPhotoLayer() {
             photoLayer.clearLayers();
             
@@ -506,17 +981,73 @@
                 const marker = L.marker([spot.lat, spot.lng], { icon: photoIcon }).addTo(photoLayer);
                 
                 marker.on('click', () => {
-                    // CHỐT CHẶN BẢO VỆ: Chỉ mở tab nếu nó là Link (bắt đầu bằng http)
                     if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
-                        window.open(spot.folderUrl, '_blank'); 
+                        // Gọi hàm mở lưới ảnh In-App
+                        openInAppGallery(spot.name, spot.folderUrl); 
                     } else {
-                        // Nếu là dòng text báo lỗi, hiện thông báo chứ không mở tab gây lỗi 404
-                        alert(`Album của [${spot.name}] đang bị lỗi tạo link: \n${spot.folderUrl}`);
+                        alert(`Chưa có Album cho [${spot.name}] hoặc đang đồng bộ!`);
                     }
                 });
             });
         }
 
+        // ==========================================
+        // 4. QUẢN LÝ GIAO DIỆN IN-APP GALLERY (LƯỚI ẢNH DRIVE)
+        // ==========================================
+        const galleryContainer = document.getElementById('inAppGallery');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const galleryTitle = document.getElementById('galleryTitle');
+        const lightboxOverlay = document.getElementById('lightboxOverlay');
+        const lightboxImg = document.getElementById('lightboxImg');
+
+        function openInAppGallery(name, folderUrl) {
+            galleryTitle.innerText = name;
+            galleryGrid.innerHTML = '<div class="empty-gallery">⏳ Đang tải ảnh từ vệ tinh...</div>';
+            galleryContainer.classList.add('active');
+
+            fetch(`${GAS_API_URL}?action=getPhotos&folderUrl=${encodeURIComponent(folderUrl)}`)
+                .then(res => res.json())
+                .then(data => {
+                    galleryGrid.innerHTML = '';
+                    
+                    if (!data.images || data.images.length === 0) {
+                        galleryGrid.innerHTML = '<div class="empty-gallery">📭 Album này chưa có ảnh nào.<br><br>Hãy vào Drive tải ảnh lên nhé!</div>';
+                        return;
+                    }
+
+                    data.images.forEach(imgId => {
+                        const imgUrl = `https://drive.google.com/uc?export=view&id=${imgId}`;
+                        const imgElem = document.createElement('img');
+                        imgElem.src = imgUrl;
+                        imgElem.className = 'gallery-item';
+                        imgElem.loading = 'lazy';
+                        
+                        imgElem.onclick = () => openLightbox(imgUrl);
+                        galleryGrid.appendChild(imgElem);
+                    });
+                })
+                .catch(err => {
+                    galleryGrid.innerHTML = '<div class="empty-gallery">⚠️ Lỗi kết nối lấy dữ liệu ảnh!</div>';
+                });
+        }
+
+        function closeInAppGallery() {
+            galleryContainer.classList.remove('active');
+        }
+
+        function openLightbox(imgUrl) {
+            lightboxImg.src = imgUrl;
+            lightboxOverlay.classList.add('active');
+        }
+
+        function closeLightbox() {
+            lightboxOverlay.classList.remove('active');
+            lightboxImg.src = '';
+        }
+
+        // ==========================================
+        // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ
+        // ==========================================
         function hideLoadingScreen() {
             const loader = document.getElementById('loadingOverlay');
             if (loader && loader.style.display !== 'none') {
@@ -529,7 +1060,9 @@
             const toast = document.getElementById('syncToast');
             toast.innerHTML = msg;
             toast.style.opacity = '1';
-            if (duration > 0) setTimeout(() => toast.style.opacity = '0', duration);
+            if (duration > 0) {
+                setTimeout(() => { toast.style.opacity = '0'; }, duration);
+            }
         }
 
         function loadDataFromGoogleSheets() {
@@ -556,6 +1089,7 @@
                 .then(data => {
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
                     const counts = renderDataToMap(data);
+                    
                     if (!hasCache) hideLoadingScreen(); 
                     showToast(`✅ Đã đồng bộ: ${counts.regCount} vùng & ${counts.spotCount} điểm`);
                 })
@@ -565,6 +1099,7 @@
                 });
         }
 
+        // Ẩn hiện Lớp Cờ Đỏ và Chấm Neon Lớn theo độ phóng đại
         const ZOOM_THRESHOLD = 9;
         function updateLayerVisibility() {
             if (isPhotoView) return; 
@@ -580,16 +1115,26 @@
         }
         map.on('zoomend', updateLayerVisibility);
 
-        let myLocationMarker = null, myCurrentLat = 0, myCurrentLng = 0;
+        // ==========================================
+        // 6. ĐỊNH VỊ GPS VÀ LƯU TRỮ
+        // ==========================================
+        let myLocationMarker = null;
+        let myCurrentLat = 0;
+        let myCurrentLng = 0;
         
         function goToMyLocation() {
             if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+            
             const btn = document.querySelector('.location-btn');
             const originTxt = btn.innerHTML; 
             btn.innerHTML = "📡 Đang quét...";
             btn.style.opacity = "0.7";
             
-            const options = { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 };
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 10000 
+            };
 
             navigator.geolocation.getCurrentPosition(
                 position => {
@@ -600,10 +1145,14 @@
                     
                     myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
                     
-                    myLocationMarker.bindPopup(`<div class="popup-title">🎯 Vị Trí Của Bạn</div><button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>`);
+                    myLocationMarker.bindPopup(`
+                        <div class="popup-title">🎯 Vị Trí Của Bạn</div>
+                        <button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>
+                    `);
                     
                     map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1 });
                     setTimeout(() => myLocationMarker.openPopup(), 500);
+                    
                     btn.innerHTML = originTxt;
                     btn.style.opacity = "1";
                 },
@@ -611,7 +1160,8 @@
                     alert("Không thể nhận tín hiệu GPS! Vui lòng bật vị trí."); 
                     btn.innerHTML = originTxt;
                     btn.style.opacity = "1";
-                }, options
+                },
+                options
             );
         }
 
@@ -623,56 +1173,92 @@
         }
 
         function findNearestProvinceOffline(lat, lng) {
-            let minDistance = Infinity; let nearestName = "Khu vực Việt Nam";
+            let minDistance = Infinity;
+            let nearestName = "Khu vực Việt Nam";
+            
             VN_PROVINCES.forEach(prov => {
-                const dLat = lat - prov.lat, dLng = lng - prov.lng;
+                const dLat = lat - prov.lat;
+                const dLng = lng - prov.lng;
                 const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-                if (distance < minDistance) { minDistance = distance; nearestName = prov.name; }
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestName = prov.name;
+                }
             });
+            
             return nearestName;
         }
 
-        let currentClickLat = 0, currentClickLng = 0, currentDetectedRegion = "Việt Nam";
-        const modal = document.getElementById('checkinModal'), autoRegionText = document.getElementById('autoRegionText'), placeNameInput = document.getElementById('placeName'), placeNoteInput = document.getElementById('placeNote');
+        let currentClickLat = 0;
+        let currentClickLng = 0;
+        let currentDetectedRegion = "Việt Nam";
+        
+        const modal = document.getElementById('checkinModal');
+        const autoRegionText = document.getElementById('autoRegionText');
+        const placeNameInput = document.getElementById('placeName');
+        const placeNoteInput = document.getElementById('placeNote');
 
         function openCheckInModal() {
-            placeNameInput.value = ''; placeNoteInput.value = ''; modal.classList.add('active'); 
+            placeNameInput.value = ''; 
+            placeNoteInput.value = ''; 
+            modal.classList.add('active'); 
             setTimeout(() => placeNameInput.focus(), 100);
             
             autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang quét tọa độ...</span>'; 
             currentDetectedRegion = "Việt Nam";
             
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, { headers: { 'Accept-Language': 'vi' } })
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
+                headers: { 'Accept-Language': 'vi' }
+            })
             .then(res => res.json())
             .then(data => {
                 if (data && data.address) {
                     let p = data.address.city || data.address.province || data.address.state || null;
-                    if (p) { currentDetectedRegion = p.replace('Thành phố ', 'TP. ').replace('Tỉnh ', ''); autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; return; }
+                    if (p) {
+                        currentDetectedRegion = p.replace('Thành phố ', 'TP. ').replace('Tỉnh ', '');
+                        autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`;
+                        return; 
+                    }
                 }
-                throw new Error("No data");
+                throw new Error("Không có chi tiết địa giới");
             })
             .catch(() => {
-                if (GAS_API_URL !== "" && !GAS_API_URL.includes("ĐIỀN_URL")) {
+                if (GAS_API_URL !== "") {
                     fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`, { redirect: "follow" })
-                        .then(res => res.json()).then(data => { 
-                            if (data.province && data.province !== "Khu vực mới") { currentDetectedRegion = data.province; autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; } else throw new Error("Empty");
+                        .then(res => res.json())
+                        .then(data => { 
+                            if (data.province && data.province !== "Khu vực mới") {
+                                currentDetectedRegion = data.province; 
+                                autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; 
+                            } else {
+                                throw new Error("Server GAS trả về rỗng");
+                            }
                         })
-                        .catch(() => { currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng); autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`; });
+                        .catch(() => { 
+                            currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
+                            autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
+                        });
                 } else {
-                    currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng); autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
+                    currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
+                    autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
                 }
             });
         }
 
-        // TÍNH NĂNG CHẠM LÊN BẢN ĐỒ CHỈ ĐỂ ZOOM, KHÔNG MỞ CHECK-IN
+        // Tính năng: Chạm lên bản đồ chỉ lướt Camera (Zoom), Tuyệt đối KHÔNG gọi bảng Check-in
         map.on('click', e => {
             map.flyTo(e.latlng, Math.max(map.getZoom() + 2, 10), { duration: 1.2 });
         });
 
-        function closeModal() { modal.classList.remove('active'); }
+        function closeModal() {
+            modal.classList.remove('active');
+        }
 
         function submitCheckIn() {
-            const name = placeNameInput.value.trim(), note = placeNoteInput.value.trim();
+            const name = placeNameInput.value.trim();
+            const note = placeNoteInput.value.trim();
+            
             if (!name) return alert("Vui lòng điền tên địa điểm!");
             
             const btnSubmit = document.querySelector('.btn-submit');
@@ -687,41 +1273,70 @@
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
             
-            // Lưu data tạm thời, url thư mục sẽ được lấy từ API phản hồi
-            const tempSpot = { region: regionName, name: name, lat: currentClickLat, lng: currentClickLng, date: todayStr, note: note, folderUrl: "" };
+            const tempSpot = {
+                region: regionName,
+                name: name,
+                lat: currentClickLat,
+                lng: currentClickLng,
+                date: todayStr,
+                note: note,
+                folderUrl: ""
+            };
+            
             globalSpotsData.push(tempSpot);
             
             const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note);
             
             closeModal(); 
             
-            if (isPhotoView) { renderPhotoLayer(); } else { updateLayerVisibility(); newMarker.openPopup(); }
+            if (isPhotoView) {
+                renderPhotoLayer();
+            } else {
+                updateLayerVisibility();
+                newMarker.openPopup();
+            }
 
             fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`, { redirect: "follow" })
                 .then(res => res.json())
                 .then((respData) => {
-                    btnSubmit.innerHTML = oldText; btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = oldText; 
+                    btnSubmit.disabled = false;
                     showToast(`⚡ Đã tạo Album Drive & lưu "${name}" thành công!`);
                     
-                    // Cập nhật lại Folder Url mới nhận được vào mảng tạm để bấm mở được liền
                     tempSpot.folderUrl = respData.url; 
                     if (isPhotoView) renderPhotoLayer();
 
-                    // Đồng bộ lại Cache
-                    fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" }).then(r => r.json()).then(newData => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData)); });
+                    fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
+                        .then(r => r.json())
+                        .then(newData => {
+                            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
+                        });
                 })
                 .catch(err => { 
                     alert("Lỗi kết nối hoặc lỗi tạo thư mục Drive. Vui lòng kiểm tra lại quyền."); 
-                    btnSubmit.innerHTML = oldText; btnSubmit.disabled = false; 
+                    btnSubmit.innerHTML = oldText; 
+                    btnSubmit.disabled = false; 
                 });
         }
 
-        document.addEventListener('keydown', e => { if (!modal.classList.contains('active')) return; if (e.key === 'Enter') submitCheckIn(); if (e.key === 'Escape') closeModal(); });
+        document.addEventListener('keydown', e => { 
+            if (!modal.classList.contains('active')) return; 
+            if (e.key === 'Enter') submitCheckIn(); 
+            if (e.key === 'Escape') closeModal(); 
+        });
         
-        function forceMapRender() { map.invalidateSize(); if (!isPhotoView) updateLayerVisibility(); }
-        setTimeout(forceMapRender, 100); setTimeout(forceMapRender, 500);
+        function forceMapRender() { 
+            map.invalidateSize(); 
+            if (!isPhotoView) updateLayerVisibility(); 
+        }
         
-        window.addEventListener('load', () => { forceMapRender(); loadDataFromGoogleSheets(); });
+        setTimeout(forceMapRender, 100); 
+        setTimeout(forceMapRender, 500);
+        
+        window.addEventListener('load', () => { 
+            forceMapRender(); 
+            loadDataFromGoogleSheets(); 
+        });
     </script>
 </body>
 </html>

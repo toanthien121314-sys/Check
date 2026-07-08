@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     
+    <!-- CÔNG NGHỆ TRÀN VIỀN -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <!-- TỐI ƯU HÓA PWA APP -->
     <meta name="theme-color" content="#03050a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,6 +14,7 @@
     
     <title>Vietnam Neon Check-in Map</title>
     
+    <!-- THƯ VIỆN BẢN ĐỒ -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -544,16 +547,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden; /* Không cho ảnh zoom tràn ra ngoài */
+            overflow: hidden; 
         }
 
         .lightbox-img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transition: transform 0.2s ease-out; /* Mượt mà khi zoom */
+            transition: transform 0.2s ease-out; 
             transform-origin: center center;
-            touch-action: none; /* Khóa thao tác mặc định để tự quản lý touch */
+            touch-action: none; 
         }
 
         /* Ẩn nút điều hướng trên điện thoại (vì điện thoại vuốt được) */
@@ -706,19 +709,24 @@
 </head>
 <body>
 
+    <!-- MÀN HÌNH TẢI -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
         <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
     </div>
 
+    <!-- THÔNG BÁO TOAST -->
     <div id="syncToast">🔄 Đang đồng bộ dữ liệu ngầm...</div>
 
+    <!-- NÚT PWA -->
     <button id="pwaInstallBtn" class="install-btn">
         📲 Tải Ứng Dụng
     </button>
 
+    <!-- BẢN ĐỒ LEAFLET -->
     <div id="map"></div>
 
+    <!-- CÁC NÚT ĐIỀU KHIỂN CHÍNH (GÓC DƯỚI) -->
     <button id="togglePhotoBtn" class="photo-btn" onclick="togglePhotoView()">
         📸 Ảnh
     </button>
@@ -727,15 +735,18 @@
         🎯 Vị Trí Của Tôi
     </button>
 
+    <!-- THƯ VIỆN ẢNH IN-APP -->
     <div class="gallery-container" id="inAppGallery">
         <div class="gallery-header">
             <div class="gallery-title" id="galleryTitle">Album Ảnh</div>
             <button class="close-gallery-btn" onclick="closeInAppGallery()">Đóng</button>
         </div>
         <div class="gallery-grid" id="galleryGrid">
-            </div>
+            <!-- Ảnh sẽ được hiển thị ở đây -->
+        </div>
     </div>
 
+    <!-- TRÌNH XEM ẢNH FULL SCREEN LIGHTBOX CÓ ĐIỀU HƯỚNG VÀ CẢM ỨNG -->
     <div class="lightbox-overlay" id="lightboxOverlay">
         <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
         <button class="lightbox-nav lightbox-prev" onclick="prevImage(event)">❮</button>
@@ -746,6 +757,7 @@
         </div>
     </div>
 
+    <!-- HỘP THOẠI NHẬP LIỆU CHECK-IN -->
     <div class="modal-overlay" id="checkinModal">
         <div class="modal-box">
             <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
@@ -1044,7 +1056,7 @@
         }
 
         // ==========================================
-        // 4. QUẢN LÝ GIAO DIỆN IN-APP GALLERY VÀ LIGHTBOX CẢM ỨNG
+        // 4. QUẢN LÝ GIAO DIỆN IN-APP GALLERY VÀ LIGHTBOX (100% CHẤT LƯỢNG)
         // ==========================================
         const galleryContainer = document.getElementById('inAppGallery');
         const galleryGrid = document.getElementById('galleryGrid');
@@ -1082,12 +1094,12 @@
 
                     currentAlbumImages = data.images;
 
-                    currentAlbumImages.forEach((imgId, index) => {
-                        // SỬ DỤNG LINK THUMBNAIL CHỐNG CHẶN TỪ GOOGLE DRIVE
-                        const imgUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w1000`;
+                    data.images.forEach((imgId, index) => {
+                        // HIỆN ẢNH THUMBNAIL (w400) TRÊN LƯỚI ĐỂ TẢI NHANH VÀ MƯỢT
+                        const thumbUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w400`;
                         
                         const imgElem = document.createElement('img');
-                        imgElem.src = imgUrl;
+                        imgElem.src = thumbUrl;
                         imgElem.className = 'gallery-item';
                         imgElem.loading = 'lazy';
                         
@@ -1113,7 +1125,8 @@
 
         function updateLightboxImage() {
             const imgId = currentAlbumImages[currentImageIndex];
-            lightboxImg.src = `https://drive.google.com/thumbnail?id=${imgId}&sz=w1000`;
+            // ÉP TẢI ẢNH GỐC 100% (sz=s0) CHO CHẾ ĐỘ XEM FULL MÀN HÌNH
+            lightboxImg.src = `https://drive.google.com/thumbnail?id=${imgId}&sz=s0`;
             resetZoom();
         }
 

@@ -2,10 +2,14 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vietnam Neon Check-in Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <meta name="theme-color" content="#03050a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
+    
+    <title>Vietnam Neon Check-in Map</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,11 +20,15 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh khi nhấn trên điện thoại */
         }
 
+        /* XÓA VỆT TRẮNG: Sử dụng 100dvh để tự động co giãn theo thanh công cụ của trình duyệt Mobile */
         html, body {
             width: 100%;
             height: 100%;
+            min-height: 100vh;
+            min-height: 100dvh; 
             background-color: #03050a;
             color: #fff;
             overflow: hidden;
@@ -30,6 +38,7 @@
         #map {
             width: 100%;
             height: 100%;
+            height: 100dvh;
             position: absolute;
             top: 0;
             left: 0;
@@ -37,16 +46,17 @@
             background: #03050a;
         }
 
+        /* ẨN HOÀN TOÀN THANH BẢN QUYỀN GÓC DƯỚI BÊN PHẢI */
         .leaflet-control-attribution {
             display: none !important;
             opacity: 0 !important;
             visibility: hidden !important;
         }
 
-        /* --- NÚT ĐỊNH VỊ GPS --- */
+        /* Nút Vị trí GPS (Đã hạ xuống một chút để tránh dính Status Bar trên điện thoại) */
         .location-btn {
             position: absolute;
-            top: 20px;
+            top: max(20px, env(safe-area-inset-top)); 
             right: 20px;
             z-index: 1000;
             background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(0, 243, 255, 0.2));
@@ -72,10 +82,10 @@
             transform: scale(1.05);
         }
 
-        /* --- THÀNH PHẦN MỚI: NÚT CÀI ĐẶT ỨNG DỤNG NEON (ẨN MẶC ĐỊNH, HIỆN KHI ĐỦ ĐIỀU KIỆN) --- */
+        /* NÚT CÀI ĐẶT ỨNG DỤNG NEON PWA */
         .install-btn {
             position: absolute;
-            top: 75px;
+            top: max(75px, calc(env(safe-area-inset-top) + 55px));
             right: 20px;
             z-index: 1000;
             background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(255, 0, 127, 0.2));
@@ -89,7 +99,7 @@
             box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 8px rgba(255, 0, 127, 0.2);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
-            display: none; /* Trình duyệt kích hoạt sẽ chuyển thành flex */
+            display: none; /* Hiện bằng JS khi đủ điều kiện */
             align-items: center;
             gap: 6px;
         }
@@ -101,9 +111,10 @@
             transform: scale(1.05);
         }
 
+        /* Thanh thông báo đồng bộ dữ liệu Cyberpunk */
         #syncToast {
             position: absolute;
-            top: 20px;
+            top: max(20px, env(safe-area-inset-top));
             left: 20px;
             z-index: 1000;
             background: rgba(8, 12, 28, 0.9);
@@ -119,6 +130,7 @@
             pointer-events: none;
         }
 
+        /* Tùy chỉnh Nút Zoom phong cách Neon */
         .leaflet-control-zoom a {
             background-color: rgba(6, 10, 25, 0.85) !important;
             color: #00f3ff !important;
@@ -135,6 +147,7 @@
             box-shadow: 0 0 20px #00f3ff !important;
         }
 
+        /* --- HIỆU ỨNG MARKER KHU VỰC (CHẤM NEON + NHÃN TÊN) --- */
         .neon-marker-container {
             position: relative;
             width: 28px;
@@ -167,6 +180,7 @@
             z-index: 1;
         }
 
+        /* Nhãn tên khu vực nhỏ */
         .neon-label {
             position: absolute;
             top: -22px;
@@ -188,6 +202,7 @@
             100% { transform: scale(2.8); opacity: 0; }
         }
 
+        /* --- HIỆU ỨNG MARKER ĐIỂM NHỎ (LÁ CỜ ĐỎ NEON 🚩) --- */
         .red-flag-marker {
             font-size: 24px;
             filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 15px #ff0000);
@@ -198,6 +213,7 @@
             transform: scale(1.3) translateY(-3px);
         }
 
+        /* --- HIỆU ỨNG MARKER VỊ TRÍ CỦA TÔI (GPS CYAN) --- */
         .gps-dot {
             width: 16px; height: 16px;
             background: #00f3ff;
@@ -216,6 +232,7 @@
             z-index: 1;
         }
 
+        /* --- TÙY CHỈNH POPUP THÔNG TIN --- */
         .leaflet-popup-content-wrapper {
             background: rgba(8, 12, 28, 0.95) !important;
             color: #fff !important;
@@ -263,6 +280,7 @@
             box-shadow: 0 0 15px rgba(255, 0, 127, 0.8);
         }
 
+        /* --- CUSTOM MODAL CHECK-IN CHUYÊN NGHIỆP --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -327,6 +345,7 @@
             text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
         }
 
+        /* Màn hình tải ban đầu */
         #loadingOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -354,7 +373,7 @@
             animation: spin 1s linear infinite;
             box-shadow: 0 0 15px #ff007f;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @shadow keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -381,7 +400,7 @@
             <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
             
             <div class="auto-region-badge">
-                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang giải mã tọa độ...</span>
+                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang giải mã...</span>
             </div>
 
             <div class="form-group">
@@ -400,52 +419,45 @@
     </div>
 
     <script>
-        // CẤU HÌNH ĐƯỜNG DẪN WEB APP CỦA GOOGLE APPS SCRIPT
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwXuXX-NVfS2YlO81Qny-CBpPQ1g6zylXtsAH8F-ZrHflhRzZsYOKtKvSAFUb1uUP6e/exec";
+        // ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxGDT5vFFH9wnVEab_QjvrqEfciZXJjNlXlL10ZTbrXkHHlLj-po0ZG88P8GpuvPheX/exec";
 
-        // ĐĂNG KÝ SERVICE WORKER
+        // ĐĂNG KÝ SERVICE WORKER CHO PWA APP
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Registered!', reg))
-                    .catch(err => console.log('SW Registration Failed:', err));
+                    .then(reg => console.log('Service Worker đã kích hoạt!', reg))
+                    .catch(err => console.error('Lỗi khởi chạy SW:', err));
             });
         }
 
-        // --- THÀNH PHẦN MỚI: LOGIC ĐIỀU KHIỂN NÚT BẤM CÀI ĐẶT ỨNG DỤNG PWA ---
+        // BIẾN PROMPT QUẢN LÝ NÚT TẢI ỨNG DỤNG PWA
         let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Ngăn trình duyệt kích hoạt biểu tượng mặc định
             e.preventDefault();
-            // Lưu sự kiện lại để kích hoạt khi người dùng bấm nút
             deferredPrompt = e;
-            // Hiển thị nút bấm Neon của chúng ta lên màn hình
+            installBtn.style.background = "linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(255, 0, 127, 0.2))";
             installBtn.style.display = 'flex';
         });
 
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
-                // Kích hoạt hộp thoại xác nhận cài đặt hệ thống của thiết bị
                 deferredPrompt.prompt();
-                // Chờ đợi lựa chọn của người dùng
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`Lựa chọn của người dùng: ${outcome}`);
-                // Giải phóng bộ nhớ biến prompt (chỉ dùng được một lần duy nhất)
+                console.log(`Kết quả cài đặt: ${outcome}`);
                 deferredPrompt = null;
-                // Ẩn nút sau khi kích hoạt xong
                 installBtn.style.display = 'none';
             }
         });
 
-        // Tự động ẩn nút nếu ứng dụng đã được cài đặt thành công trước đó
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('Ứng dụng đã được cài đặt lên thiết bị!');
+        window.addEventListener('appinstalled', () => {
+            console.log('Ứng dụng đã được cài đặt thành công!');
             installBtn.style.display = 'none';
         });
 
-        // Khởi tạo bản đồ
+        // 1. Khởi tạo bản đồ (Tắt thanh bản quyền mặc định từ gốc)
         const map = L.map('map', {
             center: [16.047079, 108.206230],
             zoom: 6, minZoom: 5, maxZoom: 18, zoomControl: false,
@@ -453,37 +465,33 @@
         });
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-            subdomains: 'abcd',
-            maxZoom: 20
+        // 2. Lớp bản đồ nền Dark Matter mượt mà
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
+            maxZoom: 20 
         }).addTo(map);
 
+        // 3. Khởi tạo cấu trúc Icon
         function createRegionalIcon(regionName) {
-            return L.divIcon({
-                className: 'custom-div-icon',
-                html: `
-                    <div class="neon-marker-container">
-                        <div class="neon-label">${regionName}</div>
-                        <div class="neon-pulse"></div>
-                        <div class="neon-dot"></div>
-                    </div>
-                `,
-                iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14]
+            return L.divIcon({ 
+                className: 'custom-div-icon', 
+                html: `<div class="neon-marker-container"><div class="neon-label">${regionName}</div><div class="neon-pulse"></div><div class="neon-dot"></div></div>`, 
+                iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] 
             });
         }
-
-        const redFlagIcon = L.divIcon({
-            className: 'custom-div-icon',
-            html: `<div class="red-flag-marker">🚩</div>`,
-            iconSize: [28, 28], iconAnchor: [5, 25], popupAnchor: [8, -25]
+        
+        const redFlagIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: `<div class="red-flag-marker">🚩</div>`, 
+            iconSize: [28, 28], iconAnchor: [5, 25], popupAnchor: [8, -25] 
+        });
+        
+        const gpsIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`, 
+            iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] 
         });
 
-        const gpsIcon = L.divIcon({
-            className: 'custom-div-icon',
-            html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`,
-            iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14]
-        });
-
+        // 4. Lớp quản lý dữ liệu bản đồ
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
         const activeRegionsTracker = new Set();
@@ -491,7 +499,7 @@
         function addRegionalMarker(name, lat, lng, desc) {
             const marker = L.marker([lat, lng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
             marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
-            marker.on('click', function() {
+            marker.on('click', () => {
                 map.flyTo([lat, lng], 11, { duration: 1.5 });
             });
             activeRegionsTracker.add(name.trim().toLowerCase());
@@ -504,16 +512,17 @@
                 <div class="popup-info">
                     <p><b>⏰ Thời gian:</b> ${date}</p>
                     <p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p>
-                    <p style="margin-top:4px; font-size: 0.8rem; color: #64748b;">📍 ${lat}, ${lng}</p>
                 </div>
             `;
             marker.bindPopup(content);
             return marker;
         }
 
+        // 5. Đồng bộ và tải dữ liệu từ Google Sheets
         function loadDataFromGoogleSheets() {
-            if (GAS_API_URL === "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
-                addRegionalMarker("TP. Hồ Chí Minh", 10.7769, 106.7009, "Hệ thống đang chạy thử nghiệm Local trên GitHub.");
+            if (GAS_API_URL === "" || GAS_API_URL.includes("ĐIỀN_URL")) {
+                // Chế độ chạy thử nếu chưa có link
+                addRegionalMarker("Vĩnh Long", 10.2537, 105.9722, "Hệ thống đang chạy chế độ Local cấu hình.");
                 document.getElementById('loadingOverlay').style.display = 'none';
                 updateLayerVisibility();
                 return;
@@ -541,19 +550,21 @@
                     }
                     
                     const toast = document.getElementById('syncToast');
-                    toast.innerHTML = `✅ Đã đồng bộ: ${regCount} khu vực & ${spotCount} điểm từ Sheets`;
-                    setTimeout(() => { toast.style.opacity = '0'; }, 5000);
-
+                    toast.innerHTML = `✅ Đã đồng bộ: ${regCount} vùng & ${spotCount} điểm thành công!`;
+                    setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+                    
                     const loader = document.getElementById('loadingOverlay');
-                    loader.style.opacity = '0';
+                    loader.style.opacity = '0'; 
                     setTimeout(() => loader.style.display = 'none', 500);
                     updateLayerVisibility();
                 })
                 .catch(err => {
-                    alert("Lỗi tải dữ liệu từ Google Sheets: " + err);
+                    console.error("Lỗi đồng bộ:", err);
+                    document.getElementById('loadingOverlay').style.display = 'none';
                 });
         }
 
+        // 6. Kiểm soát lớp ẩn hiện theo tầm thu phóng (Zoom Threshold = 9)
         const ZOOM_THRESHOLD = 9;
         function updateLayerVisibility() {
             const currentZoom = map.getZoom();
@@ -567,165 +578,153 @@
         }
         map.on('zoomend', updateLayerVisibility);
 
-        let myLocationMarker = null;
-        let myCurrentLat = 0, myCurrentLng = 0;
-
+        // 7. Định vị GPS liên tục thời gian thực
+        let myLocationMarker = null, myCurrentLat = 0, myCurrentLng = 0;
+        
         function goToMyLocation() {
-            if (!navigator.geolocation) {
-                alert("Trình duyệt của bạn không hỗ trợ định vị GPS!");
-                return;
-            }
+            if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ chip GPS!");
             const btn = document.querySelector('.location-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Đang tìm GPS...";
-
+            const originTxt = btn.innerHTML; 
+            btn.innerHTML = "⏳ Đang quét định vị...";
+            
             navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    myCurrentLat = position.coords.latitude.toFixed(4);
+                position => {
+                    myCurrentLat = position.coords.latitude.toFixed(4); 
                     myCurrentLng = position.coords.longitude.toFixed(4);
+                    
                     if (myLocationMarker) map.removeLayer(myLocationMarker);
-
+                    
                     myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
-                    const popupContent = `
-                        <div class="popup-title">🎯 Vị Trí Của Bạn</div>
-                        <p class="popup-info">Tọa độ: ${myCurrentLat}, ${myCurrentLng}</p>
-                        <button class="btn-gps-checkin" onclick="checkInAtMyLocation()">
-                            🚩 Check-in Ngay Tại Đây!
-                        </button>
-                    `;
-                    myLocationMarker.bindPopup(popupContent);
+                    myLocationMarker.bindPopup(`<div class="popup-title">🎯 Vị Trí Của Bạn</div><button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>`);
+                    
                     map.flyTo([myCurrentLat, myCurrentLng], 14, { duration: 1.5 });
                     setTimeout(() => myLocationMarker.openPopup(), 1600);
-                    btn.innerHTML = originalText;
+                    btn.innerHTML = originTxt;
                 },
-                function(error) {
-                    alert("Không thể lấy vị trí! Vui lòng bật GPS và cấp quyền truy cập vị trí.");
-                    btn.innerHTML = originalText;
+                err => { 
+                    alert("Không thể nhận tín hiệu GPS! Vui lòng bật vị trí."); 
+                    btn.innerHTML = originTxt; 
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         }
 
-        function checkInAtMyLocation() {
-            currentClickLat = myCurrentLat;
-            currentClickLng = myCurrentLng;
-            if (myLocationMarker) myLocationMarker.closePopup();
-            openCheckInModal();
+        function checkInAtMyLocation() { 
+            currentClickLat = myCurrentLat; 
+            currentClickLng = myCurrentLng; 
+            if (myLocationMarker) myLocationMarker.closePopup(); 
+            openCheckInModal(); 
         }
 
-        let currentClickLat = 0, currentClickLng = 0;
-        let currentDetectedRegion = "Việt Nam";
+        // 8. Tương tác đóng mở Modal Nhập dữ liệu
+        let currentClickLat = 0, currentClickLng = 0, currentDetectedRegion = "Việt Nam";
         const modal = document.getElementById('checkinModal');
         const autoRegionText = document.getElementById('autoRegionText');
         const placeNameInput = document.getElementById('placeName');
         const placeNoteInput = document.getElementById('placeNote');
 
         function openCheckInModal() {
-            placeNameInput.value = ''; placeNoteInput.value = '';
-            modal.classList.add('active');
+            placeNameInput.value = ''; 
+            placeNoteInput.value = ''; 
+            modal.classList.add('active'); 
             setTimeout(() => placeNameInput.focus(), 100);
             
-            autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang định vị vệ tinh Google...</span>';
+            autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang định vị vệ tinh Google...</span>'; 
             currentDetectedRegion = "Việt Nam";
-
-            if (GAS_API_URL !== "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
+            
+            if (GAS_API_URL !== "" && !GAS_API_URL.includes("ĐIỀN_URL")) {
                 fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`)
                     .then(res => res.json())
-                    .then(data => {
-                        currentDetectedRegion = data.province;
-                        autoRegionText.innerHTML = `📍 ${data.province}`;
+                    .then(data => { 
+                        currentDetectedRegion = data.province; 
+                        autoRegionText.innerHTML = `📍 ${data.province}`; 
                     })
-                    .catch(() => {
-                        autoRegionText.innerHTML = `📍 Khu vực mới`;
+                    .catch(() => { 
+                        autoRegionText.innerHTML = `📍 Khu vực mới`; 
                     });
             }
         }
 
-        map.on('click', function(e) {
+        // 9. Thuật toán click thông minh: Bản đồ lớn thì zoom nhẹ, bản đồ nhỏ thì bật Check-in
+        map.on('click', e => {
             if (map.getZoom() < ZOOM_THRESHOLD) {
-                const targetZoom = Math.max(map.getZoom() + 3, 10);
-                map.flyTo(e.latlng, targetZoom, { duration: 1.2 });
-                return;
+                return map.flyTo(e.latlng, Math.max(map.getZoom() + 3, 10), { duration: 1.2 });
             }
-            currentClickLat = e.latlng.lat.toFixed(4);
-            currentClickLng = e.latlng.lng.toFixed(4);
+            currentClickLat = e.latlng.lat.toFixed(4); 
+            currentClickLng = e.latlng.lng.toFixed(4); 
             openCheckInModal();
         });
 
         function closeModal() { modal.classList.remove('active'); }
 
+        // 10. Xử lý gửi dữ liệu lên Google Sheets
         function submitCheckIn() {
             const name = placeNameInput.value.trim();
             const note = placeNoteInput.value.trim();
-            if (!name) { alert("Vui lòng nhập tên địa điểm!"); placeNameInput.focus(); return; }
-
+            if (!name) return alert("Vui lòng điền tên địa điểm!");
+            
             const btnSubmit = document.querySelector('.btn-submit');
             const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang ghi vào Sheets...";
+            btnSubmit.innerHTML = "⏳ Đang ghi vào Sheets..."; 
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
             const regionKey = regionName.trim().toLowerCase();
             
+            // Vẽ giao diện ngay lập tức trước khi nhận phản hồi từ mạng (Optimistic UI)
             if (!activeRegionsTracker.has(regionKey)) {
-                addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực được tạo tự động từ điểm check-in chi tiết! 🏙️`);
+                addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
             }
-
-            const today = new Date().toLocaleDateString('vi-VN');
-            const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, today, note);
             
-            closeModal();
-            updateLayerVisibility();
+            const t = new Date();
+            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
+            const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note);
+            
+            closeModal(); 
+            updateLayerVisibility(); 
             newMarker.openPopup();
 
-            if (GAS_API_URL !== "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
-                const saveUrl = `${GAS_API_URL}?action=save` +
-                    `&regionName=${encodeURIComponent(regionName)}` +
-                    `&placeName=${encodeURIComponent(name)}` +
-                    `&lat=${currentClickLat}` +
-                    `&lng=${currentClickLng}` +
-                    `&date=${encodeURIComponent(today)}` +
-                    `&note=${encodeURIComponent(note)}`;
-
-                fetch(saveUrl)
+            if (GAS_API_URL !== "" && !GAS_API_URL.includes("ĐIỀN_URL")) {
+                fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`)
                     .then(res => res.json())
                     .then(() => {
-                        btnSubmit.innerHTML = oldText;
+                        btnSubmit.innerHTML = oldText; 
                         btnSubmit.disabled = false;
-                        const toast = document.getElementById('syncToast');
-                        toast.style.opacity = '1';
-                        toast.innerHTML = `⚡ Đã lưu "${name}" chuẩn 100% vào Sheets!`;
-                        setTimeout(() => { toast.style.opacity = '0'; }, 4000);
+                        const toast = document.getElementById('syncToast'); 
+                        toast.style.opacity = '1'; 
+                        toast.innerHTML = `⚡ Đã lưu "${name}" thành công!`; 
+                        setTimeout(() => toast.style.opacity = '0', 3000);
                     })
-                    .catch(err => {
-                        alert("Lỗi khi ghi vào Google Sheets: " + err);
-                        btnSubmit.innerHTML = oldText;
-                        btnSubmit.disabled = false;
+                    .catch(err => { 
+                        alert("Lỗi ghi nhận dữ liệu: " + err); 
+                        btnSubmit.innerHTML = oldText; 
+                        btnSubmit.disabled = false; 
                     });
-            } else {
-                btnSubmit.innerHTML = oldText;
-                btnSubmit.disabled = false;
+            } else { 
+                btnSubmit.innerHTML = oldText; 
+                btnSubmit.disabled = false; 
             }
         }
 
-        document.addEventListener('keydown', function(e) {
-            if (!modal.classList.contains('active')) return;
-            if (e.key === 'Enter') submitCheckIn();
-            if (e.key === 'Escape') closeModal();
+        // Sự kiện phím bấm tắt nhanh cho Modal
+        document.addEventListener('keydown', e => { 
+            if (!modal.classList.contains('active')) return; 
+            if (e.key === 'Enter') submitCheckIn(); 
+            if (e.key === 'Escape') closeModal(); 
         });
-
-        function forceMapRender() {
-            map.invalidateSize();
-            updateLayerVisibility();
+        
+        // 11. Khắc phục triệt để lỗi tính toán kích thước ô lưới iframe của GAS
+        function forceMapRender() { 
+            map.invalidateSize(); 
+            updateLayerVisibility(); 
         }
-
-        setTimeout(forceMapRender, 100);
+        setTimeout(forceMapRender, 100); 
         setTimeout(forceMapRender, 500);
         setTimeout(forceMapRender, 1500);
         
-        window.addEventListener('load', function() {
-            forceMapRender();
-            loadDataFromGoogleSheets();
+        window.addEventListener('load', () => { 
+            forceMapRender(); 
+            loadDataFromGoogleSheets(); 
         });
     </script>
 </body>

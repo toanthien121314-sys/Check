@@ -43,6 +43,7 @@
             visibility: hidden !important;
         }
 
+        /* --- NÚT ĐỊNH VỊ GPS --- */
         .location-btn {
             position: absolute;
             top: 20px;
@@ -68,6 +69,35 @@
             background: #00f3ff;
             color: #000;
             box-shadow: 0 0 25px #00f3ff;
+            transform: scale(1.05);
+        }
+
+        /* --- THÀNH PHẦN MỚI: NÚT CÀI ĐẶT ỨNG DỤNG NEON (ẨN MẶC ĐỊNH, HIỆN KHI ĐỦ ĐIỀU KIỆN) --- */
+        .install-btn {
+            position: absolute;
+            top: 75px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(255, 0, 127, 0.2));
+            color: #ff007f;
+            border: 1.5px solid #ff007f;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 8px rgba(255, 0, 127, 0.2);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            display: none; /* Trình duyệt kích hoạt sẽ chuyển thành flex */
+            align-items: center;
+            gap: 6px;
+        }
+
+        .install-btn:hover {
+            background: #ff007f;
+            color: #fff;
+            box-shadow: 0 0 25px #ff007f;
             transform: scale(1.05);
         }
 
@@ -340,6 +370,10 @@
         🎯 Vị Trí Của Tôi
     </button>
 
+    <button id="pwaInstallBtn" class="install-btn">
+        📲 Tải Ứng Dụng
+    </button>
+
     <div id="map"></div>
 
     <div class="modal-overlay" id="checkinModal">
@@ -367,18 +401,51 @@
 
     <script>
         // CẤU HÌNH ĐƯỜNG DẪN WEB APP CỦA GOOGLE APPS SCRIPT
-        // Bạn dán đường dẫn Web App URL vừa Triển khai mới (ở Bước 3) vào đây
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwXuXX-NVfS2YlO81Qny-CBpPQ1g6zylXtsAH8F-ZrHflhRzZsYOKtKvSAFUb1uUP6e/exec";
 
-        // KÍCH HOẠT ĐĂNG KÝ SERVICE WORKER (BỘ PHỤC VỤ CHẠY NỀN PWA)
+        // ĐĂNG KÝ SERVICE WORKER
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('PWA Service Worker đã đăng ký thành công!', reg))
-                    .catch(err => console.log('Lỗi đăng ký Service Worker:', err));
+                    .then(reg => console.log('SW Registered!', reg))
+                    .catch(err => console.log('SW Registration Failed:', err));
             });
         }
 
+        // --- THÀNH PHẦN MỚI: LOGIC ĐIỀU KHIỂN NÚT BẤM CÀI ĐẶT ỨNG DỤNG PWA ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('pwaInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Ngăn trình duyệt kích hoạt biểu tượng mặc định
+            e.preventDefault();
+            // Lưu sự kiện lại để kích hoạt khi người dùng bấm nút
+            deferredPrompt = e;
+            // Hiển thị nút bấm Neon của chúng ta lên màn hình
+            installBtn.style.display = 'flex';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Kích hoạt hộp thoại xác nhận cài đặt hệ thống của thiết bị
+                deferredPrompt.prompt();
+                // Chờ đợi lựa chọn của người dùng
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Lựa chọn của người dùng: ${outcome}`);
+                // Giải phóng bộ nhớ biến prompt (chỉ dùng được một lần duy nhất)
+                deferredPrompt = null;
+                // Ẩn nút sau khi kích hoạt xong
+                installBtn.style.display = 'none';
+            }
+        });
+
+        // Tự động ẩn nút nếu ứng dụng đã được cài đặt thành công trước đó
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('Ứng dụng đã được cài đặt lên thiết bị!');
+            installBtn.style.display = 'none';
+        });
+
+        // Khởi tạo bản đồ
         const map = L.map('map', {
             center: [16.047079, 108.206230],
             zoom: 6, minZoom: 5, maxZoom: 18, zoomControl: false,
@@ -444,7 +511,6 @@
             return marker;
         }
 
-        // CẢI TIẾN LÀM MỚI: Sử dụng API fetch để đồng bộ dữ liệu chéo máy chủ về GitHub
         function loadDataFromGoogleSheets() {
             if (GAS_API_URL === "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
                 addRegionalMarker("TP. Hồ Chí Minh", 10.7769, 106.7009, "Hệ thống đang chạy thử nghiệm Local trên GitHub.");
@@ -554,7 +620,6 @@
         const placeNameInput = document.getElementById('placeName');
         const placeNoteInput = document.getElementById('placeNote');
 
-        // CẢI TIẾN LÀM MỚI: Gọi API phân tích địa giới chuẩn 100% qua máy chủ Google Maps từ GitHub
         function openCheckInModal() {
             placeNameInput.value = ''; placeNoteInput.value = '';
             modal.classList.add('active');
@@ -589,7 +654,6 @@
 
         function closeModal() { modal.classList.remove('active'); }
 
-        // CẢI TIẾN LÀM MỚI: Đẩy dữ liệu ghi nhận check-in mới về máy chủ Sheets bằng fetch API
         function submitCheckIn() {
             const name = placeNameInput.value.trim();
             const note = placeNoteInput.value.trim();

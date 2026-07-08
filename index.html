@@ -1037,17 +1037,22 @@
         }
 
         // Vẽ các Khung Album lên bản đồ
+// ==========================================
+        // VẼ KHUNG ALBUM VÀ TỰ ĐỘNG TẢI ẢNH BÌA NGẦM
+        // ==========================================
         function renderPhotoLayer() {
             photoLayer.clearLayers();
             
-            globalSpotsData.forEach(spot => {
-                const mockPhotoCount = "🖼️";
+            globalSpotsData.forEach((spot, index) => {
+                // Tạo ID duy nhất cho từng Khung và Badge để dễ dàng cập nhật ảnh ngầm
+                const markerId = `album-cover-${index}`;
+                const badgeId = `album-badge-${index}`;
                 
                 const photoIcon = L.divIcon({
                     className: 'custom-photo-icon',
                     html: `
-                        <div class="photo-album-marker">
-                            <div class="photo-album-badge">${mockPhotoCount}</div>
+                        <div class="photo-album-marker" id="${markerId}">
+                            <div class="photo-album-badge" id="${badgeId}">⏳</div>
                         </div>
                     `,
                     iconSize: [65, 65],
@@ -1063,6 +1068,37 @@
                         alert(`Chưa có Album cho [${spot.name}] hoặc đang đồng bộ!`);
                     }
                 });
+
+                // CHẠY NGẦM: Yêu cầu Drive trả về danh sách ảnh để làm Ảnh Bìa
+                if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
+                    fetch(`${GAS_API_URL}?action=getPhotos&folderUrl=${encodeURIComponent(spot.folderUrl)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const markerEl = document.getElementById(markerId);
+                            const badgeEl = document.getElementById(badgeId);
+                            
+                            if (data.images && data.images.length > 0) {
+                                // 1. Hiện tổng số lượng ảnh trong Album
+                                if (badgeEl) badgeEl.innerText = data.images.length; 
+                                
+                                // 2. Lấy tấm ảnh đầu tiên làm Ảnh Bìa (dùng size nhỏ w200 để load siêu nhanh)
+                                if (markerEl) {
+                                    const coverId = data.images[0]; 
+                                    markerEl.style.backgroundImage = `url('https://drive.google.com/thumbnail?id=${coverId}&sz=w200')`;
+                                }
+                            } else {
+                                // Nếu thư mục chưa có ảnh
+                                if (badgeEl) badgeEl.innerText = "0"; 
+                            }
+                        })
+                        .catch(err => {
+                            const badgeEl = document.getElementById(badgeId);
+                            if (badgeEl) badgeEl.innerText = "!";
+                        });
+                } else {
+                    const badgeEl = document.getElementById(badgeId);
+                    if (badgeEl) badgeEl.innerText = "0";
+                }
             });
         }
 

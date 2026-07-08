@@ -51,7 +51,6 @@
             visibility: hidden !important;
         }
 
-        /* --- NÚT VỊ TRÍ GPS (GÓC DƯỚI PHẢI) --- */
         .location-btn {
             position: absolute;
             bottom: max(30px, env(safe-area-inset-bottom)); 
@@ -80,14 +79,13 @@
             transform: scale(1.05);
         }
 
-        /* --- TÍNH NĂNG MỚI: NÚT PHOTO (GÓC DƯỚI TRÁI TẠO SỰ ĐỐI XỨNG) --- */
         .photo-btn {
             position: absolute;
             bottom: max(30px, env(safe-area-inset-bottom)); 
             left: 20px;
             z-index: 1000;
             background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(189, 0, 255, 0.2));
-            color: #bd00ff; /* Tông màu tím/hồng neon để phân biệt với xanh GPS */
+            color: #bd00ff; 
             border: 1.5px solid #bd00ff;
             padding: 12px 18px; 
             border-radius: 30px;
@@ -109,7 +107,6 @@
             transform: scale(1.05);
         }
 
-        /* Nút Cài đặt ứng dụng PWA (Góc trên phải) */
         .install-btn {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -138,7 +135,6 @@
             transform: scale(1.05);
         }
 
-        /* Thanh thông báo đồng bộ dữ liệu Cyberpunk */
         #syncToast {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -158,7 +154,6 @@
             pointer-events: none;
         }
 
-        /* --- HIỆU ỨNG MARKER KHU VỰC LỚN --- */
         .neon-marker-container {
             position: relative;
             width: 28px;
@@ -166,6 +161,7 @@
             display: flex;
             justify-content: center;
         }
+
         .neon-dot {
             width: 18px;
             height: 18px;
@@ -178,6 +174,7 @@
             z-index: 2;
             cursor: pointer;
         }
+
         .neon-pulse {
             width: 28px;
             height: 28px;
@@ -188,6 +185,7 @@
             animation: ripple 1.8s infinite ease-out;
             z-index: 1;
         }
+
         .neon-label {
             position: absolute;
             top: -22px;
@@ -203,12 +201,12 @@
             border-radius: 10px;
             border: 1px solid rgba(0, 243, 255, 0.4);
         }
+
         @keyframes ripple {
             0% { transform: scale(0.8); opacity: 1; }
             100% { transform: scale(2.8); opacity: 0; }
         }
 
-        /* --- HIỆU ỨNG MARKER ĐIỂM NHỎ (CỜ ĐỎ) --- */
         .red-flag-marker {
             font-size: 24px;
             filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 15px #ff0000);
@@ -219,14 +217,12 @@
             transform: scale(1.3) translateY(-3px);
         }
 
-        /* --- UI ALBUM ẢNH (GIỐNG IPHONE) DÀNH CHO TÍNH NĂNG PHOTO --- */
         .photo-album-marker {
             width: 65px;
             height: 65px;
             border-radius: 12px;
             border: 2px solid #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.6), 0 0 15px rgba(189, 0, 255, 0.5);
-            /* Gradient tạm thời (sau này bạn truyền url ảnh thật vào thuộc tính background-image) */
             background: linear-gradient(45deg, #101026, #2a2a72);
             background-size: cover;
             background-position: center;
@@ -251,7 +247,6 @@
             backdrop-filter: blur(3px);
         }
 
-        /* --- HIỆU ỨNG VỊ TRÍ GPS --- */
         .gps-dot {
             width: 16px; height: 16px;
             background: #00f3ff;
@@ -270,7 +265,6 @@
             z-index: 1;
         }
 
-        /* --- TÙY CHỈNH POPUP --- */
         .leaflet-popup-content-wrapper { background: rgba(8, 12, 28, 0.95) !important; color: #fff !important; border: 1px solid #00f3ff; box-shadow: 0 0 20px rgba(0, 243, 255, 0.5); border-radius: 12px !important; backdrop-filter: blur(8px); padding: 5px; }
         .leaflet-popup-tip { background: rgba(8, 12, 28, 0.95) !important; border-bottom: 1px solid #00f3ff; border-right: 1px solid #00f3ff; }
         .popup-title { color: #00f3ff; font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; text-shadow: 0 0 8px rgba(0, 243, 255, 0.6); border-bottom: 1px dashed rgba(0, 243, 255, 0.3); padding-bottom: 5px; }
@@ -295,7 +289,6 @@
         .auto-region-badge { background: rgba(0, 243, 255, 0.08); border: 1px dashed rgba(0, 243, 255, 0.5); padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; color: #a5b4fc; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
         .auto-region-badge span { color: #00f3ff; font-weight: bold; text-shadow: 0 0 5px rgba(0, 243, 255, 0.5); }
 
-        /* Màn hình tải ban đầu */
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #03050a; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
         .loading-text { color: #00f3ff; font-size: 1.2rem; font-weight: bold; text-shadow: 0 0 15px #00f3ff; margin-top: 15px; letter-spacing: 1px; }
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(0, 243, 255, 0.2); border-top: 4px solid #ff007f; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px #ff007f; }
@@ -349,8 +342,8 @@
     </div>
 
     <script>
-        // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxi1zleHFDMAOzao3qv5T3tgrcFyInm6YonNUTQOeixlHt-4cWr1LyUmnP5HeDfsuzi/exec";
+        // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (SAU KHI ĐÃ CẤP QUYỀN DRIVE)
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbycKloWmQ6Hx9HXIdndXAlbT78cCcT8PviY9dX_bt5D3Rg17xklGg7aJgcMjfRwW22K/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
 
         if ('serviceWorker' in navigator) {
@@ -416,14 +409,13 @@
             { name: "Thái Bình", lat: 20.4500, lng: 106.3333 }, { name: "Nam Định", lat: 20.9333, lng: 106.3167 }, { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
-        // KHỞI TẠO CÁC LỚP BẢN ĐỒ
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
-        const photoLayer = L.layerGroup(); // LỚP DÀNH RIÊNG CHO TÍNH NĂNG ẢNH
+        const photoLayer = L.layerGroup(); 
         
         const activeRegionsTracker = new Set();
-        let globalSpotsData = []; // Biến lưu trữ toàn bộ điểm để vẽ giao diện Ảnh
-        let isPhotoView = false; // Cờ kiểm soát trạng thái Đang xem ảnh hay Xem Map
+        let globalSpotsData = []; 
+        let isPhotoView = false; 
 
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
@@ -456,21 +448,20 @@
                 data.regions.forEach(reg => addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc));
             }
             if (data && data.spots) {
-                globalSpotsData = data.spots; // Lưu lại để dùng cho chế độ Ảnh
+                globalSpotsData = data.spots; 
                 data.spots.forEach(spot => {
                     addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
                     spotCount++;
                 });
             }
             
-            // Nếu đang ở chế độ ảnh, gọi hàm vẽ lại ảnh để tránh đè layer
             if (isPhotoView) renderPhotoLayer();
             else updateLayerVisibility();
 
             return { regCount: activeRegionsTracker.size, spotCount };
         }
 
-        // --- TÍNH NĂNG MỚI: CHUYỂN ĐỔI CHẾ ĐỘ MAP <-> PHOTO ALBUM ---
+        // TÍNH NĂNG CHUYỂN ĐỔI CHẾ ĐỘ MAP <-> PHOTO ALBUM
         function togglePhotoView() {
             isPhotoView = !isPhotoView;
             const btn = document.getElementById('togglePhotoBtn');
@@ -479,30 +470,26 @@
                 btn.classList.add('active');
                 btn.innerHTML = '🔙 Tắt Ảnh';
 
-                // Ẩn sạch các cờ đỏ và chấm neon
                 if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer);
                 if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
 
-                renderPhotoLayer(); // Vẽ các khung album lên
+                renderPhotoLayer(); 
                 map.addLayer(photoLayer);
             } else {
                 btn.classList.remove('active');
                 btn.innerHTML = '📸 Ảnh';
 
-                // Ẩn lớp ảnh đi
                 if (map.hasLayer(photoLayer)) map.removeLayer(photoLayer);
-
-                // Khôi phục bản đồ Check-in thường tùy theo mức Zoom hiện tại
                 updateLayerVisibility();
             }
         }
 
+        // TÍNH NĂNG MỞ ALBUM ẢNH GOOGLE DRIVE
         function renderPhotoLayer() {
             photoLayer.clearLayers();
             
             globalSpotsData.forEach(spot => {
-                // Tạm thời hiển thị số ngẫu nhiên (1-200) làm số lượng ảnh trong Album, và gradient nền
-                const mockPhotoCount = Math.floor(Math.random() * 200) + 1;
+                const mockPhotoCount = "🖼️";
                 
                 const photoIcon = L.divIcon({
                     className: 'custom-photo-icon',
@@ -517,13 +504,11 @@
 
                 const marker = L.marker([spot.lat, spot.lng], { icon: photoIcon }).addTo(photoLayer);
                 
-                // THAY BẰNG ĐOẠN NÀY:
                 marker.on('click', () => {
-                    if (spot.folderUrl && spot.folderUrl !== "") {
-                        // Mở thẳng link thư mục Google Drive trong Tab mới
-                        window.open(spot.folderUrl, '_blank');
+                    if (spot.folderUrl && spot.folderUrl !== "" && spot.folderUrl !== "Lỗi Drive") {
+                        window.open(spot.folderUrl, '_blank'); // Mở Tab tới thẳng Folder Drive
                     } else {
-                        alert(`Album của [${spot.name}] đang được đồng bộ, vui lòng thử lại sau ít giây!`);
+                        alert(`Album của [${spot.name}] đang được đồng bộ hoặc gặp lỗi khi tạo. Hãy kiểm tra lại Google Drive của bạn!`);
                     }
                 });
             });
@@ -579,7 +564,7 @@
 
         const ZOOM_THRESHOLD = 9;
         function updateLayerVisibility() {
-            if (isPhotoView) return; // Không can thiệp nếu đang ở chế độ xem Ảnh
+            if (isPhotoView) return; 
 
             const currentZoom = map.getZoom();
             if (currentZoom < ZOOM_THRESHOLD) {
@@ -612,7 +597,6 @@
                     
                     myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
                     
-                    // CHỈ CÓ NÚT VỊ TRÍ NÀY MỚI KÍCH HOẠT CHECK-IN ĐƯỢC
                     myLocationMarker.bindPopup(`<div class="popup-title">🎯 Vị Trí Của Bạn</div><button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>`);
                     
                     map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1 });
@@ -677,9 +661,8 @@
             });
         }
 
-        // TÍNH NĂNG CHẠM LÊN BẢN ĐỒ CHỈ ĐỂ ZOOM, KHÔNG MỞ CHECK-IN (CHỐNG CHẠM NHẦM)
+        // TÍNH NĂNG CHẠM LÊN BẢN ĐỒ CHỈ ĐỂ ZOOM, KHÔNG MỞ CHECK-IN
         map.on('click', e => {
-            // Dù ở mức zoom nào, nếu người dùng bấm lên khoảng trống bản đồ thì chỉ trượt camera đến đó (không hiện bảng check-in)
             map.flyTo(e.latlng, Math.max(map.getZoom() + 2, 10), { duration: 1.2 });
         });
 
@@ -691,7 +674,7 @@
             
             const btnSubmit = document.querySelector('.btn-submit');
             const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang ghi vào Sheets..."; 
+            btnSubmit.innerHTML = "⏳ Đang tạo Album Drive..."; 
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
@@ -701,25 +684,31 @@
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
             
-// THAY BẰNG ĐOẠN NÀY (Thêm folderUrl rỗng chờ đồng bộ):
-            globalSpotsData.push({ region: regionName, name: name, lat: currentClickLat, lng: currentClickLng, date: todayStr, note: note, folderUrl: "" });
+            // Lưu data tạm thời, url thư mục sẽ được lấy từ API phản hồi
+            const tempSpot = { region: regionName, name: name, lat: currentClickLat, lng: currentClickLng, date: todayStr, note: note, folderUrl: "" };
+            globalSpotsData.push(tempSpot);
             
             const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note);
             
             closeModal(); 
             
-            // Nếu đang xem Photo thì phải cập nhật lại Photo, nếu xem Map thì cập nhật Map
             if (isPhotoView) { renderPhotoLayer(); } else { updateLayerVisibility(); newMarker.openPopup(); }
 
             fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`, { redirect: "follow" })
                 .then(res => res.json())
-                .then(() => {
+                .then((respData) => {
                     btnSubmit.innerHTML = oldText; btnSubmit.disabled = false;
-                    showToast(`⚡ Đã lưu "${name}" đồng bộ mây thành công!`);
+                    showToast(`⚡ Đã tạo Album Drive & lưu "${name}" thành công!`);
+                    
+                    // Cập nhật lại Folder Url mới nhận được vào mảng tạm để bấm mở được liền
+                    tempSpot.folderUrl = respData.url; 
+                    if (isPhotoView) renderPhotoLayer();
+
+                    // Đồng bộ lại Cache
                     fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" }).then(r => r.json()).then(newData => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData)); });
                 })
                 .catch(err => { 
-                    alert("Lỗi kết nối khi lưu: Mạng yếu. Dữ liệu đã được vẽ tạm lên bản đồ."); 
+                    alert("Lỗi kết nối hoặc lỗi tạo thư mục Drive. Vui lòng kiểm tra lại quyền."); 
                     btnSubmit.innerHTML = oldText; btnSubmit.disabled = false; 
                 });
         }

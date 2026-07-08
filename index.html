@@ -393,7 +393,7 @@
     </div>
 
     <script>
-        // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (Dán URL của bạn vào đây)
+        // 🔴 ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxGDT5vFFH9wnVEab_QjvrqEfciZXJjNlXlL10ZTbrXkHHlLj-po0ZG88P8GpuvPheX/exec";
 
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
@@ -556,7 +556,6 @@
             }
         }
 
-        // CẢI TIẾN FETCH BẰNG REDIRECT 'FOLLOW' ĐỂ VƯỢT RÀO CẢN BẢO MẬT TRÌNH DUYỆT DI ĐỘNG
         function loadDataFromGoogleSheets() {
             const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
             let hasCache = false;
@@ -573,7 +572,6 @@
 
             setTimeout(hideLoadingScreen, 4000);
 
-            // Thêm { redirect: "follow" } để đảm bảo trình duyệt tự đi theo link chuyển hướng của Google
             fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
                 .then(res => {
                     if (!res.ok) throw new Error("Mạng lỗi hoặc sai link");
@@ -705,7 +703,7 @@
                                 currentDetectedRegion = data.province; 
                                 autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; 
                             } else {
-                                throw new Error("GAS rỗng");
+                                throw new Error("GAS trả về rỗng");
                             }
                         })
                         .catch(() => { 
@@ -719,13 +717,11 @@
             });
         }
 
+        // TÍNH NĂNG CHẠM LÊN BẢN ĐỒ CHỈ ĐỂ ZOOM, KHÔNG MỞ CHECK-IN (CHỐNG CHẠM NHẦM)
         map.on('click', e => {
             if (map.getZoom() < ZOOM_THRESHOLD) {
-                return map.flyTo(e.latlng, Math.max(map.getZoom() + 3, 10), { duration: 1.2 });
+                map.flyTo(e.latlng, Math.max(map.getZoom() + 3, 10), { duration: 1.2 });
             }
-            currentClickLat = e.latlng.lat.toFixed(4); 
-            currentClickLng = e.latlng.lng.toFixed(4); 
-            openCheckInModal();
         });
 
         function closeModal() { modal.classList.remove('active'); }
@@ -741,6 +737,7 @@
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
+            const regionKey = regionName.trim().toLowerCase();
             
             addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
             

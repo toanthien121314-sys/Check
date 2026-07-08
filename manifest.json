@@ -1,11 +1,12 @@
 {
-  "name": "Meow Health",
-  "short_name": "Meow Health",
+  "name": "Vietnam Neon Check-in Map",
+  "short_name": "NeonMap",
+  "description": "Bản đồ check-in phong cách Neon Cyberpunk Việt Nam",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#F0F4F8",
-  "theme_color": "#FF8C00",
-  "orientation": "portrait",
+  "background_color": "#03050a",
+  "theme_color": "#03050a",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icon-192.png",

@@ -53,19 +53,19 @@
             visibility: hidden !important;
         }
 
-        /* Nút Vị trí GPS */
+        /* ĐÃ CHUYỂN XUỐNG GÓC DƯỚI BÊN PHẢI: Nút Vị trí GPS */
         .location-btn {
             position: absolute;
-            top: max(20px, env(safe-area-inset-top)); 
+            bottom: max(30px, env(safe-area-inset-bottom)); /* Chuyển xuống đáy, cách mép dưới 30px */
             right: 20px;
             z-index: 1000;
             background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(0, 243, 255, 0.2));
             color: #00f3ff;
             border: 1.5px solid #00f3ff;
-            padding: 10px 16px;
+            padding: 12px 18px; /* Làm nút to ra 1 chút để dễ bấm bằng ngón tay cái */
             border-radius: 30px;
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             cursor: pointer;
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 8px rgba(0, 243, 255, 0.2);
             backdrop-filter: blur(5px);
@@ -82,10 +82,10 @@
             transform: scale(1.05);
         }
 
-        /* NÚT CÀI ĐẶT ỨNG DỤNG NEON PWA */
+        /* NÚT CÀI ĐẶT ỨNG DỤNG NEON PWA (Chuyển lên góc trên bên phải thay chỗ GPS cũ) */
         .install-btn {
             position: absolute;
-            top: max(75px, calc(env(safe-area-inset-top) + 55px));
+            top: max(20px, env(safe-area-inset-top));
             right: 20px;
             z-index: 1000;
             background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(255, 0, 127, 0.2));
@@ -99,7 +99,7 @@
             box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 8px rgba(255, 0, 127, 0.2);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
-            display: none; 
+            display: none; /* Hiện bằng JS khi đủ điều kiện */
             align-items: center;
             gap: 6px;
         }
@@ -129,23 +129,6 @@
             transition: opacity 0.5s ease;
             opacity: 0; /* Mặc định ẩn, điều khiển bằng JS */
             pointer-events: none;
-        }
-
-        /* Tùy chỉnh Nút Zoom phong cách Neon */
-        .leaflet-control-zoom a {
-            background-color: rgba(6, 10, 25, 0.85) !important;
-            color: #00f3ff !important;
-            border: 1px solid #00f3ff !important;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4) !important;
-            font-weight: bold;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-        }
-
-        .leaflet-control-zoom a:hover {
-            background-color: #00f3ff !important;
-            color: #000 !important;
-            box-shadow: 0 0 20px #00f3ff !important;
         }
 
         /* --- HIỆU ỨNG MARKER KHU VỰC (CHẤM NEON + NHÃN TÊN) --- */
@@ -388,15 +371,15 @@
 
     <div id="syncToast">🔄 Đang đồng bộ dữ liệu ngầm...</div>
 
-    <button class="location-btn" onclick="goToMyLocation()">
-        🎯 Vị Trí Của Tôi
-    </button>
-
     <button id="pwaInstallBtn" class="install-btn">
         📲 Tải Ứng Dụng
     </button>
 
     <div id="map"></div>
+
+    <button class="location-btn" onclick="goToMyLocation()">
+        🎯 Vị Trí Của Tôi
+    </button>
 
     <div class="modal-overlay" id="checkinModal">
         <div class="modal-box">
@@ -422,7 +405,7 @@
     </div>
 
     <script>
-        // ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (GIỮ NGUYÊN)
+        // ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxGDT5vFFH9wnVEab_QjvrqEfciZXJjNlXlL10ZTbrXkHHlLj-po0ZG88P8GpuvPheX/exec";
 
         // Khóa lưu đệm nội bộ (Local Storage Key)
@@ -462,12 +445,13 @@
         });
 
         // 1. Khởi tạo bản đồ (Tắt thanh bản quyền mặc định từ gốc)
+        // ĐÃ XÓA L.control.zoom ĐỂ BỎ 2 NÚT + / - THEO YÊU CẦU
         const map = L.map('map', {
             center: [16.047079, 108.206230],
-            zoom: 6, minZoom: 5, maxZoom: 18, zoomControl: false,
-            attributionControl: false
+            zoom: 6, minZoom: 5, maxZoom: 18, 
+            zoomControl: false, // Tắt zoom control mặc định
+            attributionControl: false // Tắt bản quyền OSM/CARTO
         });
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         // 2. Lớp bản đồ nền Dark Matter mượt mà
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
@@ -563,7 +547,7 @@
 
         // 5. CHIẾN LƯỢC ĐỒNG BỘ: STALE-WHILE-REVALIDATE (ĐỌC CACHE TỨC THÌ -> FETCH SAU)
         function loadDataFromGoogleSheets() {
-            // Bước 1: Đọc Local Storage ngay lập tức để người dùng xem luôn
+            // Bước 1: Đọc Local Storage ngay lập tức
             const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
             let hasCache = false;
 
@@ -571,28 +555,25 @@
                 try {
                     const cachedData = JSON.parse(cachedDataStr);
                     renderDataToMap(cachedData);
-                    hideLoadingScreen(); // Ẩn màn hình loading đen ngay tắp lự!
+                    hideLoadingScreen(); 
                     hasCache = true;
-                    showToast('🔄 Đang đồng bộ dữ liệu ngầm...', 0); // Hiện toast quay ngầm
+                    showToast('🔄 Đang đồng bộ dữ liệu ngầm...', 0); 
                 } catch(e) {
                     console.error("Lỗi khi đọc cache:", e);
                 }
             }
 
-            // Timeout An toàn 4 giây: Nếu tải quá lâu (trường hợp load lần đầu không có cache), ẩn đen để báo lỗi
+            // Timeout An toàn 4 giây: Nếu mạng lag quá thì tự bỏ màn hình loading đen
             setTimeout(hideLoadingScreen, 4000);
 
-            // Bước 2: Gọi mạng ngầm lên Google Sheets để đối chiếu dữ liệu 2 thiết bị
+            // Bước 2: Gọi mạng ngầm lên Google Sheets
             fetch(`${GAS_API_URL}?action=get`)
                 .then(res => res.json())
                 .then(data => {
-                    // Lưu dữ liệu mới tinh vào bộ đệm nội bộ
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-                    
-                    // Cập nhật lại bản đồ bằng dữ liệu thật (đã gồm điểm check-in từ thiết bị khác)
                     const counts = renderDataToMap(data);
                     
-                    if (!hasCache) hideLoadingScreen(); // Nếu chưa có cache (lần mở đầu tiên), giờ mới ẩn loading
+                    if (!hasCache) hideLoadingScreen(); 
                     
                     showToast(`✅ Đã đồng bộ: ${counts.regCount} vùng & ${counts.spotCount} điểm`);
                 })
@@ -624,7 +605,7 @@
             if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ chip GPS!");
             const btn = document.querySelector('.location-btn');
             const originTxt = btn.innerHTML; 
-            btn.innerHTML = "⏳ Đang quét định vị...";
+            btn.innerHTML = "⏳ Đang quét vị trí...";
             
             navigator.geolocation.getCurrentPosition(
                 position => {
@@ -641,7 +622,7 @@
                     btn.innerHTML = originTxt;
                 },
                 err => { 
-                    alert("Không thể nhận tín hiệu GPS! Vui lòng bật vị trí."); 
+                    alert("Không thể nhận tín hiệu GPS! Vui lòng bật vị trí thiết bị."); 
                     btn.innerHTML = originTxt; 
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
@@ -702,13 +683,12 @@
             
             const btnSubmit = document.querySelector('.btn-submit');
             const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang ghi..."; 
+            btnSubmit.innerHTML = "⏳ Đang ghi vào Sheets..."; 
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
             const regionKey = regionName.trim().toLowerCase();
             
-            // Vẽ giao diện ngay lập tức trước khi chờ mạng
             if (!activeRegionsTracker.has(regionKey)) {
                 addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
             }
@@ -729,26 +709,25 @@
                     btnSubmit.disabled = false;
                     showToast(`⚡ Đã lưu "${name}" đồng bộ mây thành công!`);
                     
-                    // Cập nhật lại bộ nhớ đệm Cache (âm thầm gọi lại dữ liệu Sheets) để lần tải sau đầy đủ luôn
+                    // Cập nhật lại bộ nhớ đệm Cache
                     fetch(`${GAS_API_URL}?action=get`).then(r => r.json()).then(newData => {
                         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
                     });
                 })
                 .catch(err => { 
-                    alert("Lỗi kết nối khi lưu: Mạng yếu. Dữ liệu sẽ được lưu offline trước."); 
+                    alert("Lỗi kết nối khi lưu: Mạng yếu. Dữ liệu đã được vẽ tạm lên bản đồ."); 
                     btnSubmit.innerHTML = oldText; 
                     btnSubmit.disabled = false; 
                 });
         }
 
-        // Sự kiện phím bấm tắt nhanh cho Modal
         document.addEventListener('keydown', e => { 
             if (!modal.classList.contains('active')) return; 
             if (e.key === 'Enter') submitCheckIn(); 
             if (e.key === 'Escape') closeModal(); 
         });
         
-        // 11. Khắc phục triệt để lỗi tính toán kích thước ô lưới
+        // 11. Khắc phục lỗi tính toán kích thước ô lưới màn hình
         function forceMapRender() { 
             map.invalidateSize(); 
             updateLayerVisibility(); 

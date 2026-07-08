@@ -53,7 +53,7 @@
             visibility: hidden !important;
         }
 
-        /* Nút Vị trí GPS (Đã hạ xuống một chút để tránh dính Status Bar trên điện thoại) */
+        /* Nút Vị trí GPS */
         .location-btn {
             position: absolute;
             top: max(20px, env(safe-area-inset-top)); 
@@ -99,7 +99,7 @@
             box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 8px rgba(255, 0, 127, 0.2);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
-            display: none; /* Hiện bằng JS khi đủ điều kiện */
+            display: none; 
             align-items: center;
             gap: 6px;
         }
@@ -127,6 +127,7 @@
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
             backdrop-filter: blur(5px);
             transition: opacity 0.5s ease;
+            opacity: 0; /* Mặc định ẩn, điều khiển bằng JS */
             pointer-events: none;
         }
 
@@ -355,7 +356,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.4s ease;
         }
         .loading-text {
             color: #00f3ff;
@@ -373,7 +374,6 @@
             animation: spin 1s linear infinite;
             box-shadow: 0 0 15px #ff007f;
         }
-        /* ĐÃ SỬA LỖI TỪ KHÓA ĐỂ VÒNG XOAY HOẠT ĐỘNG */
         @keyframes spin { 
             100% { transform: rotate(360deg); } 
         }
@@ -383,10 +383,10 @@
 
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div class="loading-text">⏳ ĐANG TẢI DỮ LIỆU TỪ GOOGLE SHEETS...</div>
+        <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
     </div>
 
-    <div id="syncToast">🔄 Đang kết nối mạng lưới vệ tinh...</div>
+    <div id="syncToast">🔄 Đang đồng bộ dữ liệu ngầm...</div>
 
     <button class="location-btn" onclick="goToMyLocation()">
         🎯 Vị Trí Của Tôi
@@ -403,7 +403,7 @@
             <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
             
             <div class="auto-region-badge">
-                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang giải mã...</span>
+                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang giải mã tọa độ...</span>
             </div>
 
             <div class="form-group">
@@ -422,8 +422,11 @@
     </div>
 
     <script>
-        // ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN
+        // ĐƯỜNG DẪN WEB API GOOGLE APPS SCRIPT CỦA BẠN (GIỮ NGUYÊN)
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxGDT5vFFH9wnVEab_QjvrqEfciZXJjNlXlL10ZTbrXkHHlLj-po0ZG88P8GpuvPheX/exec";
+
+        // Khóa lưu đệm nội bộ (Local Storage Key)
+        const LOCAL_STORAGE_KEY = 'neonMapDataCache';
 
         // ĐĂNG KÝ SERVICE WORKER CHO PWA APP
         if ('serviceWorker' in navigator) {
@@ -441,7 +444,6 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.style.background = "linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(255, 0, 127, 0.2))";
             installBtn.style.display = 'flex';
         });
 
@@ -456,7 +458,6 @@
         });
 
         window.addEventListener('appinstalled', () => {
-            console.log('Ứng dụng đã được cài đặt thành công!');
             installBtn.style.display = 'none';
         });
 
@@ -521,57 +522,84 @@
             return marker;
         }
 
-        // 5. Đồng bộ và tải dữ liệu từ Google Sheets
-        function loadDataFromGoogleSheets() {
-            // TỰ ĐỘNG GIẢI PHÓNG MÀN HÌNH SAU 4 GIÂY (SAFETY TIMEOUT) CHỐNG ĐỨNG HÌNH VĨNH VIỄN
-            setTimeout(function() {
-                const loader = document.getElementById('loadingOverlay');
-                if (loader && loader.style.display !== 'none') {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                    console.log("Đã kích hoạt chế độ tải an toàn.");
-                }
-            }, 4000);
+        function renderDataToMap(data) {
+            regionalLayer.clearLayers();
+            spotLayer.clearLayers();
+            activeRegionsTracker.clear();
 
-            if (GAS_API_URL === "" || GAS_API_URL.includes("ĐIỀN_URL")) {
-                addRegionalMarker("Vĩnh Long", 10.2537, 105.9722, "Hệ thống đang chạy chế độ Local cấu hình.");
-                return;
+            let regCount = 0, spotCount = 0;
+            if (data && data.regions) {
+                data.regions.forEach(function(reg) {
+                    addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
+                    regCount++;
+                });
+            }
+            if (data && data.spots) {
+                data.spots.forEach(function(spot) {
+                    addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
+                    spotCount++;
+                });
+            }
+            updateLayerVisibility();
+            return { regCount, spotCount };
+        }
+
+        function hideLoadingScreen() {
+            const loader = document.getElementById('loadingOverlay');
+            if (loader && loader.style.display !== 'none') {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 400);
+            }
+        }
+
+        function showToast(msg, duration = 3000) {
+            const toast = document.getElementById('syncToast');
+            toast.innerHTML = msg;
+            toast.style.opacity = '1';
+            if (duration > 0) {
+                setTimeout(() => { toast.style.opacity = '0'; }, duration);
+            }
+        }
+
+        // 5. CHIẾN LƯỢC ĐỒNG BỘ: STALE-WHILE-REVALIDATE (ĐỌC CACHE TỨC THÌ -> FETCH SAU)
+        function loadDataFromGoogleSheets() {
+            // Bước 1: Đọc Local Storage ngay lập tức để người dùng xem luôn
+            const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
+            let hasCache = false;
+
+            if (cachedDataStr) {
+                try {
+                    const cachedData = JSON.parse(cachedDataStr);
+                    renderDataToMap(cachedData);
+                    hideLoadingScreen(); // Ẩn màn hình loading đen ngay tắp lự!
+                    hasCache = true;
+                    showToast('🔄 Đang đồng bộ dữ liệu ngầm...', 0); // Hiện toast quay ngầm
+                } catch(e) {
+                    console.error("Lỗi khi đọc cache:", e);
+                }
             }
 
+            // Timeout An toàn 4 giây: Nếu tải quá lâu (trường hợp load lần đầu không có cache), ẩn đen để báo lỗi
+            setTimeout(hideLoadingScreen, 4000);
+
+            // Bước 2: Gọi mạng ngầm lên Google Sheets để đối chiếu dữ liệu 2 thiết bị
             fetch(`${GAS_API_URL}?action=get`)
                 .then(res => res.json())
                 .then(data => {
-                    regionalLayer.clearLayers();
-                    spotLayer.clearLayers();
-                    activeRegionsTracker.clear();
-
-                    let regCount = 0, spotCount = 0;
-                    if (data && data.regions) {
-                        data.regions.forEach(function(reg) {
-                            addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
-                            regCount++;
-                        });
-                    }
-                    if (data && data.spots) {
-                        data.spots.forEach(function(spot) {
-                            addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
-                            spotCount++;
-                        });
-                    }
+                    // Lưu dữ liệu mới tinh vào bộ đệm nội bộ
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
                     
-                    const toast = document.getElementById('syncToast');
-                    toast.innerHTML = `✅ Đã đồng bộ: ${regCount} vùng & ${spotCount} điểm thành công!`;
-                    setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+                    // Cập nhật lại bản đồ bằng dữ liệu thật (đã gồm điểm check-in từ thiết bị khác)
+                    const counts = renderDataToMap(data);
                     
-                    const loader = document.getElementById('loadingOverlay');
-                    if (loader) {
-                        loader.style.opacity = '0'; 
-                        setTimeout(() => loader.style.display = 'none', 500);
-                    }
-                    updateLayerVisibility();
+                    if (!hasCache) hideLoadingScreen(); // Nếu chưa có cache (lần mở đầu tiên), giờ mới ẩn loading
+                    
+                    showToast(`✅ Đã đồng bộ: ${counts.regCount} vùng & ${counts.spotCount} điểm`);
                 })
                 .catch(err => {
-                    console.error("Lỗi đồng bộ mạng:", err);
+                    console.error("Lỗi mạng khi đồng bộ:", err);
+                    if (!hasCache) hideLoadingScreen();
+                    showToast(`⚠️ Không có mạng. Đang xem dữ liệu offline.`);
                 });
         }
 
@@ -643,17 +671,15 @@
             autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang định vị vệ tinh Google...</span>'; 
             currentDetectedRegion = "Việt Nam";
             
-            if (GAS_API_URL !== "" && !GAS_API_URL.includes("ĐIỀN_URL")) {
-                fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`)
-                    .then(res => res.json())
-                    .then(data => { 
-                        currentDetectedRegion = data.province; 
-                        autoRegionText.innerHTML = `📍 ${data.province}`; 
-                    })
-                    .catch(() => { 
-                        autoRegionText.innerHTML = `📍 Khu vực mới`; 
-                    });
-            }
+            fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`)
+                .then(res => res.json())
+                .then(data => { 
+                    currentDetectedRegion = data.province; 
+                    autoRegionText.innerHTML = `📍 ${data.province}`; 
+                })
+                .catch(() => { 
+                    autoRegionText.innerHTML = `📍 Khu vực mới`; 
+                });
         }
 
         // 9. Thuật toán click thông minh: Bản đồ lớn thì zoom nhẹ, bản đồ nhỏ thì bật Check-in
@@ -668,7 +694,7 @@
 
         function closeModal() { modal.classList.remove('active'); }
 
-        // 10. Xử lý gửi dữ liệu lên Google Sheets
+        // 10. Xử lý gửi dữ liệu lên Google Sheets và cập nhật Cache nội bộ
         function submitCheckIn() {
             const name = placeNameInput.value.trim();
             const note = placeNoteInput.value.trim();
@@ -676,13 +702,13 @@
             
             const btnSubmit = document.querySelector('.btn-submit');
             const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang ghi vào Sheets..."; 
+            btnSubmit.innerHTML = "⏳ Đang ghi..."; 
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
             const regionKey = regionName.trim().toLowerCase();
             
-            // Vẽ giao diện ngay lập tức trước khi nhận phản hồi từ mạng (Optimistic UI)
+            // Vẽ giao diện ngay lập tức trước khi chờ mạng
             if (!activeRegionsTracker.has(regionKey)) {
                 addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
             }
@@ -695,26 +721,24 @@
             updateLayerVisibility(); 
             newMarker.openPopup();
 
-            if (GAS_API_URL !== "" && !GAS_API_URL.includes("ĐIỀN_URL")) {
-                fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`)
-                    .then(res => res.json())
-                    .then(() => {
-                        btnSubmit.innerHTML = oldText; 
-                        btnSubmit.disabled = false;
-                        const toast = document.getElementById('syncToast'); 
-                        toast.style.opacity = '1'; 
-                        toast.innerHTML = `⚡ Đã lưu "${name}" thành công!`; 
-                        setTimeout(() => toast.style.opacity = '0', 3000);
-                    })
-                    .catch(err => { 
-                        alert("Lỗi ghi nhận dữ liệu: " + err); 
-                        btnSubmit.innerHTML = oldText; 
-                        btnSubmit.disabled = false; 
+            // Gọi mạng lưu dữ liệu
+            fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`)
+                .then(res => res.json())
+                .then(() => {
+                    btnSubmit.innerHTML = oldText; 
+                    btnSubmit.disabled = false;
+                    showToast(`⚡ Đã lưu "${name}" đồng bộ mây thành công!`);
+                    
+                    // Cập nhật lại bộ nhớ đệm Cache (âm thầm gọi lại dữ liệu Sheets) để lần tải sau đầy đủ luôn
+                    fetch(`${GAS_API_URL}?action=get`).then(r => r.json()).then(newData => {
+                        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
                     });
-            } else { 
-                btnSubmit.innerHTML = oldText; 
-                btnSubmit.disabled = false; 
-            }
+                })
+                .catch(err => { 
+                    alert("Lỗi kết nối khi lưu: Mạng yếu. Dữ liệu sẽ được lưu offline trước."); 
+                    btnSubmit.innerHTML = oldText; 
+                    btnSubmit.disabled = false; 
+                });
         }
 
         // Sự kiện phím bấm tắt nhanh cho Modal
@@ -724,14 +748,13 @@
             if (e.key === 'Escape') closeModal(); 
         });
         
-        // 11. Khắc phục triệt để lỗi tính toán kích thước ô lưới iframe của GAS
+        // 11. Khắc phục triệt để lỗi tính toán kích thước ô lưới
         function forceMapRender() { 
             map.invalidateSize(); 
             updateLayerVisibility(); 
         }
         setTimeout(forceMapRender, 100); 
         setTimeout(forceMapRender, 500);
-        setTimeout(forceMapRender, 1500);
         
         window.addEventListener('load', () => { 
             forceMapRender(); 

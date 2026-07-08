@@ -1514,7 +1514,7 @@
             modal.classList.remove('active');
         }
 
-        function submitCheckIn() {
+function submitCheckIn() {
             const name = placeNameInput.value.trim();
             const note = placeNoteInput.value.trim();
             
@@ -1556,25 +1556,55 @@
             }
 
             fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`, { redirect: "follow" })
-                .then(res => res.json())
-                .then((respData) => {
-                    btnSubmit.innerHTML = oldText; 
-                    btnSubmit.disabled = false;
-                    showToast(`⚡ Đã tạo Album Drive & lưu "${name}" thành công!`);
-                    
-                    tempSpot.folderUrl = respData.url; 
-                    if (isPhotoView) renderPhotoLayer();
+                .then(res => res.text())
+                .then(text => {
+                    try {
+                        const respData = JSON.parse(text);
+                        btnSubmit.innerHTML = oldText; 
+                        btnSubmit.disabled = false;
+                        showToast(`⚡ Đã tạo Album Drive & lưu "${name}" thành công!`);
+                        
+                        tempSpot.folderUrl = respData.url; 
+                        if (isPhotoView) renderPhotoLayer();
 
-                    fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
-                        .then(r => r.json())
-                        .then(newData => {
-                            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-                        });
+                        fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
+                            .then(r => r.json())
+                            .then(newData => {
+                                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
+                            });
+                    } catch(e) {
+                        throw new Error("Phản hồi bị lỗi định dạng");
+                    }
                 })
                 .catch(err => { 
-                    alert("Lỗi kết nối hoặc lỗi tạo thư mục Drive. Vui lòng kiểm tra lại quyền."); 
-                    btnSubmit.innerHTML = oldText; 
-                    btnSubmit.disabled = false; 
+                    // THUẬT TOÁN "KIỂM TRA CHÉO" KHI LỖI MẠNG 1 CHIỀU
+                    showToast(`⏳ Máy chủ phản hồi chậm. Đang kiểm tra chéo...`, 3000);
+                    
+                    setTimeout(() => {
+                        fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
+                            .then(r => r.json())
+                            .then(newData => {
+                                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
+                                
+                                // Quét xem Server đã lưu điểm này chưa
+                                const savedSpot = newData.spots.find(s => s.name === name && Math.abs(s.lat - currentClickLat) < 0.0001);
+                                
+                                if (savedSpot && savedSpot.folderUrl) {
+                                    tempSpot.folderUrl = savedSpot.folderUrl; // Vá link ngầm
+                                    if (isPhotoView) renderPhotoLayer();
+                                    showToast(`✅ Đã đồng bộ thành công "${name}"!`, 3000);
+                                } else {
+                                    alert("Lỗi thực sự: Không thể tạo thư mục. Vui lòng kiểm tra lại quyền Drive.");
+                                }
+                                
+                                btnSubmit.innerHTML = oldText; 
+                                btnSubmit.disabled = false; 
+                            })
+                            .catch(e => {
+                                btnSubmit.innerHTML = oldText; 
+                                btnSubmit.disabled = false; 
+                            });
+                    }, 2500);
                 });
         }
 

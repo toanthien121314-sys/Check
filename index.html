@@ -1000,7 +1000,7 @@
         const lightboxOverlay = document.getElementById('lightboxOverlay');
         const lightboxImg = document.getElementById('lightboxImg');
 
-        function openInAppGallery(name, folderUrl) {
+function openInAppGallery(name, folderUrl) {
             galleryTitle.innerText = name;
             galleryGrid.innerHTML = '<div class="empty-gallery">⏳ Đang tải ảnh từ vệ tinh...</div>';
             galleryContainer.classList.add('active');
@@ -1016,7 +1016,9 @@
                     }
 
                     data.images.forEach(imgId => {
-                        const imgUrl = `https://drive.google.com/uc?export=view&id=${imgId}`;
+                        // 🔴 DÒNG ĐÃ SỬA: Dùng API Thumbnail của Google để vượt tường lửa chặn ảnh (sz=w1000 là độ phân giải HD)
+                        const imgUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w1000`;
+                        
                         const imgElem = document.createElement('img');
                         imgElem.src = imgUrl;
                         imgElem.className = 'gallery-item';

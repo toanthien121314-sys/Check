@@ -1,458 +1,668 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>Meow Health</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#FF8C00">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Meow Health">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <style>
-    :root {
-      --primary: #FF8C00; 
-      --bg: #F0F4F8; 
-      --card-bg: rgba(255, 255, 255, 0.85); 
-      --text: #2C3E50; 
-      --success: #2ecc71;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0; padding-bottom: 90px;
-      overflow-x: hidden;
-      -webkit-user-select: none; 
-      user-select: none;         
-      -webkit-touch-callout: none; 
-    }
-
-    .glass-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 1);
-      border-radius: 24px;
-      padding: 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); 
-    }
-
-    /* --- VÒNG TRÒN TIẾN ĐỘ SVG --- */
-    .water-circle {
-      width: 200px; height: 200px; 
-      position: relative;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      margin: 10px auto;
-    }
-    .progress-ring {
-      position: absolute;
-      top: 0; left: 0;
-      transform: rotate(-90deg); 
-    }
-    .progress-ring__circle {
-      transition: stroke-dashoffset 0.5s ease; 
-      stroke-linecap: round; 
-    }
-    #water-icon { color: var(--primary); font-size: 1.5rem; z-index: 1; transition: all 0.5s ease; }
-    .water-value { font-size: 2.2rem; font-weight: 800; color: var(--primary); z-index: 1; transition: all 0.5s ease; }
-    .water-goal-text { font-size: 0.85rem; opacity: 0.5; z-index: 1; }
-
-    /* --- TRẠNG THÁI ĐẠT MỤC TIÊU --- */
-    .goal-reached .progress-ring__circle { stroke: var(--success) !important; }
-    .goal-reached #water-current, .goal-reached #water-icon {
-      color: var(--success) !important;
-      text-shadow: 0 0 15px rgba(46, 204, 113, 0.2);
-    }
-
-    /* --- NÚT BẤM & CHECKBOX --- */
-    .btn-main {
-      background: var(--primary); color: #ffffff; 
-      font-weight: 700;
-      border-radius: 12px; border: none; padding: 12px 20px; transition: 0.2s; width: 100%;
-      box-shadow: 0 4px 12px rgba(255, 140, 0, 0.25);
-    }
-    .btn-main:active { transform: scale(0.98); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnam Neon Check-in Map</title>
     
-    .vit-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; font-weight: 500;}
-    .check-box {
-      width: 32px; height: 32px; border-radius: 10px;
-      border: 2px solid var(--primary); cursor: pointer;
-      display: flex; align-items: center; justify-content: center; transition: 0.3s;
-      background: #ffffff;
-    }
-    .check-box.done { background: var(--primary); color: #ffffff; }
-
-    /* --- THANH ĐIỀU HƯỚNG --- */
-    .nav-bar {
-      position: fixed; bottom: 0; width: 100%; height: 75px;
-      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
-      display: flex; justify-content: space-around; align-items: center;
-      border-top: 1px solid rgba(0,0,0,0.05); z-index: 1000;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
-    }
-    .nav-item { color: #A0AEC0; font-size: 1.4rem; cursor: pointer; transition: 0.2s; }
+    <link rel="manifest" href="manifest.json">
     
-    /* --- LỊCH SỬ --- */
-    .history-item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #ffffff; border-radius: 18px;
-      padding: 15px 20px; margin-bottom: 12px; border-left: 5px solid var(--primary);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    }
-    .history-date { font-weight: 700; font-size: 0.95rem; flex: 1; }
-    .history-stats { text-align: right; flex: 1; }
-    .stat-water { font-weight: 800; font-size: 1rem; }
-    .stat-vit { font-size: 0.75rem; color: #7F8C8D; margin-top: 2px; }
-    .text-success-health { color: var(--success) !important; }
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    .opacity-50 { opacity: 0.7 !important; }
-    /* Container chú thích */
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
 
-/* Bảng ghi chú - Đã bỏ absolute để không bị đè */
-.water-note {
-  background: rgba(255, 140, 0, 0.08);
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px dashed var(--primary);
-  /* Đảm bảo khung không quá to trên màn hình nhỏ */
-  min-width: 120px; 
-  margin: 10px;
-}
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #03050a;
+            color: #fff;
+            overflow: hidden;
+            user-select: none;
+        }
 
-.note-item {
-  display: grid;
-  grid-template-columns: 45px 15px 15px 20px; /* Chia cột cố định: ml | icon | số | ly */
-  align-items: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.5;
-}
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            background: #03050a;
+        }
 
-.note-item .ml { opacity: 0.7; text-align: right; }
-.note-item .bi-chevron-right { color: var(--primary); font-size: 0.6rem; text-align: center; }
-.note-item .cup-val { color: var(--primary); text-align: center; }
-.note-item .bi-cup-straw { color: var(--primary); font-size: 0.9rem; }
-  </style>
+        .leaflet-control-attribution {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        .location-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(0, 243, 255, 0.2));
+            color: #00f3ff;
+            border: 1.5px solid #00f3ff;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 8px rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .location-btn:hover {
+            background: #00f3ff;
+            color: #000;
+            box-shadow: 0 0 25px #00f3ff;
+            transform: scale(1.05);
+        }
+
+        #syncToast {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(8, 12, 28, 0.9);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            backdrop-filter: blur(5px);
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .leaflet-control-zoom a {
+            background-color: rgba(6, 10, 25, 0.85) !important;
+            color: #00f3ff !important;
+            border: 1px solid #00f3ff !important;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4) !important;
+            font-weight: bold;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background-color: #00f3ff !important;
+            color: #000 !important;
+            box-shadow: 0 0 20px #00f3ff !important;
+        }
+
+        .neon-marker-container {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .neon-dot {
+            width: 18px;
+            height: 18px;
+            background: #ff007f;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            position: absolute;
+            top: 5px;
+            box-shadow: 0 0 15px #ff007f, 0 0 25px #ff007f, 0 0 35px #ff007f;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .neon-pulse {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 0, 127, 0.7);
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            animation: ripple 1.8s infinite ease-out;
+            z-index: 1;
+        }
+
+        .neon-label {
+            position: absolute;
+            top: -22px;
+            color: #00f3ff;
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-shadow: 0 0 5px #00f3ff, 0 0 10px #000;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            background: rgba(5, 8, 20, 0.7);
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 243, 255, 0.4);
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.8); opacity: 0; }
+        }
+
+        .red-flag-marker {
+            font-size: 24px;
+            filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 15px #ff0000);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .red-flag-marker:hover {
+            transform: scale(1.3) translateY(-3px);
+        }
+
+        .gps-dot {
+            width: 16px; height: 16px;
+            background: #00f3ff;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            position: absolute; top: 6px; left: 6px;
+            box-shadow: 0 0 15px #00f3ff, 0 0 30px #00f3ff;
+            z-index: 2;
+        }
+        .gps-pulse {
+            width: 28px; height: 28px;
+            background: rgba(0, 243, 255, 0.6);
+            border-radius: 50%;
+            position: absolute; top: 0; left: 0;
+            animation: ripple 1.5s infinite ease-out;
+            z-index: 1;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(8, 12, 28, 0.95) !important;
+            color: #fff !important;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            border-radius: 12px !important;
+            backdrop-filter: blur(8px);
+            padding: 5px;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(8, 12, 28, 0.95) !important;
+            border-bottom: 1px solid #00f3ff;
+            border-right: 1px solid #00f3ff;
+        }
+
+        .popup-title {
+            color: #00f3ff;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+            border-bottom: 1px dashed rgba(0, 243, 255, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .popup-info { font-size: 0.9rem; line-height: 1.5; color: #d1d5db; }
+        .popup-info b { color: #ff007f; }
+
+        .btn-gps-checkin {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(90deg, #ff007f, #ff00ff);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+            transition: all 0.2s;
+        }
+        .btn-gps-checkin:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.8);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-box {
+            background: linear-gradient(135deg, rgba(10, 16, 38, 0.95), rgba(5, 8, 20, 0.98));
+            width: 90%; max-width: 400px; padding: 25px;
+            border-radius: 16px; border: 2px solid #00f3ff;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2);
+            transform: translateY(-20px); transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+
+        .modal-title {
+            font-size: 1.3rem; font-weight: bold; color: #00f3ff;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 15px; text-align: center;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a5b4fc; margin-bottom: 6px; font-weight: 600; }
+        .form-control {
+            width: 100%; background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #3b82f6; border-radius: 8px;
+            padding: 10px 12px; color: #fff; font-size: 0.95rem; outline: none; transition: all 0.3s;
+        }
+        .form-control:focus { border-color: #ff007f; box-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
+
+        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .btn-cancel { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+        .btn-cancel:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .btn-submit { background: linear-gradient(90deg, #00f3ff, #0077ff); color: #000; box-shadow: 0 0 15px rgba(0, 243, 255, 0.5); }
+        .btn-submit:hover { background: linear-gradient(90deg, #ff007f, #ff00ff); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 127, 0.8); }
+
+        .auto-region-badge {
+            background: rgba(0, 243, 255, 0.08);
+            border: 1px dashed rgba(0, 243, 255, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .auto-region-badge span {
+            color: #00f3ff;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #03050a;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .loading-text {
+            color: #00f3ff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00f3ff;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
+        .spinner {
+            width: 45px; height: 45px;
+            border: 4px solid rgba(0, 243, 255, 0.2);
+            border-top: 4px solid #ff007f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 15px #ff007f;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
 
-  <div class="container mt-4">
-    <h2 class="fw-bold text-center mb-4">Meow <span style="color: var(--primary)">Health</span></h2>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">⏳ ĐANG TẢI DỮ LIỆU TỪ GOOGLE SHEETS...</div>
+    </div>
 
-    <div id="tab-home">
-      <div class="glass-card text-center">
-        <h6 class="text-uppercase small fw-bold opacity-50">Lượng nước hôm nay</h6>
-        
-        <div class="d-flex align-items-center justify-content-center flex-wrap mb-3">
-          
-          <div class="water-circle" id="water-container" style="margin: 0;">
-            <svg class="progress-ring" width="200" height="200">
-              <circle stroke="rgba(255, 140, 0, 0.1)" stroke-width="8" fill="transparent" r="85" cx="100" cy="100"/>
-              <circle id="progress-bar" class="progress-ring__circle" stroke="#FF8C00" stroke-width="8" stroke-dasharray="534.07" stroke-dashoffset="534.07" fill="transparent" r="85" cx="100" cy="100"/>
-            </svg>
-            <i class="bi bi-droplet-fill mb-1" id="water-icon"></i>
-            <div class="water-value" id="water-current">0</div>
-            <div class="water-goal-text">/ 2000 ml</div>
-          </div>
+    <div id="syncToast">🔄 Đang kết nối mạng lưới vệ tinh...</div>
 
-          <div class="water-note">
-            <div class="note-item">
-              <span class="ml">100ml</span>
-              <i class="bi bi-chevron-right"></i>
-              <span class="cup-val">½</span>
-              <i class="bi bi-cup-straw"></i>
+    <button class="location-btn" onclick="goToMyLocation()">
+        🎯 Vị Trí Của Tôi
+    </button>
+
+    <div id="map"></div>
+
+    <div class="modal-overlay" id="checkinModal">
+        <div class="modal-box">
+            <div class="modal-title">📍 Thêm Điểm Check-in Nhỏ</div>
+            
+            <div class="auto-region-badge">
+                🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang giải mã tọa độ...</span>
             </div>
-            <div class="note-item mt-1">
-              <span class="ml">200ml</span>
-              <i class="bi bi-chevron-right"></i>
-              <span class="cup-val">1</span>
-              <i class="bi bi-cup-straw"></i>
+
+            <div class="form-group">
+                <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
+                <input type="text" id="placeName" class="form-control" placeholder="VD: Bến Nhà Rồng, Quán cà phê..." autocomplete="off">
             </div>
-          </div>
+            <div class="form-group">
+                <label for="placeNote">Ghi chú / Kỷ niệm</label>
+                <input type="text" id="placeNote" class="form-control" placeholder="VD: Trải nghiệm cực kỳ chill..." autocomplete="off">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn btn-submit" onclick="submitCheckIn()">Lưu Điểm</button>
+            </div>
         </div>
-
-        <div class="row g-2">
-          <div class="col-6"><button class="btn-main" onclick="addWater(100)">+ 100ml</button></div>
-          <div class="col-6"><button class="btn-main" onclick="addWater(200)">+ 200ml</button></div>
-        </div>
-      </div>
-
-      <div class="glass-card">
-        <h6 class="text-uppercase small fw-bold opacity-50 mb-2">Vitamin hàng ngày</h6>
-        <div class="vit-item">
-          <span>Vitamin C</span>
-          <div class="check-box" id="check-vit-c" onclick="toggleVit('Vitamin C')">
-            <i class="bi bi-check-lg"></i>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <div id="tab-history" style="display:none;">
-      <h5 class="fw-bold mb-3 ps-2">Lịch sử theo dõi</h5>
-      <div id="history-list">
-        <div class="text-center opacity-50 small mt-5">Đang tải dữ liệu lịch sử...</div>
-      </div>
-    </div>
-    
-    <div id="tab-settings" style="display:none;">
-      <h5 class="fw-bold mb-3 ps-2">Cài đặt</h5>
-      <div class="glass-card text-center">
-        <h6 class="text-uppercase small fw-bold opacity-50 mb-3">Ứng dụng</h6>
-        
-        <button id="btn-install" class="btn-main mb-2" style="display: none;">
-          <i class="bi bi-download me-2"></i> Cài đặt App ra màn hình
-        </button>
-        
-        <p id="ios-guide" class="small text-danger mt-2" style="display: none; font-weight: 500;">
-          *Để cài đặt trên iPhone/iPad: Hãy bấm nút Chia sẻ (⍐) ở cạnh dưới màn hình Safari và chọn "Thêm vào MH chính".
-        </p>
-      </div>
-    </div>
-  </div>
+    <script>
+        // CẤU HÌNH ĐƯỜNG DẪN WEB APP CỦA GOOGLE APPS SCRIPT
+        // Bạn dán đường dẫn Web App URL vừa Triển khai mới (ở Bước 3) vào đây
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwXuXX-NVfS2YlO81Qny-CBpPQ1g6zylXtsAH8F-ZrHflhRzZsYOKtKvSAFUb1uUP6e/exec";
 
-  <div class="nav-bar">
-    <div class="nav-item" onclick="switchTab('home', this)" style="color: var(--primary)"><i class="bi bi-house-heart-fill fs-3"></i></div>
-    <div class="nav-item" onclick="switchTab('history', this)"><i class="bi bi-clock-history fs-3"></i></div>
-    <div class="nav-item" onclick="switchTab('settings', this)"><i class="bi bi-gear-fill fs-3"></i></div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyPiIo8qSwTye_dzReFmfoVhY-p8zLKStwvZS2XE5W0wiFuuUoKUkFn_x6Lr2oIOFg4/exec"; 
-    let currentWater = 0;
-
-    // HÀM CẬP NHẬT VÒNG TRÒN SVG
-    function updateCircle(value) {
-      const circle = document.getElementById('progress-bar');
-      const container = document.getElementById('water-container');
-      const radius = circle.r.baseVal.value;
-      const circumference = 2 * Math.PI * radius; // Chu vi = 534.07
-
-      const goal = 2000;
-      const percentage = Math.min(value / goal, 1); 
-      const offset = circumference - (percentage * circumference);
-      
-      circle.style.strokeDashoffset = offset;
-
-      // Kiểm tra nếu đạt chỉ tiêu thì bắn pháo hoa
-    if (value >= goal) {
-      if (!container.classList.contains('goal-reached')) {
-        launchFireworks(); // Chỉ bắn pháo hoa khi vừa chạm mốc lần đầu
-      }
-      container.classList.add('goal-reached');
-    } else {
-      container.classList.remove('goal-reached');
-    }
-    }
-    // Hàm tạo hiệu ứng pháo hoa chuyên nghiệp
-function launchFireworks() {
-  var duration = 3 * 1000; // Bắn trong 3 giây
-  var animationEnd = Date.now() + duration;
-  var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-  function randomInRange(min, max) {
-    return Math.random() * (max - min) + min;
-  }
-
-  var interval = setInterval(function() {
-    var timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-      return clearInterval(interval);
-    }
-
-    var particleCount = 50 * (timeLeft / duration);
-    // Bắn từ hai phía trái phải màn hình
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-  }, 250);
-}
-
-    // ĐỒNG BỘ 2 LỚP: ƯU TIÊN MÁY TÍNH -> NGẦM KIỂM TRA SERVER
-    async function initApp() {
-      const waterDisplay = document.getElementById('water-current');
-      const container = document.getElementById('water-container');
-      const vitCheck = document.getElementById('check-vit-c');
-
-      const todayStr = new Date().toLocaleDateString('vi-VN');
-      const savedDate = localStorage.getItem('meowHealthDate') || "";
-
-      if (savedDate !== todayStr) {
-        currentWater = 0;
-        localStorage.setItem('meowHealthWater', 0);
-        localStorage.setItem('meowHealthVitC', 'false');
-        localStorage.setItem('meowHealthDate', todayStr);
-      } else {
-        currentWater = parseInt(localStorage.getItem('meowHealthWater')) || 0;
-        if (localStorage.getItem('meowHealthVitC') === 'true') {
-          vitCheck.classList.add('done');
-        }
-      }
-
-      waterDisplay.innerText = currentWater;
-      updateCircle(currentWater); // Cập nhật vòng tròn khi mở app
-
-      try {
-        const response = await fetch(API_URL + "?action=sync");
-        const serverData = await response.json();
-
-        const localVit = localStorage.getItem('meowHealthVitC') === 'true';
-        
-        if (serverData.water !== currentWater || serverData.vit !== localVit || serverData.date !== savedDate) {
-          console.log("Phát hiện dữ liệu mới từ máy chủ. Đang cập nhật...");
-          
-          currentWater = serverData.water;
-          
-          waterDisplay.innerText = currentWater;
-          updateCircle(currentWater); // Cập nhật vòng tròn nếu có data từ server
-
-          if (serverData.vit) vitCheck.classList.add('done');
-          else vitCheck.classList.remove('done');
-
-          localStorage.setItem('meowHealthWater', currentWater);
-          localStorage.setItem('meowHealthVitC', serverData.vit ? 'true' : 'false');
-          localStorage.setItem('meowHealthDate', serverData.date);
-        } else {
-          console.log("Dữ liệu đã đồng bộ, không cần chỉnh sửa.");
+        // KÍCH HOẠT ĐĂNG KÝ SERVICE WORKER (BỘ PHỤC VỤ CHẠY NỀN PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA Service Worker đã đăng ký thành công!', reg))
+                    .catch(err => console.log('Lỗi đăng ký Service Worker:', err));
+            });
         }
 
-      } catch (error) {
-        console.log("Đang offline hoặc lỗi mạng. Tiếp tục dùng dữ liệu trên máy.");
-      }
-    }
-
-    async function sendToSheet(type, value) {
-      try {
-        await fetch(API_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: JSON.stringify({ action: 'logData', type: type, value: value })
+        const map = L.map('map', {
+            center: [16.047079, 108.206230],
+            zoom: 6, minZoom: 5, maxZoom: 18, zoomControl: false,
+            attributionControl: false
         });
-      } catch (error) { console.error("Lỗi:", error); }
-    }
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    let waterTimeout;
-    let pendingWater = 0;
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
 
-    function addWater(ml) {
-      currentWater += ml;
-      pendingWater += ml; 
-      
-      localStorage.setItem('meowHealthWater', currentWater);
-      document.getElementById('water-current').innerText = currentWater;
-      
-      updateCircle(currentWater); // Vòng tròn chạy ngay lập tức khi bấm nút
+        function createRegionalIcon(regionName) {
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `
+                    <div class="neon-marker-container">
+                        <div class="neon-label">${regionName}</div>
+                        <div class="neon-pulse"></div>
+                        <div class="neon-dot"></div>
+                    </div>
+                `,
+                iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14]
+            });
+        }
 
-      clearTimeout(waterTimeout); 
-      waterTimeout = setTimeout(() => {
-        sendToSheet('Water', pendingWater);
-        pendingWater = 0; 
-      }, 1500); 
-    }
+        const redFlagIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class="red-flag-marker">🚩</div>`,
+            iconSize: [28, 28], iconAnchor: [5, 25], popupAnchor: [8, -25]
+        });
 
-    function toggleVit(name) {
-      const el = document.getElementById('check-vit-c');
-      if (!el.classList.contains('done')) {
-        el.classList.add('done');
-        localStorage.setItem('meowHealthVitC', 'true');
-        sendToSheet('Vitamin', name);
-      }
-    }
+        const gpsIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`,
+            iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14]
+        });
 
-    function switchTab(tabName, el) {
-      document.getElementById('tab-home').style.display = 'none';
-      document.getElementById('tab-history').style.display = 'none';
-      document.getElementById('tab-settings').style.display = 'none';
-      document.getElementById('tab-' + tabName).style.display = 'block';
-      
-      document.querySelectorAll('.nav-item').forEach(item => item.style.color = '#A0AEC0'); 
-      el.style.color = 'var(--primary)';
-      
-      if (tabName === 'history') loadHistory();
-    }
+        const regionalLayer = L.layerGroup().addTo(map);
+        const spotLayer = L.layerGroup();
+        const activeRegionsTracker = new Set();
 
-    async function loadHistory() {
-      const listEl = document.getElementById('history-list');
-      listEl.innerHTML = '<div class="text-center opacity-50 small mt-5">Đang tải dữ liệu...</div>';
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        let html = '';
-        if (data.length === 0) {
-          html = '<div class="text-center opacity-50 mt-4">Chưa có lịch sử</div>';
-        } else {
-          data.forEach(item => {
-            const isGoal = item.water >= 2000 ? 'text-success-health' : '';
-            const vitStatus = item.vitamin === 'Đã uống' ? '✅ Vitamin C' : '❌ Vitamin C';
-            html += `
-              <div class="history-item">
-                <div class="history-date">${item.date}</div>
-                <div class="history-stats">
-                  <div class="stat-water ${isGoal}">${item.water} ml</div>
-                  <div class="stat-vit">${vitStatus}</div>
+        function addRegionalMarker(name, lat, lng, desc) {
+            const marker = L.marker([lat, lng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
+            marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
+            marker.on('click', function() {
+                map.flyTo([lat, lng], 11, { duration: 1.5 });
+            });
+            activeRegionsTracker.add(name.trim().toLowerCase());
+        }
+
+        function addSpotMarker(name, lat, lng, date, note) {
+            const marker = L.marker([lat, lng], { icon: redFlagIcon }).addTo(spotLayer);
+            const content = `
+                <div class="popup-title">🚩 ${name}</div>
+                <div class="popup-info">
+                    <p><b>⏰ Thời gian:</b> ${date}</p>
+                    <p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p>
+                    <p style="margin-top:4px; font-size: 0.8rem; color: #64748b;">📍 ${lat}, ${lng}</p>
                 </div>
-              </div>`;
-          });
+            `;
+            marker.bindPopup(content);
+            return marker;
         }
-        listEl.innerHTML = html;
-      } catch (e) {
-        listEl.innerHTML = '<div class="text-center text-danger mt-4">Lỗi kết nối</div>';
-      }
-    }
 
-    // --- XỬ LÝ NÚT CÀI ĐẶT PWA ---
-    let deferredPrompt;
-    const installBtn = document.getElementById('btn-install');
-    const iosGuide = document.getElementById('ios-guide');
+        // CẢI TIẾN LÀM MỚI: Sử dụng API fetch để đồng bộ dữ liệu chéo máy chủ về GitHub
+        function loadDataFromGoogleSheets() {
+            if (GAS_API_URL === "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
+                addRegionalMarker("TP. Hồ Chí Minh", 10.7769, 106.7009, "Hệ thống đang chạy thử nghiệm Local trên GitHub.");
+                document.getElementById('loadingOverlay').style.display = 'none';
+                updateLayerVisibility();
+                return;
+            }
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.navigator.standalone === true;
-    
-    if (isIOS && !isStandalone) {
-      iosGuide.style.display = 'block'; 
-    }
+            fetch(`${GAS_API_URL}?action=get`)
+                .then(res => res.json())
+                .then(data => {
+                    regionalLayer.clearLayers();
+                    spotLayer.clearLayers();
+                    activeRegionsTracker.clear();
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault(); 
-      deferredPrompt = e; 
-      installBtn.style.display = 'block'; 
-    });
+                    let regCount = 0, spotCount = 0;
+                    if (data && data.regions) {
+                        data.regions.forEach(function(reg) {
+                            addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
+                            regCount++;
+                        });
+                    }
+                    if (data && data.spots) {
+                        data.spots.forEach(function(spot) {
+                            addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
+                            spotCount++;
+                        });
+                    }
+                    
+                    const toast = document.getElementById('syncToast');
+                    toast.innerHTML = `✅ Đã đồng bộ: ${regCount} khu vực & ${spotCount} điểm từ Sheets`;
+                    setTimeout(() => { toast.style.opacity = '0'; }, 5000);
 
-    installBtn.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt(); 
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          console.log('Đã đồng ý cài đặt');
+                    const loader = document.getElementById('loadingOverlay');
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                    updateLayerVisibility();
+                })
+                .catch(err => {
+                    alert("Lỗi tải dữ liệu từ Google Sheets: " + err);
+                });
         }
-        deferredPrompt = null; 
-        installBtn.style.display = 'none'; 
-      }
-    });
 
-    window.addEventListener('appinstalled', () => {
-      installBtn.style.display = 'none';
-      deferredPrompt = null;
-    });
+        const ZOOM_THRESHOLD = 9;
+        function updateLayerVisibility() {
+            const currentZoom = map.getZoom();
+            if (currentZoom < ZOOM_THRESHOLD) {
+                if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer);
+                if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
+            } else {
+                if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer);
+                if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer);
+            }
+        }
+        map.on('zoomend', updateLayerVisibility);
 
-    window.onload = initApp;
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker đã đăng ký thành công!'))
-          .catch(err => console.error('Lỗi đăng ký Service Worker:', err));
-      });
-    }
-  </script>
+        let myLocationMarker = null;
+        let myCurrentLat = 0, myCurrentLng = 0;
+
+        function goToMyLocation() {
+            if (!navigator.geolocation) {
+                alert("Trình duyệt của bạn không hỗ trợ định vị GPS!");
+                return;
+            }
+            const btn = document.querySelector('.location-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ Đang tìm GPS...";
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    myCurrentLat = position.coords.latitude.toFixed(4);
+                    myCurrentLng = position.coords.longitude.toFixed(4);
+                    if (myLocationMarker) map.removeLayer(myLocationMarker);
+
+                    myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
+                    const popupContent = `
+                        <div class="popup-title">🎯 Vị Trí Của Bạn</div>
+                        <p class="popup-info">Tọa độ: ${myCurrentLat}, ${myCurrentLng}</p>
+                        <button class="btn-gps-checkin" onclick="checkInAtMyLocation()">
+                            🚩 Check-in Ngay Tại Đây!
+                        </button>
+                    `;
+                    myLocationMarker.bindPopup(popupContent);
+                    map.flyTo([myCurrentLat, myCurrentLng], 14, { duration: 1.5 });
+                    setTimeout(() => myLocationMarker.openPopup(), 1600);
+                    btn.innerHTML = originalText;
+                },
+                function(error) {
+                    alert("Không thể lấy vị trí! Vui lòng bật GPS và cấp quyền truy cập vị trí.");
+                    btn.innerHTML = originalText;
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        function checkInAtMyLocation() {
+            currentClickLat = myCurrentLat;
+            currentClickLng = myCurrentLng;
+            if (myLocationMarker) myLocationMarker.closePopup();
+            openCheckInModal();
+        }
+
+        let currentClickLat = 0, currentClickLng = 0;
+        let currentDetectedRegion = "Việt Nam";
+        const modal = document.getElementById('checkinModal');
+        const autoRegionText = document.getElementById('autoRegionText');
+        const placeNameInput = document.getElementById('placeName');
+        const placeNoteInput = document.getElementById('placeNote');
+
+        // CẢI TIẾN LÀM MỚI: Gọi API phân tích địa giới chuẩn 100% qua máy chủ Google Maps từ GitHub
+        function openCheckInModal() {
+            placeNameInput.value = ''; placeNoteInput.value = '';
+            modal.classList.add('active');
+            setTimeout(() => placeNameInput.focus(), 100);
+            
+            autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang định vị vệ tinh Google...</span>';
+            currentDetectedRegion = "Việt Nam";
+
+            if (GAS_API_URL !== "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
+                fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        currentDetectedRegion = data.province;
+                        autoRegionText.innerHTML = `📍 ${data.province}`;
+                    })
+                    .catch(() => {
+                        autoRegionText.innerHTML = `📍 Khu vực mới`;
+                    });
+            }
+        }
+
+        map.on('click', function(e) {
+            if (map.getZoom() < ZOOM_THRESHOLD) {
+                const targetZoom = Math.max(map.getZoom() + 3, 10);
+                map.flyTo(e.latlng, targetZoom, { duration: 1.2 });
+                return;
+            }
+            currentClickLat = e.latlng.lat.toFixed(4);
+            currentClickLng = e.latlng.lng.toFixed(4);
+            openCheckInModal();
+        });
+
+        function closeModal() { modal.classList.remove('active'); }
+
+        // CẢI TIẾN LÀM MỚI: Đẩy dữ liệu ghi nhận check-in mới về máy chủ Sheets bằng fetch API
+        function submitCheckIn() {
+            const name = placeNameInput.value.trim();
+            const note = placeNoteInput.value.trim();
+            if (!name) { alert("Vui lòng nhập tên địa điểm!"); placeNameInput.focus(); return; }
+
+            const btnSubmit = document.querySelector('.btn-submit');
+            const oldText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = "⏳ Đang ghi vào Sheets...";
+            btnSubmit.disabled = true;
+
+            const regionName = currentDetectedRegion;
+            const regionKey = regionName.trim().toLowerCase();
+            
+            if (!activeRegionsTracker.has(regionKey)) {
+                addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực được tạo tự động từ điểm check-in chi tiết! 🏙️`);
+            }
+
+            const today = new Date().toLocaleDateString('vi-VN');
+            const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, today, note);
+            
+            closeModal();
+            updateLayerVisibility();
+            newMarker.openPopup();
+
+            if (GAS_API_URL !== "ĐIỀN_URL_WEB_APP_GAS_CỦA_BẠN_VÀO_ĐÂY") {
+                const saveUrl = `${GAS_API_URL}?action=save` +
+                    `&regionName=${encodeURIComponent(regionName)}` +
+                    `&placeName=${encodeURIComponent(name)}` +
+                    `&lat=${currentClickLat}` +
+                    `&lng=${currentClickLng}` +
+                    `&date=${encodeURIComponent(today)}` +
+                    `&note=${encodeURIComponent(note)}`;
+
+                fetch(saveUrl)
+                    .then(res => res.json())
+                    .then(() => {
+                        btnSubmit.innerHTML = oldText;
+                        btnSubmit.disabled = false;
+                        const toast = document.getElementById('syncToast');
+                        toast.style.opacity = '1';
+                        toast.innerHTML = `⚡ Đã lưu "${name}" chuẩn 100% vào Sheets!`;
+                        setTimeout(() => { toast.style.opacity = '0'; }, 4000);
+                    })
+                    .catch(err => {
+                        alert("Lỗi khi ghi vào Google Sheets: " + err);
+                        btnSubmit.innerHTML = oldText;
+                        btnSubmit.disabled = false;
+                    });
+            } else {
+                btnSubmit.innerHTML = oldText;
+                btnSubmit.disabled = false;
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!modal.classList.contains('active')) return;
+            if (e.key === 'Enter') submitCheckIn();
+            if (e.key === 'Escape') closeModal();
+        });
+
+        function forceMapRender() {
+            map.invalidateSize();
+            updateLayerVisibility();
+        }
+
+        setTimeout(forceMapRender, 100);
+        setTimeout(forceMapRender, 500);
+        setTimeout(forceMapRender, 1500);
+        
+        window.addEventListener('load', function() {
+            forceMapRender();
+            loadDataFromGoogleSheets();
+        });
+    </script>
 </body>
 </html>

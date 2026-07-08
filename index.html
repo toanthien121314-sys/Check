@@ -1281,37 +1281,56 @@
             }
         }
 
+// ==========================================
+        // ĐỒNG BỘ DỮ LIỆU NGẦM & BỘ NHỚ ĐỆM SIÊU TỐC
+        // ==========================================
         function loadDataFromGoogleSheets() {
             const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
             let hasCache = false;
 
+            // 1. NẾU CÓ CACHE: Tải ngay lập tức, tắt luôn màn hình loading đen
             if (cachedDataStr) {
                 try {
                     const cachedData = JSON.parse(cachedDataStr);
                     renderDataToMap(cachedData);
                     hideLoadingScreen(); 
                     hasCache = true;
-                    showToast('🔄 Đang đồng bộ dữ liệu ngầm...', 0); 
-                } catch(e) {}
+                    // Hiện thông báo siêu nhỏ, tự tắt sau 2 giây để không làm phiền
+                    showToast('🔄 Đang kiểm tra dữ liệu mới ngầm...', 2000); 
+                } catch(e) {
+                    console.error("Lỗi đọc bộ nhớ đệm:", e);
+                }
             }
 
-            setTimeout(hideLoadingScreen, 4000);
-
+            // 2. CHẠY NGẦM LÊN GOOGLE SHEETS
             fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
                 .then(res => {
-                    if (!res.ok) throw new Error("Mạng lỗi");
+                    if (!res.ok) throw new Error("Máy chủ Google phản hồi chậm");
                     return res.json();
                 })
                 .then(data => {
+                    // Cập nhật bộ đệm mới nhất vào máy
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+                    
+                    // Vẽ lại bản đồ
                     const counts = renderDataToMap(data);
                     
+                    // Nếu là lần đầu mở app (chưa có cache), giờ mới tắt loading
                     if (!hasCache) hideLoadingScreen(); 
-                    showToast(`✅ Đã đồng bộ: ${counts.regCount} vùng & ${counts.spotCount} điểm`);
+                    
+                    showToast(`✅ Đã cập nhật mới nhất!`, 3000);
                 })
                 .catch(err => {
-                    if (!hasCache) hideLoadingScreen();
-                    showToast(`⚠️ Lỗi kết nối. Đang xem dữ liệu offline.`);
+                    // 3. XỬ LÝ LỖI THÔNG MINH
+                    if (!hasCache) {
+                        // Lần đầu mở app mà mất mạng thì đành chịu, phải báo lỗi
+                        hideLoadingScreen();
+                        showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
+                    } else {
+                        // CÓ CACHE RỒI MÀ LỖI MẠNG NGẦM -> IM LẶNG CHO QUA
+                        // Không hiện thông báo đỏ cản trở trải nghiệm của người dùng nữa
+                        console.log("Đồng bộ ngầm thất bại (Google quá tải). Tiếp tục dùng Cache mượt mà.");
+                    }
                 });
         }
 

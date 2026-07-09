@@ -62,8 +62,16 @@
             visibility: hidden !important;
         }
 
+        /* Bật tăng tốc phần cứng cho các lớp gạch bản đồ (Trống nháy đen) */
+        .leaflet-tile {
+            will-change: transform, opacity;
+        }
+        .leaflet-fade-anim .leaflet-tile {
+            transition: opacity 0.15s ease-in;
+        }
+
         /* =========================================
-          NÚT ĐIỀU KHIỂN (BUTTONS)
+           CÁC NÚT ĐIỀU KHIỂN (BUTTONS)
         ========================================= */
         .location-btn {
             position: absolute;
@@ -827,7 +835,6 @@
         </div>
     </div>
 
-    <!-- HỘP THOẠI: MENU LỰA CHỌN KHI ẤN ĐÈ TEM KỶ NIỆM -->
     <div class="modal-overlay" id="stampOptionsMenu">
         <div class="modal-box" style="text-align:center; padding: 25px;">
             <h3 style="color:var(--neon-primary); margin-bottom: 20px; text-shadow: 0 0 10px rgba(var(--neon-primary-rgb),0.6);">TÙY CHỌN MỘC BẢN</h3>
@@ -854,7 +861,6 @@
                 🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang quét tọa độ...</span>
             </div>
 
-            <!-- BƯỚC 1: NHẬP THÔNG TIN -->
             <div id="step1Inputs" class="step-container">
                 <div class="form-group">
                     <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
@@ -875,7 +881,6 @@
                 </div>
             </div>
 
-            <!-- BƯỚC 2: XEM TRƯỚC TEM VÀ LƯU -->
             <div id="step2Preview" class="step-container" style="display: none;">
                 <div class="stamp-preview-container">
                     <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
@@ -900,12 +905,11 @@
             { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, // Bạc hà - Tím
             { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  // Vàng - Đỏ
             { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, // Xanh biển - Cam
-            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  // Chanh - Đỏ tươi (Magenta)
+            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  // Chanh - Đỏ tươi
         ];
         
         function setAppNeonColorByDate() {
             const today = new Date();
-            // Lấy ngày trong năm để đổi màu ngẫu nhiên nhưng cố định trong ngày
             const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
             const palette = appNeonPalettes[dayOfYear % appNeonPalettes.length];
             
@@ -980,7 +984,7 @@
         });
 
         // ==========================================
-        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET VÀ CÁC LỚP
+        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET (ĐÃ CẤU HÌNH SIÊU MƯỢT NHƯ GOOGLE MAPS)
         // ==========================================
         const map = L.map('map', {
             center: [16.047079, 108.206230],
@@ -988,11 +992,21 @@
             minZoom: 5,
             maxZoom: 18, 
             zoomControl: false, 
-            attributionControl: false 
+            attributionControl: false,
+            // Thủ thuật Fractional Zoom siêu mượt
+            zoomSnap: 0,
+            zoomDelta: 0.5,
+            wheelPxPerZoomLevel: 60,
+            bounceAtZoomLimits: true
         });
 
+        // Áp dụng Caching & Giữ khung hình cũ để tránh mảng đen khi kéo bản đồ
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
-            maxZoom: 20 
+            maxZoom: 20,
+            maxNativeZoom: 19, 
+            keepBuffer: 8,     
+            updateWhenZooming: false, 
+            updateWhenIdle: true
         }).addTo(map);
 
         function createRegionalIcon(regionName) {
@@ -1020,68 +1034,6 @@
             iconAnchor: [14, 14], 
             popupAnchor: [0, -14] 
         });
-
-        const VN_PROVINCES = [
-            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
-            { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
-            { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 },
-            { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 },
-            { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
-            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
-            { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 },
-            { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
-            { name: "Huế", lat: 16.4637, lng: 107.5909 },
-            { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 },
-            { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
-            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 },
-            { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 },
-            { name: "Hội An", lat: 15.8801, lng: 108.3380 },
-            { name: "An Giang", lat: 10.5216, lng: 105.1259 },
-            { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 },
-            { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
-            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 },
-            { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 },
-            { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
-            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 },
-            { name: "Bến Tre", lat: 10.2333, lng: 106.3833 },
-            { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
-            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 },
-            { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 },
-            { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
-            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 },
-            { name: "Sa Pa", lat: 22.3364, lng: 103.8438 },
-            { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
-            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 },
-            { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 },
-            { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
-            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 },
-            { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 },
-            { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
-            { name: "Bình Định", lat: 14.1667, lng: 108.9000 },
-            { name: "Phú Yên", lat: 14.0500, lng: 109.0167 },
-            { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
-            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 },
-            { name: "Gia Lai", lat: 13.9833, lng: 108.0000 },
-            { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
-            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 },
-            { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 },
-            { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
-            { name: "Long An", lat: 10.6667, lng: 106.1667 },
-            { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 },
-            { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
-            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 },
-            { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 },
-            { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
-            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 },
-            { name: "Nam Định", lat: 20.9333, lng: 106.3167 },
-            { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
-        ];
-
-        const regionalLayer = L.layerGroup().addTo(map);
-        const spotLayer = L.layerGroup();
-        const photoLayer = L.layerGroup();
-        const activeRegionsTracker = new Set();
 
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
@@ -1121,7 +1073,7 @@
             });
 
             marker.on('click', () => {
-                map.flyTo([finalLat, finalLng], 11, { duration: 1.5 });
+                map.flyTo([finalLat, finalLng], 12, { duration: 1.5 }); // Phóng sâu hơn 1 bậc nữa
             });
             
             activeRegionsTracker.add(regionKey);
@@ -1182,7 +1134,7 @@
         }
 
         // ==========================================
-        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH THÀNH ĐỔI MÀU
+        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH THÀNH ĐỔI MÀU NEON
         // ==========================================
         function loadProvinceBorders() {
             fetch(GEOJSON_VN_BORDERS_URL)
@@ -1654,7 +1606,7 @@
                 });
         }
 
-        // TĂNG NGƯỠNG ZOOM CHO CỜ ĐỎ LÊN 11
+        // ĐẨY NGƯỠNG ZOOM LÊN MỨC 11 ĐỂ GIẤU CỜ ĐỎ KHI NHÌN TỪ XA
         const ZOOM_THRESHOLD = 11;
         function updateLayerVisibility() {
             if (isPhotoView) return; 
@@ -1945,6 +1897,8 @@
             placeNoteInput.value = ''; 
             stampPhotoInput.value = ''; 
             userCapturedImg = null;    
+
+            currentStampColor = vintageColors[Math.floor(Math.random() * vintageColors.length)];
 
             goToStep1();
 

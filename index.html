@@ -922,7 +922,7 @@
         const currentAppColors = setAppNeonColorByDate();
 
         // ==========================================
-        // 1. CẤU HÌNH HỆ THỐNG VÀ API
+        // 1. CẤU HÌNH HỆ THỐNG VÀ API (ĐÃ SỬA LẠI LINK API GỐC)
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7vxQeX0br9PqlWsjE8FcVvdg6zohwHejlEJbxlrKIEDldoHymGNd8gvXe5ZqQmI3q/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
@@ -1540,7 +1540,7 @@
         }
 
         // ==========================================
-        // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ CÓ FAILSAFE
+        // 5. ĐỒNG BỘ DATA VỚI HÀM FETCH GỐC (ỔN ĐỊNH 100%)
         // ==========================================
         function hideLoadingScreen() {
             const loader = document.getElementById('loadingOverlay');
@@ -1576,13 +1576,9 @@
                 }
             }
 
-            // GIA TĂNG THỜI GIAN ĐỢI LÊN 30 GIÂY ĐỂ TRÁNH LỖI LÚC GOOGLE NGỦ ĐÔNG
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); 
-
-            fetch(`${GAS_API_URL}?action=get`, { redirect: "follow", signal: controller.signal })
+            // HÀM FETCH NGUYÊN BẢN 100% CỦA PHIÊN BẢN CHẠY ỔN ĐỊNH NHẤT
+            fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
                 .then(res => {
-                    clearTimeout(timeoutId);
                     if (!res.ok) throw new Error("Máy chủ Google phản hồi chậm");
                     return res.json();
                 })
@@ -1593,22 +1589,16 @@
                     showToast(`✅ Đã cập nhật mới nhất!`, 3000);
                     if (data.spots) preloadStampsIntoCache(data.spots); 
                 })
-                .catch((err) => {
-                    clearTimeout(timeoutId);
+                .catch(() => {
                     if (!hasCache) {
                         hideLoadingScreen();
-                        if (err.name === 'AbortError') {
-                            showToast(`⚠️ Google phản hồi quá chậm. Vui lòng tải lại trang!`, 5000);
-                        } else {
-                            showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
-                        }
+                        showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
                     } else {
                         console.log("Đồng bộ ngầm thất bại. Tiếp tục dùng Cache mượt mà.");
                     }
                 });
         }
 
-        // TĂNG NGƯỠNG ZOOM CHO CỜ ĐỎ LÊN 11
         const ZOOM_THRESHOLD = 11;
         function updateLayerVisibility() {
             if (isPhotoView) return; 
@@ -2082,15 +2072,6 @@
         }
         
         window.addEventListener('load', () => { 
-            // Giãn thời gian chờ Failsafe lên 15 giây
-            setTimeout(() => {
-                const loader = document.getElementById('loadingOverlay');
-                if (loader && loader.style.opacity !== '0') {
-                    hideLoadingScreen();
-                    showToast("⚠️ Mạng chậm, đang tải dữ liệu ngầm...", 4000);
-                }
-            }, 15000);
-            
             setTimeout(forceMapRender, 100); 
             setTimeout(forceMapRender, 500);
             

@@ -1381,8 +1381,15 @@
         let myCurrentLat = 0;
         let myCurrentLng = 0;
         
+// ==========================================
+        // 6. ĐỊNH VỊ GPS VÀ LƯU TRỮ (Đã nâng cấp chống lỗi)
+        // ==========================================
+        let myLocationMarker = null;
+        let myCurrentLat = 0;
+        let myCurrentLng = 0;
+        
         function goToMyLocation() {
-            if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+            if (!navigator.geolocation) return alert("Trình duyệt của bạn không hỗ trợ GPS!");
             
             const btn = document.querySelector('.location-btn');
             const originTxt = btn.innerHTML; 
@@ -1391,7 +1398,7 @@
             
             const options = {
                 enableHighAccuracy: true,
-                timeout: 5000,
+                timeout: 15000, // TĂNG LÊN 15 GIÂY ĐỂ ĐIỆN THOẠI KỊP BẮT VỆ TINH
                 maximumAge: 10000 
             };
 
@@ -1416,7 +1423,17 @@
                     btn.style.opacity = "1";
                 },
                 err => { 
-                    alert("Không thể nhận tín hiệu GPS! Vui lòng bật vị trí."); 
+                    // PHÂN TÍCH CHÍNH XÁC LỖI ĐỂ BÁO CHO NGƯỜI DÙNG
+                    let errorMsg = "Không thể nhận tín hiệu GPS! Vui lòng bật vị trí.";
+                    if (err.code === 1) {
+                        errorMsg = "Trình duyệt đã bị CHẶN quyền vị trí!\nVui lòng vào Cài đặt của trình duyệt -> Cài đặt trang web -> Xóa dữ liệu & Đặt lại quyền cho trang này.";
+                    } else if (err.code === 2) {
+                        errorMsg = "Không thể xác định được vị trí (Mất kết nối vệ tinh).";
+                    } else if (err.code === 3) {
+                        errorMsg = "Quá thời gian quét GPS (Timeout). Vui lòng thử lại ở nơi thoáng đãng hơn.";
+                    }
+                    
+                    alert(errorMsg); 
                     btn.innerHTML = originTxt;
                     btn.style.opacity = "1";
                 },

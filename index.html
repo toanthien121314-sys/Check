@@ -62,7 +62,6 @@
             visibility: hidden !important;
         }
 
-        /* Bật tăng tốc phần cứng cho các lớp gạch bản đồ (Trống nháy đen) */
         .leaflet-tile {
             will-change: transform, opacity;
         }
@@ -898,14 +897,14 @@
 
     <script>
         // ==========================================
-        // 0. HỆ THỐNG MÀU NEON THEO NGÀY (THAY THẾ HARDCODE MÀU)
+        // 0. HỆ THỐNG MÀU NEON THEO NGÀY
         // ==========================================
         const appNeonPalettes = [
-            { primary: '#00f3ff', pRgb: '0, 243, 255', secondary: '#ff007f', sRgb: '255, 0, 127' }, // Xanh lam - Hồng (Mặc định)
-            { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, // Bạc hà - Tím
-            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  // Vàng - Đỏ
-            { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, // Xanh biển - Cam
-            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  // Chanh - Đỏ tươi
+            { primary: '#00f3ff', pRgb: '0, 243, 255', secondary: '#ff007f', sRgb: '255, 0, 127' }, 
+            { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, 
+            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  
+            { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, 
+            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  
         ];
         
         function setAppNeonColorByDate() {
@@ -984,7 +983,7 @@
         });
 
         // ==========================================
-        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET (ĐÃ CẤU HÌNH SIÊU MƯỢT NHƯ GOOGLE MAPS)
+        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET
         // ==========================================
         const map = L.map('map', {
             center: [16.047079, 108.206230],
@@ -993,14 +992,12 @@
             maxZoom: 18, 
             zoomControl: false, 
             attributionControl: false,
-            // Thủ thuật Fractional Zoom siêu mượt
             zoomSnap: 0,
             zoomDelta: 0.5,
             wheelPxPerZoomLevel: 60,
             bounceAtZoomLimits: true
         });
 
-        // Áp dụng Caching & Giữ khung hình cũ để tránh mảng đen khi kéo bản đồ
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
             maxZoom: 20,
             maxNativeZoom: 19, 
@@ -1073,7 +1070,7 @@
             });
 
             marker.on('click', () => {
-                map.flyTo([finalLat, finalLng], 12, { duration: 1.5 }); // Phóng sâu hơn 1 bậc nữa
+                map.flyTo([finalLat, finalLng], 12, { duration: 1.5 });
             });
             
             activeRegionsTracker.add(regionKey);
@@ -1134,7 +1131,7 @@
         }
 
         // ==========================================
-        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH THÀNH ĐỔI MÀU NEON
+        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH THÀNH (GEOJSON)
         // ==========================================
         function loadProvinceBorders() {
             fetch(GEOJSON_VN_BORDERS_URL)
@@ -1579,8 +1576,9 @@
                 }
             }
 
+            // GIA TĂNG THỜI GIAN ĐỢI LÊN 30 GIÂY ĐỂ TRÁNH LỖI LÚC GOOGLE NGỦ ĐÔNG
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000); 
+            const timeoutId = setTimeout(() => controller.abort(), 30000); 
 
             fetch(`${GAS_API_URL}?action=get`, { redirect: "follow", signal: controller.signal })
                 .then(res => {
@@ -1595,18 +1593,22 @@
                     showToast(`✅ Đã cập nhật mới nhất!`, 3000);
                     if (data.spots) preloadStampsIntoCache(data.spots); 
                 })
-                .catch(() => {
+                .catch((err) => {
                     clearTimeout(timeoutId);
                     if (!hasCache) {
                         hideLoadingScreen();
-                        showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
+                        if (err.name === 'AbortError') {
+                            showToast(`⚠️ Google phản hồi quá chậm. Vui lòng tải lại trang!`, 5000);
+                        } else {
+                            showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
+                        }
                     } else {
                         console.log("Đồng bộ ngầm thất bại. Tiếp tục dùng Cache mượt mà.");
                     }
                 });
         }
 
-        // ĐẨY NGƯỠNG ZOOM LÊN MỨC 11 ĐỂ GIẤU CỜ ĐỎ KHI NHÌN TỪ XA
+        // TĂNG NGƯỠNG ZOOM CHO CỜ ĐỎ LÊN 11
         const ZOOM_THRESHOLD = 11;
         function updateLayerVisibility() {
             if (isPhotoView) return; 
@@ -2080,13 +2082,14 @@
         }
         
         window.addEventListener('load', () => { 
+            // Giãn thời gian chờ Failsafe lên 15 giây
             setTimeout(() => {
                 const loader = document.getElementById('loadingOverlay');
                 if (loader && loader.style.opacity !== '0') {
                     hideLoadingScreen();
-                    showToast("⚠️ Mạng chậm, đã tự động chuyển sang chế độ Nhanh (Offline)!", 4000);
+                    showToast("⚠️ Mạng chậm, đang tải dữ liệu ngầm...", 4000);
                 }
-            }, 7000);
+            }, 15000);
             
             setTimeout(forceMapRender, 100); 
             setTimeout(forceMapRender, 500);

@@ -610,7 +610,7 @@
             transform: translateY(-20px);
             transition: transform 0.3s ease;
             max-height: 92vh;
-            overflow: hidden; /* Cấm thanh cuộn, giữ size cố định */
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
@@ -651,7 +651,6 @@
             text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
         }
 
-        /* Animation cho việc lật trang (Step 1 -> Step 2) */
         .step-container {
             animation: fadeIn 0.3s ease forwards;
         }
@@ -733,7 +732,6 @@
             box-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
         }
 
-        /* KHUNG HIỂN THỊ TEM TRONG STEP 2 */
         .stamp-preview-container {
             display: flex;
             flex-direction: column;
@@ -814,6 +812,7 @@
                 🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang quét tọa độ...</span>
             </div>
 
+            <!-- BƯỚC 1: NHẬP THÔNG TIN -->
             <div id="step1Inputs" class="step-container">
                 <div class="form-group">
                     <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
@@ -830,10 +829,12 @@
 
                 <div class="modal-actions">
                     <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
+                    <!-- Nút này kích hoạt chuyển sang Bước 2 vẽ Tem -->
                     <button class="btn btn-submit" onclick="goToStep2()">Tạo Tem</button>
                 </div>
             </div>
 
+            <!-- BƯỚC 2: XEM TRƯỚC TEM VÀ LƯU -->
             <div id="step2Preview" class="step-container" style="display: none;">
                 <div class="stamp-preview-container">
                     <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
@@ -841,6 +842,7 @@
                 </div>
 
                 <div class="modal-actions">
+                    <!-- Nút này quay lại Bước 1 để chỉnh sửa -->
                     <button class="btn btn-cancel" onclick="goToStep1()">Quay Lại</button>
                     <button class="btn btn-submit" id="btnSubmitCheckIn" onclick="submitCheckIn()">Lưu Điểm</button>
                 </div>
@@ -1132,15 +1134,22 @@
             }
         }
 
+        // ==========================================
+        // SỬ DỤNG TEM LÀM ẢNH ĐẠI DIỆN ALBUM MẶC ĐỊNH
+        // ==========================================
         function renderPhotoLayer() {
             photoLayer.clearLayers();
             globalSpotsData.forEach((spot, index) => {
                 const markerId = `album-cover-${index}`;
                 const badgeId = `album-badge-${index}`;
                 
+                // Lấy Tem Thư đã lưu làm background mặc định
+                const cleanStampUrl = (spot.stampUrl || "").toString().trim();
+                const bgStyle = cleanStampUrl ? `background-image: url('${cleanStampUrl}');` : '';
+                
                 const photoIcon = L.divIcon({
                     className: 'custom-photo-icon',
-                    html: `<div class="photo-album-marker" id="${markerId}"><div class="photo-album-badge" id="${badgeId}">⏳</div></div>`,
+                    html: `<div class="photo-album-marker" id="${markerId}" style="${bgStyle}"><div class="photo-album-badge" id="${badgeId}">⏳</div></div>`,
                     iconSize: [65, 65],
                     iconAnchor: [32, 32]
                 });
@@ -1165,7 +1174,9 @@
                             const badgeEl = document.getElementById(badgeId);
                             if (data.images && data.images.length > 0) {
                                 if (badgeEl) badgeEl.innerText = data.images.length; 
-                                if (markerEl) {
+                                
+                                // CHỈ tải ảnh trong Drive làm bìa nếu Album này CHƯA CÓ TEM THƯ
+                                if (markerEl && !cleanStampUrl) {
                                     const coverId = data.images[0]; 
                                     markerEl.style.backgroundImage = `url('https://drive.google.com/thumbnail?id=${coverId}&sz=w200')`;
                                 }
@@ -1474,7 +1485,6 @@
         const placeNoteInput = document.getElementById('placeNote');
         const stampPhotoInput = document.getElementById('stampPhotoInput');
 
-        // Bắt sự kiện chọn ảnh chỉ để lưu vào bộ nhớ, chưa vẽ tem
         stampPhotoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -1503,11 +1513,9 @@
                 return;
             }
 
-            // Đổi giao diện
             document.getElementById('step1Inputs').style.display = 'none';
             document.getElementById('step2Preview').style.display = 'block';
 
-            // Vẽ tem với dữ liệu đã nhập
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
             drawNeonStamp(nameVal, currentDetectedRegion, todayStr);
@@ -1680,16 +1688,13 @@
         }
 
         function openCheckInModal() {
-            // Reset dữ liệu
             placeNameInput.value = ''; 
             placeNoteInput.value = ''; 
             stampPhotoInput.value = ''; 
             userCapturedImg = null;    
 
-            // Chọn màu ngẫu nhiên cho lần mở này
             currentStampColor = vintageColors[Math.floor(Math.random() * vintageColors.length)];
 
-            // Đặt về Bước 1
             goToStep1();
 
             modal.classList.add('active'); 
@@ -1853,15 +1858,14 @@
             });
         }
 
-        // Fix lỗi ấn Enter kích hoạt submit khi đang ở bước 1
         document.addEventListener('keydown', e => { 
             if (!modal.classList.contains('active')) return; 
             if (e.key === 'Escape') closeModal(); 
             if (e.key === 'Enter') {
                 if (document.getElementById('step1Inputs').style.display !== 'none') {
-                    goToStep2(); // Đang ở bước 1 thì sang bước 2
+                    goToStep2(); 
                 } else {
-                    submitCheckIn(); // Đang ở bước 2 thì lưu điểm
+                    submitCheckIn(); 
                 }
             }
         });

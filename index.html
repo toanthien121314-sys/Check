@@ -854,7 +854,7 @@
 
             <div id="step2Preview" class="step-container" style="display: none;">
                 <div class="stamp-preview-container">
-                    <div class="stamp-preview-title">🌸 stamp check in 🌸</div>
+                    <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
                     <canvas id="stampCanvas" width="320" height="420"></canvas>
                 </div>
 
@@ -884,7 +884,6 @@
         let isPhotoView = false; 
         let userCapturedImg = null; 
 
-        // Các biến phục vụ tính năng Long Press Đổi ảnh
         let pressTimer;
         let isPressing = false;
         let targetStampInfo = null;
@@ -1075,19 +1074,18 @@
         }
 
         // ==========================================
-        // CƠ CHẾ LONG-PRESS VÀ XÓA BỎ EVENT ONCLICK
+        // CƠ CHẾ LONG-PRESS VÀ BỎ EVENT ONCLICK
         // ==========================================
         function startStampPress(e, lat, lng, nameStr) {
             isPressing = true;
             pressTimer = setTimeout(() => {
                 if(isPressing) {
-                    // Tìm chính xác điểm check-in trong bộ đệm
                     targetStampInfo = globalSpotsData.find(s => s.name === nameStr && Math.abs(s.lat - lat) < 0.0001 && Math.abs(s.lng - lng) < 0.0001);
                     if (targetStampInfo) {
                         document.getElementById('stampOptionsMenu').classList.add('active');
                     }
                 }
-            }, 800); // Đè 0.8 giây sẽ mở Menu Tuỳ chọn
+            }, 800); 
         }
 
         function cancelStampPress() {
@@ -1098,12 +1096,11 @@
         function addSpotMarker(name, lat, lng, date, note, stampUrl) {
             const marker = L.marker([lat, lng], { icon: redFlagIcon }).addTo(spotLayer);
             const cleanStampUrl = (stampUrl || "").toString().trim();
-            const safeNameStr = name.replace(/'/g, "\\'"); // Lọc ký tự nháy đơn
+            const safeNameStr = name.replace(/'/g, "\\'"); 
             const imgId = `stamp-img-${name.replace(/\s/g, '')}`;
             
             let stampHtml = '';
             if (cleanStampUrl !== '') {
-                // Đã loại bỏ onclick, chặn mở context menu khi đè trên điện thoại
                 stampHtml = `
                     <div style="text-align:center; margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,243,255,0.3);">
                         <div style="font-size:0.75rem; color:#00f3ff; margin-bottom:4px; font-weight:bold; letter-spacing:0.5px;">🌸 TEM THƯ KỶ NIỆM 🌸</div>
@@ -1131,6 +1128,26 @@
                 </div>
             `);
             return marker;
+        }
+
+        // BỘ ĐỆM ẢNH TEM THƯ SIÊU TỐC (CACHE API)
+        function preloadStampsIntoCache(spots) {
+            if (!window.caches) return;
+            caches.open('neon-stamps-cache-v1').then(cache => {
+                spots.forEach(spot => {
+                    const cleanUrl = (spot.stampUrl || "").toString().trim();
+                    if (cleanUrl.startsWith('http')) {
+                        cache.match(cleanUrl).then(res => {
+                            if (!res) {
+                                // Tải ngầm ảnh tem thư bằng chế độ no-cors để ép vào bộ nhớ đệm trình duyệt
+                                fetch(cleanUrl, { mode: 'no-cors' }).then(networkRes => {
+                                    cache.put(cleanUrl, networkRes);
+                                }).catch(() => {});
+                            }
+                        });
+                    }
+                });
+            });
         }
 
         function renderDataToMap(data) {
@@ -1301,7 +1318,6 @@
             currentImageIndex = index;
             updateLightboxImage();
             
-            // Hiện lại 2 nút mũi tên vì đây là xem Album nhiều ảnh
             document.querySelector('.lightbox-prev').style.display = 'flex';
             document.querySelector('.lightbox-next').style.display = 'flex';
             
@@ -1395,23 +1411,20 @@
             document.getElementById('stampOptionsMenu').classList.remove('active');
         }
 
-        // Chức năng 1: Xem Tem trong App (Dùng chung Lightbox)
         function viewStampFullscreen() {
             closeStampOptionsMenu();
             if (!targetStampInfo || !targetStampInfo.stampUrl) return;
 
-            lightboxImg.src = targetStampInfo.stampUrl; // Mở ảnh Tem trực tiếp
-            currentAlbumImages = [targetStampInfo.stampUrl]; // Tránh lỗi mảng
+            lightboxImg.src = targetStampInfo.stampUrl; 
+            currentAlbumImages = [targetStampInfo.stampUrl]; 
             resetZoom();
             
-            // Tắt nút chuyển ảnh vì chỉ có 1 tấm Tem
             document.querySelector('.lightbox-prev').style.display = 'none';
             document.querySelector('.lightbox-next').style.display = 'none';
             
             document.getElementById('lightboxOverlay').classList.add('active');
         }
 
-        // Chức năng 2: Đổi Ảnh Tem
         function triggerChangeStamp() {
             document.getElementById('updateStampFileInput').click();
         }
@@ -1420,7 +1433,7 @@
             const file = e.target.files[0];
             if (file) {
                 closeStampOptionsMenu();
-                showToast("⏳ Đang thiết kế Tem mới... Xin chờ!", 0); // Vô hạn chờ xử lý
+                showToast("⏳ Đang thiết kế Tem mới... Xin chờ!", 0); 
                 
                 const reader = new FileReader();
                 reader.onload = function(event) {
@@ -1429,12 +1442,10 @@
                         userCapturedImg = img;
                         currentStampColor = vintageColors[Math.floor(Math.random() * vintageColors.length)];
                         
-                        // Mượn canvas có sẵn để vẽ lại tem
                         drawNeonStamp(targetStampInfo.name, targetStampInfo.region, targetStampInfo.date);
                         const stampCanvasEl = document.getElementById('stampCanvas');
                         const newStampBase64 = stampCanvasEl.toDataURL('image/png');
                         
-                        // Gửi POST cập nhật qua Server
                         updateStampOnServer(targetStampInfo, newStampBase64);
                     };
                     img.src = event.target.result;
@@ -1449,7 +1460,7 @@
                 redirect: "follow",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({
-                    action: "updateStamp", // Kích hoạt chức năng mới trên GAS
+                    action: "updateStamp", 
                     placeName: spotInfo.name,
                     lat: spotInfo.lat,
                     lng: spotInfo.lng,
@@ -1461,18 +1472,17 @@
                 if (data.success) {
                     showToast("✅ Đã thiết kế Tem mới xong!", 3000);
                     
-                    // Cập nhật giao diện mượt mà tại chỗ
                     spotInfo.stampUrl = data.stampUrl;
                     const imgId = `stamp-img-${spotInfo.name.replace(/\s/g, '')}`;
                     const imgEl = document.getElementById(imgId);
                     if(imgEl) imgEl.src = data.stampUrl;
                     
-                    // Nạp lại bộ nhớ Cache
                     fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
                         .then(r => r.json())
                         .then(newData => {
                             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
                             if (isPhotoView) renderPhotoLayer();
+                            if (newData.spots) preloadStampsIntoCache(newData.spots); 
                         });
                 } else {
                     showToast("⚠️ Bị từ chối: " + data.error, 4000);
@@ -1484,7 +1494,7 @@
         }
 
         // ==========================================
-        // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ
+        // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ CÓ FAILSAFE
         // ==========================================
         function hideLoadingScreen() {
             const loader = document.getElementById('loadingOverlay');
@@ -1514,13 +1524,19 @@
                     hideLoadingScreen(); 
                     hasCache = true;
                     showToast('🔄 Đang kiểm tra dữ liệu mới ngầm...', 2000); 
+                    if (cachedData.spots) preloadStampsIntoCache(cachedData.spots); 
                 } catch(e) {
                     console.error("Lỗi đọc cache:", e);
                 }
             }
 
-            fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
+            // Tích hợp AbortController để chống treo mạng
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 giây ngắt
+
+            fetch(`${GAS_API_URL}?action=get`, { redirect: "follow", signal: controller.signal })
                 .then(res => {
+                    clearTimeout(timeoutId);
                     if (!res.ok) throw new Error("Máy chủ Google phản hồi chậm");
                     return res.json();
                 })
@@ -1529,13 +1545,15 @@
                     renderDataToMap(data);
                     if (!hasCache) hideLoadingScreen(); 
                     showToast(`✅ Đã cập nhật mới nhất!`, 3000);
+                    if (data.spots) preloadStampsIntoCache(data.spots); 
                 })
                 .catch(() => {
+                    clearTimeout(timeoutId);
                     if (!hasCache) {
                         hideLoadingScreen();
                         showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
                     } else {
-                        console.log("Đồng bộ ngầm thất bại. Tiếp tục dùng Cache.");
+                        console.log("Đồng bộ ngầm thất bại. Tiếp tục dùng Cache mượt mà.");
                     }
                 });
         }
@@ -1962,6 +1980,7 @@
                             .then(r => r.json())
                             .then(newData => {
                                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
+                                if (newData.spots) preloadStampsIntoCache(newData.spots); 
                             });
                     } else {
                         throw new Error(respData.error || "Lỗi lưu từ máy chủ");
@@ -2014,11 +2033,18 @@
             if (!isPhotoView) updateLayerVisibility(); 
         }
         
-        setTimeout(forceMapRender, 100); 
-        setTimeout(forceMapRender, 500);
-        
         window.addEventListener('load', () => { 
-            forceMapRender(); 
+            // Cứu cánh: Nếu mạng bị treo quá 7 giây, ép tắt màn hình Loading và chạy Offline
+            setTimeout(() => {
+                const loader = document.getElementById('loadingOverlay');
+                if (loader && loader.style.opacity !== '0') {
+                    hideLoadingScreen();
+                    showToast("⚠️ Mạng chậm, đã tự động chuyển sang chế độ Nhanh (Offline)!", 4000);
+                }
+            }, 7000);
+            
+            setTimeout(forceMapRender, 100); 
+            setTimeout(forceMapRender, 500);
             loadDataFromGoogleSheets(); 
         });
     </script>

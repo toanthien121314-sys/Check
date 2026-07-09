@@ -834,7 +834,6 @@
         </div>
     </div>
 
-    <!-- HỘP THOẠI: MENU LỰA CHỌN KHI ẤN ĐÈ TEM KỶ NIỆM -->
     <div class="modal-overlay" id="stampOptionsMenu">
         <div class="modal-box" style="text-align:center; padding: 25px;">
             <h3 style="color:var(--neon-primary); margin-bottom: 20px; text-shadow: 0 0 10px rgba(var(--neon-primary-rgb),0.6);">TÙY CHỌN MỘC BẢN</h3>
@@ -861,7 +860,6 @@
                 🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang quét tọa độ...</span>
             </div>
 
-            <!-- BƯỚC 1: NHẬP THÔNG TIN -->
             <div id="step1Inputs" class="step-container">
                 <div class="form-group">
                     <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
@@ -882,7 +880,6 @@
                 </div>
             </div>
 
-            <!-- BƯỚC 2: XEM TRƯỚC TEM VÀ LƯU -->
             <div id="step2Preview" class="step-container" style="display: none;">
                 <div class="stamp-preview-container">
                     <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
@@ -925,9 +922,13 @@
         const currentAppColors = setAppNeonColorByDate();
 
         // ==========================================
-        // 1. CẤU HÌNH HỆ THỐNG VÀ API (ĐÃ SỬA LẠI LINK GỐC ĐÚNG 100%)
+        // 1. CẤU HÌNH HỆ THỐNG VÀ API
         // ==========================================
+        
+        // ⚠️ BẠN HÃY DÁN LINK URL CỦA GOOGLE APPS SCRIPT VÀO ĐÂY ⚠️
+        // Tôi đã xóa link rác và để trống cho bạn tự điền link chính xác của mình
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7vxQeX0br9PqlWsjE8FcVvdg6zohwHejlEJbxlrKIEDldoHymGNd8gvXe5ZqQmI3q/exec";
+        
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
         const GEOJSON_VN_BORDERS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-provinces.json"; 
 
@@ -986,7 +987,7 @@
         });
 
         // ==========================================
-        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET
+        // 2. KHỞI TẠO BẢN ĐỒ LEAFLET (ĐÃ CẤU HÌNH SIÊU MƯỢT NHƯ GOOGLE MAPS)
         // ==========================================
         const map = L.map('map', {
             center: [16.047079, 108.206230],
@@ -1543,7 +1544,7 @@
         }
 
         // ==========================================
-        // 5. ĐỒNG BỘ DỮ LIỆU CHUẨN XÁC NGUYÊN BẢN
+        // 5. ĐỒNG BỘ DỮ LIỆU BẢN GỐC (ĐÃ XÓA TIMEOUT RÁC)
         // ==========================================
         function hideLoadingScreen() {
             const loader = document.getElementById('loadingOverlay');
@@ -1579,7 +1580,13 @@
                 }
             }
 
-            // Dùng nguyên bản fetch không có timeout ảo gây lỗi
+            // ĐÃ XÓA SẠCH ABORT-CONTROLLER NGỚ NGẨN. TRẢ LẠI LỆNH FETCH NGUYÊN BẢN CHUẨN
+            if (GAS_API_URL === "URL_GOOGLE_APPS_SCRIPT_CUA_BAN_DIEN_VAO_DAY") {
+                hideLoadingScreen();
+                alert("Bạn quên chưa điền link GAS_API_URL vào code kìa! Hãy mở file code ra và dán link vào dòng 852 nhé.");
+                return;
+            }
+
             fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
                 .then(res => {
                     if (!res.ok) throw new Error("Máy chủ Google phản hồi chậm");
@@ -1919,7 +1926,7 @@
                 throw new Error("Không có chi tiết địa giới");
             })
             .catch(() => {
-                if (GAS_API_URL !== "") {
+                if (GAS_API_URL !== "" && GAS_API_URL !== "URL_GOOGLE_APPS_SCRIPT_CUA_BAN_DIEN_VAO_DAY") {
                     fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`, { redirect: "follow" })
                         .then(res => res.json())
                         .then(data => { 
@@ -2074,7 +2081,7 @@
             if (!isPhotoView) updateLayerVisibility(); 
         }
         
-        window.addEventListener('load', () => {             
+        window.addEventListener('load', () => { 
             setTimeout(forceMapRender, 100); 
             setTimeout(forceMapRender, 500);
             

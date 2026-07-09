@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="theme-color" content="#03050a">
@@ -135,13 +134,6 @@
             gap: 6px;
         }
 
-        .install-btn:hover {
-            background: #ff007f;
-            color: #fff;
-            box-shadow: 0 0 25px #ff007f;
-            transform: scale(1.05);
-        }
-
         /* =========================================
            CÁC THÔNG BÁO VÀ LOADING
         ========================================= */
@@ -198,9 +190,7 @@
             box-shadow: 0 0 15px #ff007f;
         }
 
-        @keyframes spin { 
-            100% { transform: rotate(360deg); } 
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* =========================================
            THIẾT KẾ MARKERS TRÊN BẢN ĐỒ
@@ -265,36 +255,28 @@
             cursor: pointer;
         }
 
-        .red-flag-marker:hover {
-            transform: scale(1.3) translateY(-3px);
-        }
+        .red-flag-marker:hover { transform: scale(1.3) translateY(-3px); }
 
         .gps-dot {
-            width: 16px;
-            height: 16px;
+            width: 16px; height: 16px;
             background: #00f3ff;
             border-radius: 50%;
             border: 2px solid #fff;
-            position: absolute;
-            top: 6px;
-            left: 6px;
+            position: absolute; top: 6px; left: 6px;
             box-shadow: 0 0 15px #00f3ff, 0 0 30px #00f3ff;
             z-index: 2;
         }
 
         .gps-pulse {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             background: rgba(0, 243, 255, 0.6);
             border-radius: 50%;
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: absolute; top: 0; left: 0;
             animation: ripple 1.5s infinite ease-out;
             z-index: 1;
         }
 
-        /* Marker Album Ảnh */
+        /* Marker Album Ảnh Con Dấu (STAMP) */
         .photo-album-marker {
             width: 65px;
             height: 65px;
@@ -356,15 +338,8 @@
             padding-bottom: 5px;
         }
 
-        .popup-info {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: #d1d5db;
-        }
-
-        .popup-info b {
-            color: #ff007f;
-        }
+        .popup-info { font-size: 0.9rem; line-height: 1.5; color: #d1d5db; }
+        .popup-info b { color: #ff007f; }
 
         .btn-gps-checkin {
             margin-top: 8px;
@@ -386,7 +361,7 @@
         }
 
         /* =========================================
-           THƯ VIỆN ẢNH IN-APP MASONRY GIAO DIỆN (NEW)
+           THƯ VIỆN ẢNH IN-APP MASONRY GIAO DIỆN
         ========================================= */
         .gallery-container {
             position: fixed;
@@ -403,9 +378,7 @@
             transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .gallery-container.active {
-            transform: translateY(0);
-        }
+        .gallery-container.active { transform: translateY(0); }
         
         .gallery-header {
             padding: max(20px, env(safe-area-inset-top)) 20px 15px 20px;
@@ -433,61 +406,34 @@
             cursor: pointer;
         }
         
-        /* Giao diện lưới Masonry chống gãy ảnh */
         .gallery-grid {
             flex: 1;
             padding: 12px;
             overflow-y: auto;
-            column-count: 4; /* Mặc định PC là 4 cột */
+            column-count: 4; 
             column-gap: 12px;
         }
 
-        /* Tablet hoặc máy tính vừa */
-        @media (max-width: 1024px) {
-            .gallery-grid { column-count: 3; }
-        }
-
-        /* Tối ưu màn hình dọc Điện thoại (Mobile) */
-        @media (max-width: 768px) {
-            .gallery-grid { 
-                column-count: 2; 
-                column-gap: 8px; 
-                padding: 8px; 
-            }
-        }
+        @media (max-width: 1024px) { .gallery-grid { column-count: 3; } }
+        @media (max-width: 768px) { .gallery-grid { column-count: 2; column-gap: 8px; padding: 8px; } }
 
         .gallery-item {
             width: 100%;
-            height: auto; /* Ảnh tự điều chỉnh độ dài/ngang giữ tỷ lệ gốc */
+            height: auto; 
             margin-bottom: 12px;
             border-radius: 8px;
             background: #111;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
             transition: opacity 0.2s, transform 0.2s;
-            break-inside: avoid; /* Bắt buộc để ảnh không bị đứt làm đôi ở mép cột */
-            display: block; /* Sửa lỗi viền trắng dưới ảnh */
+            break-inside: avoid; 
+            display: block; 
         }
 
-        @media (max-width: 768px) {
-            .gallery-item { margin-bottom: 8px; }
-        }
-
-        .gallery-item:active {
-            opacity: 0.6;
-        }
-
-        .gallery-item:hover {
-            transform: scale(1.02); /* Phóng to nhẹ khi lia chuột */
-        }
-        
-        .empty-gallery {
-            text-align: center;
-            color: #64748b;
-            margin-top: 50px;
-            width: 100%;
-            column-span: all; /* Text trải dài 100% khi trống */
-        }
+        @media (max-width: 768px) { .gallery-item { margin-bottom: 8px; } }
+        .gallery-item:active { opacity: 0.6; }
+        .gallery-item:hover { transform: scale(1.02); }
+        .empty-gallery { text-align: center; color: #64748b; margin-top: 50px; width: 100%; column-span: all; }
         
         /* GIAO DIỆN LIGHTBOX (XEM ẢNH FULL SCREEN) */
         .lightbox-overlay {
@@ -507,12 +453,8 @@
             transition: opacity 0.2s ease;
         }
 
-        .lightbox-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .lightbox-overlay.active { opacity: 1; pointer-events: auto; }
 
-        /* Nút Tắt và Chuyển ảnh trong Lightbox */
         .lightbox-close {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -553,14 +495,10 @@
             transition: background 0.3s;
         }
 
-        .lightbox-nav:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
+        .lightbox-nav:hover { background: rgba(255,255,255,0.3); }
         .lightbox-prev { left: 15px; }
         .lightbox-next { right: 15px; }
 
-        /* Khung ảnh trong Lightbox (hỗ trợ Zoom mượt) */
         .lightbox-img-container {
             width: 100%;
             height: 100%;
@@ -579,10 +517,7 @@
             touch-action: none; 
         }
 
-        /* Ẩn nút điều hướng trên điện thoại (vì điện thoại vuốt được) */
-        @media (max-width: 768px) {
-            .lightbox-nav { display: none; }
-        }
+        @media (max-width: 768px) { .lightbox-nav { display: none; } }
 
         /* =========================================
            HỘP THOẠI NHẬP LIỆU CHECK-IN (MODAL)
@@ -604,10 +539,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
         .modal-box {
             background: linear-gradient(135deg, rgba(10, 16, 38, 0.95), rgba(5, 8, 20, 0.98));
@@ -621,9 +553,7 @@
             transition: transform 0.3s ease;
         }
 
-        .modal-overlay.active .modal-box {
-            transform: translateY(0);
-        }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
 
         .modal-title {
             font-size: 1.3rem;
@@ -636,17 +566,8 @@
             text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
         }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            color: #a5b4fc;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a5b4fc; margin-bottom: 6px; font-weight: 600; }
 
         .form-control {
             width: 100%;
@@ -665,11 +586,7 @@
             box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
         }
 
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
+        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
 
         .btn {
             flex: 1;
@@ -684,16 +601,8 @@
             letter-spacing: 0.5px;
         }
 
-        .btn-cancel {
-            background: transparent;
-            color: #94a3b8;
-            border: 1px solid #475569;
-        }
-
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
+        .btn-cancel { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+        .btn-cancel:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
         .btn-submit {
             background: linear-gradient(90deg, #00f3ff, #0077ff);
@@ -781,6 +690,16 @@
                 <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
                 <input type="text" id="placeName" class="form-control" placeholder="VD: Bến Nhà Rồng, Quán cà phê..." autocomplete="off">
             </div>
+            
+            <div class="form-group">
+                <label>🎫 Ảnh đóng dấu hành trình (Stamp)</label>
+                <input type="file" id="stampFileInput" accept="image/*" capture="environment" style="display:none;" onchange="handleStampFile(event)">
+                <button type="button" class="btn-gps-checkin" style="margin-top:0; background:linear-gradient(90deg, #bd00ff, #ff007f);" onclick="document.getElementById('stampFileInput').click()">📸 Chụp Ảnh Con Dấu</button>
+                <div id="stampPreviewContainer" style="margin-top:12px; text-align:center; display:none;">
+                    <canvas id="stampCanvas" width="300" height="300" style="width:110px; height:110px; border:2px dashed #bd00ff; background:#000; border-radius:10px; box-shadow: 0 0 10px #bd00ff;"></canvas>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="placeNote">Ghi chú / Kỷ niệm</label>
                 <input type="text" id="placeNote" class="form-control" placeholder="VD: Trải nghiệm cực kỳ chill..." autocomplete="off">
@@ -796,847 +715,451 @@
         // ==========================================
         // 1. CẤU HÌNH HỆ THỐNG VÀ API
         // ==========================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzrUySSsMIwedNWgSarTdCPoZpqe_aYfuVvpIBhLZDCAiP5TSTZGm83S6h-K7SiA16L/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwa_ODSpKrrSWbbzeg7Fpc4cm3d1-FW9BbGrKtuJqhGIlrr4-y9NIZ7dIHo45EyWew/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
 
-        // Khởi chạy Service Worker cho PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('Lỗi khởi chạy SW:', err));
             });
         }
 
-        // Xử lý nút Tải ứng dụng PWA
         let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'flex';
-        });
-
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                installBtn.style.display = 'none';
-            }
-        });
-
-        window.addEventListener('appinstalled', () => {
-            installBtn.style.display = 'none';
-        });
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'flex'; });
+        installBtn.addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; installBtn.style.display = 'none'; } });
+        window.addEventListener('appinstalled', () => { installBtn.style.display = 'none'; });
 
         // ==========================================
         // 2. KHỞI TẠO BẢN ĐỒ LEAFLET VÀ CÁC LỚP
         // ==========================================
-        const map = L.map('map', {
-            center: [16.047079, 108.206230],
-            zoom: 6,
-            minZoom: 5,
-            maxZoom: 18, 
-            zoomControl: false, 
-            attributionControl: false 
-        });
+        const map = L.map('map', { center: [16.047079, 108.206230], zoom: 6, minZoom: 5, maxZoom: 18, zoomControl: false, attributionControl: false });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(map);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
-            maxZoom: 20 
-        }).addTo(map);
+        function createRegionalIcon(regionName) { return L.divIcon({ className: 'custom-div-icon', html: `<div class="neon-marker-container"><div class="neon-label">${regionName}</div><div class="neon-pulse"></div><div class="neon-dot"></div></div>`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] }); }
+        const redFlagIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="red-flag-marker">🚩</div>`, iconSize: [28, 28], iconAnchor: [5, 25], popupAnchor: [8, -25] });
+        const gpsIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
 
-        // Định nghĩa các biểu tượng (Icons)
-        function createRegionalIcon(regionName) {
-            return L.divIcon({ 
-                className: 'custom-div-icon', 
-                html: `<div class="neon-marker-container"><div class="neon-label">${regionName}</div><div class="neon-pulse"></div><div class="neon-dot"></div></div>`, 
-                iconSize: [28, 28], 
-                iconAnchor: [14, 14], 
-                popupAnchor: [0, -14] 
-            });
-        }
-        
-        const redFlagIcon = L.divIcon({ 
-            className: 'custom-div-icon', 
-            html: `<div class="red-flag-marker">🚩</div>`, 
-            iconSize: [28, 28], 
-            iconAnchor: [5, 25], 
-            popupAnchor: [8, -25] 
-        });
-        
-        const gpsIcon = L.divIcon({ 
-            className: 'custom-div-icon', 
-            html: `<div class="neon-marker-container"><div class="gps-pulse"></div><div class="gps-dot"></div></div>`, 
-            iconSize: [28, 28], 
-            iconAnchor: [14, 14], 
-            popupAnchor: [0, -14] 
-        });
-
-        // Dữ liệu chuẩn tọa độ của 63 Tỉnh Thành Việt Nam
         const VN_PROVINCES = [
-            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
-            { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
-            { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 },
-            { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 },
-            { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
-            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
-            { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 },
-            { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
-            { name: "Huế", lat: 16.4637, lng: 107.5909 },
-            { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 },
-            { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
-            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 },
-            { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 },
-            { name: "Hội An", lat: 15.8801, lng: 108.3380 },
-            { name: "An Giang", lat: 10.5216, lng: 105.1259 },
-            { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 },
-            { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
-            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 },
-            { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 },
-            { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
-            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 },
-            { name: "Bến Tre", lat: 10.2333, lng: 106.3833 },
-            { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
-            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 },
-            { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 },
-            { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
-            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 },
-            { name: "Sa Pa", lat: 22.3364, lng: 103.8438 },
-            { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
-            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 },
-            { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 },
-            { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
-            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 },
-            { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 },
-            { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
-            { name: "Bình Định", lat: 14.1667, lng: 108.9000 },
-            { name: "Phú Yên", lat: 14.0500, lng: 109.0167 },
-            { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
-            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 },
-            { name: "Gia Lai", lat: 13.9833, lng: 108.0000 },
-            { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
-            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 },
-            { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 },
-            { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
-            { name: "Long An", lat: 10.6667, lng: 106.1667 },
-            { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 },
-            { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
-            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 },
-            { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 },
-            { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
-            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 },
-            { name: "Nam Định", lat: 20.9333, lng: 106.3167 },
-            { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
+            { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 }, { name: "Hà Nội", lat: 21.0285, lng: 105.8542 }, { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
+            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 }, { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 }, { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
+            { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 }, { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 }, { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
+            { name: "Huế", lat: 16.4637, lng: 107.5909 }, { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 }, { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
+            { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 }, { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 }, { name: "Hội An", lat: 15.8801, lng: 108.3380 },
+            { name: "An Giang", lat: 10.5216, lng: 105.1259 }, { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 }, { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
+            { name: "Bình Dương", lat: 11.1667, lng: 106.6667 }, { name: "Tây Ninh", lat: 11.3667, lng: 106.1167 }, { name: "Tiền Giang", lat: 10.4333, lng: 106.2500 },
+            { name: "Đồng Tháp", lat: 10.5333, lng: 105.6833 }, { name: "Bến Tre", lat: 10.2333, lng: 106.3833 }, { name: "Trà Vinh", lat: 9.8167, lng: 106.3000 },
+            { name: "Sóc Trăng", lat: 9.6000, lng: 105.9667 }, { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 }, { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
+            { name: "Lào Cai", lat: 22.4833, lng: 103.9500 }, { name: "Sa Pa", lat: 22.3364, lng: 103.8438 }, { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
+            { name: "Nghệ An", lat: 19.8067, lng: 105.7714 }, { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 }, { name: "Quảng Bình", lat: 18.4136, lng: 106.0125 },
+            { name: "Quảng Trị", lat: 17.4833, lng: 106.6000 }, { name: "Quảng Nam", lat: 15.5678, lng: 108.0000 }, { name: "Quảng Ngãi", lat: 15.1205, lng: 108.7923 },
+            { name: "Bình Định", lat: 14.1667, lng: 108.9000 }, { name: "Phú Yên", lat: 14.0500, lng: 109.0167 }, { name: "Ninh Thuận", lat: 11.0833, lng: 108.9333 },
+            { name: "Kon Tum", lat: 14.3500, lng: 108.0000 }, { name: "Gia Lai", lat: 13.9833, lng: 108.0000 }, { name: "Đắk Lắk", lat: 13.7667, lng: 108.0000 },
+            { name: "Đắk Nông", lat: 12.0000, lng: 108.0000 }, { name: "Lâm Đồng", lat: 11.9500, lng: 108.4333 }, { name: "Bình Phước", lat: 12.0000, lng: 106.7500 },
+            { name: "Long An", lat: 10.6667, lng: 106.1667 }, { name: "Thái Nguyên", lat: 21.6000, lng: 105.8333 }, { name: "Bắc Giang", lat: 21.2667, lng: 106.2000 },
+            { name: "Bắc Ninh", lat: 21.1833, lng: 106.0667 }, { name: "Hưng Yên", lat: 21.1167, lng: 106.0500 }, { name: "Hải Dương", lat: 20.9333, lng: 106.3167 },
+            { name: "Thái Bình", lat: 20.4500, lng: 106.3333 }, { name: "Nam Định", lat: 20.9333, lng: 106.3167 }, { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
-        // Khởi tạo các Lớp dữ liệu
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
         const photoLayer = L.layerGroup();
-        
         const activeRegionsTracker = new Set();
         let globalSpotsData = []; 
         let isPhotoView = false; 
 
-// Vẽ Khu vực lớn (Có chức năng gộp và ép tọa độ trung tâm)
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
-            
             if (activeRegionsTracker.has(regionKey)) return;
-
-            let finalLat = lat;
-            let finalLng = lng;
-            
+            let finalLat = lat, finalLng = lng;
             const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
-            if (standardProv) {
-                finalLat = standardProv.lat;
-                finalLng = standardProv.lng;
-            }
+            if (standardProv) { finalLat = standardProv.lat; finalLng = standardProv.lng; }
 
             const marker = L.marker([finalLat, finalLng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
-            
             marker.bindPopup(`<div class="popup-title">📍 ${name}</div><p style="color:#d1d5db;">${desc}</p>`);
             
-            // --- TÍNH NĂNG MỚI: TÀNG HÌNH CHỮ NHỎ KHI MỞ BẢNG THÔNG TIN ---
             marker.on('popupopen', function(e) {
                 const iconElement = e.target.getElement();
                 if (iconElement) {
                     const label = iconElement.querySelector('.neon-label');
-                    if (label) {
-                        label.style.transition = 'opacity 0.2s'; // Hiệu ứng mờ đi mượt mà
-                        label.style.opacity = '0'; // Tàng hình chữ nhỏ
-                    }
+                    if (label) { label.style.transition = 'opacity 0.2s'; label.style.opacity = '0'; }
                 }
             });
-
             marker.on('popupclose', function(e) {
                 const iconElement = e.target.getElement();
-                if (iconElement) {
-                    const label = iconElement.querySelector('.neon-label');
-                    if (label) {
-                        label.style.opacity = '1'; // Hiện lại khi đóng bảng
-                    }
-                }
+                if (iconElement) { const label = iconElement.querySelector('.neon-label'); if (label) { label.style.opacity = '1'; } }
             });
-            // --------------------------------------------------------
 
-            marker.on('click', () => {
-                map.flyTo([finalLat, finalLng], 11, { duration: 1.5 });
-            });
-            
+            marker.on('click', () => { map.flyTo([finalLat, finalLng], 11, { duration: 1.5 }); });
             activeRegionsTracker.add(regionKey);
         }
 
-        // Vẽ Điểm chi tiết (Lá cờ đỏ)
         function addSpotMarker(name, lat, lng, date, note) {
             const marker = L.marker([lat, lng], { icon: redFlagIcon }).addTo(spotLayer);
-            marker.bindPopup(`
-                <div class="popup-title">🚩 ${name}</div>
-                <div class="popup-info">
-                    <p><b>⏰ Thời gian:</b> ${date}</p>
-                    <p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p>
-                </div>
-            `);
+            marker.bindPopup(`<div class="popup-title">🚩 ${name}</div><div class="popup-info"><p><b>⏰ Thời gian:</b> ${date}</p><p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p></div>`);
             return marker;
         }
 
-        // Đổ dữ liệu tổng hợp ra bản đồ
         function renderDataToMap(data) {
-            regionalLayer.clearLayers();
-            spotLayer.clearLayers();
-            activeRegionsTracker.clear(); 
-            globalSpotsData = []; 
-
-            let spotCount = 0;
-            
-            if (data && data.regions) {
-                data.regions.forEach(function(reg) {
-                    addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc);
-                });
-            }
-            
-            if (data && data.spots) {
-                globalSpotsData = data.spots; 
-                data.spots.forEach(function(spot) {
-                    addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note);
-                    spotCount++;
-                });
-            }
-            
-            const uniqueRegionsCount = activeRegionsTracker.size;
-            
-            if (isPhotoView) {
-                renderPhotoLayer();
-            } else {
-                updateLayerVisibility();
-            }
-
-            return { regCount: uniqueRegionsCount, spotCount };
+            regionalLayer.clearLayers(); spotLayer.clearLayers(); activeRegionsTracker.clear(); globalSpotsData = []; 
+            if (data && data.regions) data.regions.forEach(reg => addRegionalMarker(reg.name, reg.lat, reg.lng, reg.desc));
+            if (data && data.spots) { globalSpotsData = data.spots; data.spots.forEach(spot => addSpotMarker(spot.name, spot.lat, spot.lng, spot.date, spot.note)); }
+            if (isPhotoView) renderPhotoLayer(); else updateLayerVisibility();
+            return { regCount: activeRegionsTracker.size, spotCount: globalSpotsData.length };
         }
 
-        // ==========================================
-        // 3. TÍNH NĂNG CHUYỂN ĐỔI CHẾ ĐỘ ẢNH (PHOTO MODE)
-        // ==========================================
         function togglePhotoView() {
             isPhotoView = !isPhotoView;
             const btn = document.getElementById('togglePhotoBtn');
-
             if (isPhotoView) {
-                btn.classList.add('active');
-                btn.innerHTML = '🔙 Tắt Ảnh';
-
+                btn.classList.add('active'); btn.innerHTML = '🔙 Tắt Ảnh';
                 if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer);
                 if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
-
-                renderPhotoLayer(); 
-                map.addLayer(photoLayer);
+                renderPhotoLayer(); map.addLayer(photoLayer);
             } else {
-                btn.classList.remove('active');
-                btn.innerHTML = '📸 Ảnh';
-
+                btn.classList.remove('active'); btn.innerHTML = '📸 Ảnh';
                 if (map.hasLayer(photoLayer)) map.removeLayer(photoLayer);
                 updateLayerVisibility();
             }
         }
 
-        // Vẽ các Khung Album lên bản đồ
-// ==========================================
-        // VẼ KHUNG ALBUM VÀ TỰ ĐỘNG TẢI ẢNH BÌA NGẦM
-        // ==========================================
+        // ========================================================
+        // 5. HIỂN THỊ CON STAMP RA BẢN ĐỒ (ƯU TIÊN LẤY TỪ LINK CỘT H CỦA SHEET)
+        // ========================================================
         function renderPhotoLayer() {
             photoLayer.clearLayers();
-            
             globalSpotsData.forEach((spot, index) => {
-                // Tạo ID duy nhất cho từng Khung và Badge để dễ dàng cập nhật ảnh ngầm
                 const markerId = `album-cover-${index}`;
                 const badgeId = `album-badge-${index}`;
                 
                 const photoIcon = L.divIcon({
                     className: 'custom-photo-icon',
-                    html: `
-                        <div class="photo-album-marker" id="${markerId}">
-                            <div class="photo-album-badge" id="${badgeId}">⏳</div>
-                        </div>
-                    `,
-                    iconSize: [65, 65],
-                    iconAnchor: [32, 32]
+                    html: `<div class="photo-album-marker" id="${markerId}" style="background-color:#0f111a; border:2px solid #ff007f; box-shadow:0 0 15px #ff007f;"><div class="photo-album-badge" id="${badgeId}">⏳</div></div>`,
+                    iconSize: [65, 65], iconAnchor: [32, 32]
                 });
 
                 const marker = L.marker([spot.lat, spot.lng], { icon: photoIcon }).addTo(photoLayer);
-                
                 marker.on('click', () => {
-                    if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
-                        openInAppGallery(spot.name, spot.folderUrl); 
-                    } else {
-                        alert(`Chưa có Album cho [${spot.name}] hoặc đang đồng bộ!`);
-                    }
+                    if (spot.folderUrl && spot.folderUrl.startsWith('http')) openInAppGallery(spot.name, spot.folderUrl); 
+                    else alert(`Chưa có Album cho [${spot.name}] hoặc đang đồng bộ!`);
                 });
 
-                // CHẠY NGẦM: Yêu cầu Drive trả về danh sách ảnh để làm Ảnh Bìa
-                if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
+                // NẾU CÓ SẴN ẢNH CON STAMP TRONG CACHE/SHEET -> DÁN THẲNG LÊN BẢN ĐỒ SIÊU TỐC
+                const markerEl = document.getElementById(markerId);
+                const badgeEl = document.getElementById(badgeId);
+                
+                if (spot.stampUrl && spot.stampUrl.startsWith('http')) {
+                    if (badgeEl) badgeEl.innerText = "🎫";
+                    if (markerEl) {
+                        markerEl.style.backgroundImage = `url('${spot.stampUrl}')`;
+                        markerEl.style.backgroundSize = 'cover';
+                    }
+                } else if (spot.folderUrl && spot.folderUrl.startsWith('http')) {
+                    // Fallback: Nếu là điểm cũ chưa có stamp, gọi tìm ảnh thường làm bìa
                     fetch(`${GAS_API_URL}?action=getPhotos&folderUrl=${encodeURIComponent(spot.folderUrl)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            const markerEl = document.getElementById(markerId);
-                            const badgeEl = document.getElementById(badgeId);
-                            
+                        .then(res => res.json()).then(data => {
                             if (data.images && data.images.length > 0) {
-                                // 1. Hiện tổng số lượng ảnh trong Album
                                 if (badgeEl) badgeEl.innerText = data.images.length; 
-                                
-                                // 2. Lấy tấm ảnh đầu tiên làm Ảnh Bìa (dùng size nhỏ w200 để load siêu nhanh)
-                                if (markerEl) {
-                                    const coverId = data.images[0]; 
-                                    markerEl.style.backgroundImage = `url('https://drive.google.com/thumbnail?id=${coverId}&sz=w200')`;
-                                }
-                            } else {
-                                // Nếu thư mục chưa có ảnh
-                                if (badgeEl) badgeEl.innerText = "0"; 
-                            }
-                        })
-                        .catch(err => {
-                            const badgeEl = document.getElementById(badgeId);
-                            if (badgeEl) badgeEl.innerText = "!";
-                        });
-                } else {
-                    const badgeEl = document.getElementById(badgeId);
-                    if (badgeEl) badgeEl.innerText = "0";
-                }
+                                if (markerEl) markerEl.style.backgroundImage = `url('https://drive.google.com/thumbnail?id=${data.images[0]}&sz=w200')`;
+                            } else { if (badgeEl) badgeEl.innerText = "0"; }
+                        }).catch(() => { if (badgeEl) badgeEl.innerText = "!"; });
+                } else { if (badgeEl) badgeEl.innerText = "0"; }
             });
         }
 
+        // ========================================================
+        // THUẬT TOÁN XỬ LÝ ẢNH CHỤP THÀNH BẢN IN MỘC DẤU BƯU ĐIỆN CỔ ĐIỂN
+        // ========================================================
+        let hasSelectedStampFile = false;
+
+        function handleStampFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            hasSelectedStampFile = true;
+            document.getElementById('stampPreviewContainer').style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    processImageToStamp(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processImageToStamp(img) {
+            const canvas = document.getElementById('stampCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 300, 300);
+
+            // Bước 1: Thu nhỏ ảnh vẽ vào canvas phụ để lấy ma trận điểm ảnh
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = 170; offCanvas.height = 170;
+            const offCtx = offCanvas.getContext('2d');
+            
+            // Tính toán cắt ảnh vuông tâm (Center Crop)
+            let side = Math.min(img.width, img.height);
+            let sx = (img.width - side) / 2;
+            let sy = (img.height - side) / 2;
+            offCtx.drawImage(img, sx, sy, side, side, 0, 0, 170, 170);
+
+            const imgData = offCtx.getImageData(0, 0, 170, 170);
+            const pixels = imgData.data;
+            
+            // Bộ lọc mộc bản (High contrast Threshold) & phủ màu mực đỏ bưu điện
+            const threshold = 120; 
+            const stampColor = { r: 230, g: 20, b: 80 }; // Màu mực hồng/đỏ Neon truyền thống
+            
+            for (let i = 0; i < pixels.length; i += 4) {
+                let brightness = 0.2126 * pixels[i] + 0.7152 * pixels[i+1] + 0.0722 * pixels[i+2];
+                if (brightness > threshold) {
+                    pixels[i+3] = 0; // Các vùng sáng biến thành trong suốt
+                } else {
+                    pixels[i] = stampColor.r; pixels[i+1] = stampColor.g; pixels[i+2] = stampColor.b; pixels[i+3] = 235;
+                }
+            }
+            offCtx.putImageData(imgData, 0, 0);
+
+            // Bước 2: Vẽ stencil mộc bản vào giữa con dấu chính
+            ctx.drawImage(offCanvas, 65, 65);
+
+            // Bước 3: Vẽ khung Viền chữ nhật/vuông phong cách bưu điện cổ điển
+            ctx.strokeStyle = "rgb(230, 20, 80)";
+            ctx.fillStyle = "rgb(230, 20, 80)";
+            
+            ctx.lineWidth = 5; ctx.strokeRect(25, 20, 250, 260); // Viền dày ngoài
+            ctx.lineWidth = 1.5; ctx.strokeRect(33, 28, 234, 244); // Viền chỉ mỏng trong
+
+            // Bước 4: Chèn chữ chạy vòng quanh lấy từ thông tin Check-in
+            const name = document.getElementById('placeName').value.trim() || "CHECK-IN";
+            const t = new Date();
+            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
+
+            ctx.font = "bold 15px 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+            ctx.textAlign = "center";
+            
+            // Chữ biên trên: Tên địa điểm
+            ctx.fillText(name.toUpperCase(), 150, 47);
+            
+            // Chữ biên dưới: Ngày tháng năm
+            ctx.font = "bold 14px 'Segoe UI', Roboto, Arial";
+            ctx.fillText(todayStr, 150, 253);
+
+            // Họa tiết góc cổ điển
+            ctx.font = "12px Arial";
+            ctx.fillText("★", 50, 150); ctx.fillText("★", 250, 150);
+
+            // Bước 5: Phủ lớp nhiễu Grunge tạo độ mài mòn cao su mô phỏng vết xước thật
+            const mainImgData = ctx.getImageData(0, 0, 300, 300);
+            const mainPixels = mainImgData.data;
+            for (let i = 0; i < mainPixels.length; i += 4) {
+                if (mainPixels[i+3] > 0) {
+                    if (Math.random() < 0.14) { 
+                        mainPixels[i+3] = Math.random() * 45; // Đục lỗ mô phỏng thiếu mực
+                    }
+                }
+            }
+            ctx.putImageData(mainImgData, 0, 0);
+        }
+
+        // Đảm bảo chữ trên con dấu tự cập nhật khi người dùng đổi tên địa điểm
+        document.getElementById('placeName').addEventListener('input', () => {
+            const fileInput = document.getElementById('stampFileInput');
+            if (fileInput.files && fileModelImageGlobal) { processImageToStamp(fileModelImageGlobal); }
+        });
+        let fileModelImageGlobal = null;
+        document.getElementById('stampFileInput').addEventListener('change', function(e){
+            const file = e.target.files[0];
+            if(file){
+                const r = new FileReader();
+                r.onload = function(ev){
+                    const img = new Image();
+                    img.onload = function(){ fileModelImageGlobal = img; processImageToStamp(img); };
+                    img.src = ev.target.result;
+                };
+                r.readAsDataURL(file);
+            }
+        });
+
         // ==========================================
-        // 4. QUẢN LÝ GIAO DIỆN IN-APP GALLERY VÀ LIGHTBOX (100% CHẤT LƯỢNG)
+        // GALLERY ĐIỀU HƯỚNG VÀ SƯU TẬP ẢNH
         // ==========================================
-        const galleryContainer = document.getElementById('inAppGallery');
         const galleryGrid = document.getElementById('galleryGrid');
-        const galleryTitle = document.getElementById('galleryTitle');
         const lightboxOverlay = document.getElementById('lightboxOverlay');
         const lightboxImg = document.getElementById('lightboxImg');
         const lightboxContainer = document.getElementById('lightboxContainer');
-
-        let currentAlbumImages = [];
-        let currentImageIndex = 0;
-
-        // Biến phục vụ cảm ứng (Zoom, Pan, Swipe)
-        let currentScale = 1;
-        let currentTranslateX = 0;
-        let currentTranslateY = 0;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let lastTapTime = 0;
+        let currentAlbumImages = []; let currentImageIndex = 0;
+        let currentScale = 1; let currentTranslateX = 0; let currentTranslateY = 0;
+        let touchStartX = 0; let touchStartY = 0; let lastTapTime = 0;
 
         function openInAppGallery(name, folderUrl) {
-            galleryTitle.innerText = name;
-            galleryGrid.innerHTML = '<div class="empty-gallery">⏳ Đang tải ảnh từ vệ tinh...</div>';
-            galleryContainer.classList.add('active');
-
+            galleryTitle.innerText = name; galleryGrid.innerHTML = '<div class="empty-gallery">⏳ Đang tải ảnh từ vệ tinh...</div>'; galleryContainer.classList.add('active');
             fetch(`${GAS_API_URL}?action=getPhotos&folderUrl=${encodeURIComponent(folderUrl)}`)
-                .then(res => res.json())
-                .then(data => {
+                .then(res => res.json()).then(data => {
                     galleryGrid.innerHTML = '';
-                    
-                    if (!data.images || data.images.length === 0) {
-                        galleryGrid.innerHTML = '<div class="empty-gallery">📭 Album này chưa có ảnh nào.<br><br>Hãy vào Drive tải ảnh lên nhé!</div>';
-                        currentAlbumImages = [];
-                        return;
-                    }
-
+                    if (!data.images || data.images.length === 0) { galleryGrid.innerHTML = '<div class="empty-gallery">📭 Album này chưa có ảnh nào.<br><br>Hãy vào Drive tải ảnh lên nhé!</div>'; currentAlbumImages = []; return; }
                     currentAlbumImages = data.images;
-
                     data.images.forEach((imgId, index) => {
-                        // HIỆN ẢNH THUMBNAIL (w800) TRÊN LƯỚI ĐỂ TẢI NHANH VÀ MƯỢT TRÊN PC LẪN MOBILE
                         const thumbUrl = `https://drive.google.com/thumbnail?id=${imgId}&sz=w800`;
-                        
-                        const imgElem = document.createElement('img');
-                        imgElem.src = thumbUrl;
-                        imgElem.className = 'gallery-item';
-                        imgElem.loading = 'lazy';
-                        
-                        imgElem.onclick = () => openLightbox(index);
-                        galleryGrid.appendChild(imgElem);
+                        const imgElem = document.createElement('img'); imgElem.src = thumbUrl; imgElem.className = 'gallery-item'; imgElem.loading = 'lazy';
+                        imgElem.onclick = () => openLightbox(index); galleryGrid.appendChild(imgElem);
                     });
-                })
-                .catch(err => {
-                    galleryGrid.innerHTML = '<div class="empty-gallery">⚠️ Lỗi kết nối lấy dữ liệu ảnh!</div>';
-                });
+                }).catch(() => { galleryGrid.innerHTML = '<div class="empty-gallery">⚠️ Lỗi kết nối lấy dữ liệu ảnh!</div>'; });
         }
 
-        function closeInAppGallery() {
-            galleryContainer.classList.remove('active');
-        }
+        function closeInAppGallery() { galleryContainer.classList.remove('active'); }
+        function openLightbox(index) { currentImageIndex = index; updateLightboxImage(); lightboxOverlay.classList.add('active'); }
+        function updateLightboxImage() { const imgId = currentAlbumImages[currentImageIndex]; lightboxImg.src = `https://drive.google.com/thumbnail?id=${imgId}&sz=s0`; resetZoom(); }
+        function closeLightbox(event) { if(event) event.stopPropagation(); lightboxOverlay.classList.remove('active'); lightboxImg.src = ''; resetZoom(); }
+        function nextImage(event) { if(event) event.stopPropagation(); if (currentAlbumImages.length === 0) return; currentImageIndex = (currentImageIndex + 1) % currentAlbumImages.length; updateLightboxImage(); }
+        function prevImage(event) { if(event) event.stopPropagation(); if (currentAlbumImages.length === 0) return; currentImageIndex = (currentImageIndex - 1 + currentAlbumImages.length) % currentAlbumImages.length; updateLightboxImage(); }
 
-        // Mở ảnh Full Screen theo Index
-        function openLightbox(index) {
-            currentImageIndex = index;
-            updateLightboxImage();
-            lightboxOverlay.classList.add('active');
-        }
-
-        function updateLightboxImage() {
-            const imgId = currentAlbumImages[currentImageIndex];
-            // ÉP TẢI ẢNH GỐC 100% (sz=s0) CHO CHẾ ĐỘ XEM FULL MÀN HÌNH
-            lightboxImg.src = `https://drive.google.com/thumbnail?id=${imgId}&sz=s0`;
-            resetZoom();
-        }
-
-        function closeLightbox(event) {
-            if(event) event.stopPropagation();
-            lightboxOverlay.classList.remove('active');
-            lightboxImg.src = '';
-            resetZoom();
-        }
-
-        // Chuyển ảnh kế tiếp/trước đó
-        function nextImage(event) {
-            if(event) event.stopPropagation();
-            if (currentAlbumImages.length === 0) return;
-            currentImageIndex = (currentImageIndex + 1) % currentAlbumImages.length;
-            updateLightboxImage();
-        }
-
-        function prevImage(event) {
-            if(event) event.stopPropagation();
-            if (currentAlbumImages.length === 0) return;
-            currentImageIndex = (currentImageIndex - 1 + currentAlbumImages.length) % currentAlbumImages.length;
-            updateLightboxImage();
-        }
-
-        // --- THUẬT TOÁN CẢM ỨNG: SWIPE, ZOOM, PAN ---
-        function resetZoom() {
-            currentScale = 1;
-            currentTranslateX = 0;
-            currentTranslateY = 0;
-            applyTransform();
-        }
-
-        function applyTransform() {
-            lightboxImg.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`;
-        }
+        function resetZoom() { currentScale = 1; currentTranslateX = 0; currentTranslateY = 0; applyTransform(); }
+        function applyTransform() { lightboxImg.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`; }
 
         lightboxContainer.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
-                touchStartX = e.touches[0].clientX - currentTranslateX;
-                touchStartY = e.touches[0].clientY - currentTranslateY;
-
-                // Thuật toán phát hiện Double Tap (chạm 2 lần)
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTapTime;
-                
+                touchStartX = e.touches[0].clientX - currentTranslateX; touchStartY = e.touches[0].clientY - currentTranslateY;
+                const currentTime = new Date().getTime(); const tapLength = currentTime - lastTapTime;
                 if (tapLength < 300 && tapLength > 0) {
-                    // Nếu chạm 2 lần -> Zoom hoặc Reset
-                    if (currentScale === 1) {
-                        currentScale = 2.5; // Phóng to 2.5 lần
-                    } else {
-                        currentScale = 1; // Thu nhỏ lại bình thường
-                        currentTranslateX = 0;
-                        currentTranslateY = 0;
-                    }
-                    applyTransform();
-                    e.preventDefault();
+                    if (currentScale === 1) currentScale = 2.5; else { currentScale = 1; currentTranslateX = 0; currentTranslateY = 0; }
+                    applyTransform(); e.preventDefault();
                 }
                 lastTapTime = currentTime;
             }
         });
+        lightboxContainer.addEventListener('touchmove', (e) => { if (currentScale > 1 && e.touches.length === 1) { currentTranslateX = e.touches[0].clientX - touchStartX; currentTranslateY = e.touches[0].clientY - touchStartY; applyTransform(); e.preventDefault(); } });
+        lightboxContainer.addEventListener('touchend', (e) => { if (currentScale === 1 && e.changedTouches.length === 1) { let touchEndX = e.changedTouches[0].clientX; let diffX = touchEndX - touchStartX; if (diffX < -50) nextImage(); else if (diffX > 50) prevImage(); } });
 
-        lightboxContainer.addEventListener('touchmove', (e) => {
-            // Nếu đang Zoom thì cho phép kéo ảnh (Pan)
-            if (currentScale > 1 && e.touches.length === 1) {
-                currentTranslateX = e.touches[0].clientX - touchStartX;
-                currentTranslateY = e.touches[0].clientY - touchStartY;
-                applyTransform();
-                e.preventDefault(); // Tránh cuộn trang của trình duyệt
-            }
-        });
-
-        lightboxContainer.addEventListener('touchend', (e) => {
-            // Nếu KHÔNG Zoom, thì ngón tay nhấc lên sẽ tính là Swipe trái/phải
-            if (currentScale === 1 && e.changedTouches.length === 1) {
-                let touchEndX = e.changedTouches[0].clientX;
-                // Khoảng cách vuốt thực tế (vuốt > 50px mới tính là chuyển ảnh)
-                let diffX = touchEndX - touchStartX; 
-                
-                if (diffX < -50) {
-                    nextImage(); // Vuốt sang trái -> Ảnh tiếp theo
-                } else if (diffX > 50) {
-                    prevImage(); // Vuốt sang phải -> Ảnh trước đó
-                }
-            }
-        });
-
-        // ==========================================
-        // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ
-        // ==========================================
-        function hideLoadingScreen() {
-            const loader = document.getElementById('loadingOverlay');
-            if (loader && loader.style.display !== 'none') {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 400);
-            }
-        }
-
-        function showToast(msg, duration = 3000) {
-            const toast = document.getElementById('syncToast');
-            toast.innerHTML = msg;
-            toast.style.opacity = '1';
-            if (duration > 0) {
-                setTimeout(() => { toast.style.opacity = '0'; }, duration);
-            }
-        }
-
-// ==========================================
-        // ĐỒNG BỘ DỮ LIỆU NGẦM & BỘ NHỚ ĐỆM SIÊU TỐC
-        // ==========================================
         function loadDataFromGoogleSheets() {
-            const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
-            let hasCache = false;
-
-            // 1. NẾU CÓ CACHE: Tải ngay lập tức, tắt luôn màn hình loading đen
-            if (cachedDataStr) {
-                try {
-                    const cachedData = JSON.parse(cachedDataStr);
-                    renderDataToMap(cachedData);
-                    hideLoadingScreen(); 
-                    hasCache = true;
-                    // Hiện thông báo siêu nhỏ, tự tắt sau 2 giây để không làm phiền
-                    showToast('🔄 Đang kiểm tra dữ liệu mới ngầm...', 2000); 
-                } catch(e) {
-                    console.error("Lỗi đọc bộ nhớ đệm:", e);
-                }
-            }
-
-            // 2. CHẠY NGẦM LÊN GOOGLE SHEETS
+            setTimeout(hideLoadingScreen, 8000);
+            const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY); let hasCache = false;
+            if (cachedDataStr) { try { renderDataToMap(JSON.parse(cachedDataStr)); hideLoadingScreen(); hasCache = true; showToast('🔄 Đang kiểm tra dữ liệu mới ngầm...', 2000); } catch(e) {} }
             fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
-                .then(res => {
-                    if (!res.ok) throw new Error("Máy chủ Google phản hồi chậm");
-                    return res.json();
-                })
-                .then(data => {
-                    // Cập nhật bộ đệm mới nhất vào máy
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-                    
-                    // Vẽ lại bản đồ
-                    const counts = renderDataToMap(data);
-                    
-                    // Nếu là lần đầu mở app (chưa có cache), giờ mới tắt loading
-                    if (!hasCache) hideLoadingScreen(); 
-                    
-                    showToast(`✅ Đã cập nhật mới nhất!`, 3000);
-                })
-                .catch(err => {
-                    // 3. XỬ LÝ LỖI THÔNG MINH
-                    if (!hasCache) {
-                        // Lần đầu mở app mà mất mạng thì đành chịu, phải báo lỗi
-                        hideLoadingScreen();
-                        showToast(`⚠️ Không có mạng. Vui lòng kiểm tra kết nối!`, 5000);
-                    } else {
-                        // CÓ CACHE RỒI MÀ LỖI MẠNG NGẦM -> IM LẶNG CHO QUA
-                        // Không hiện thông báo đỏ cản trở trải nghiệm của người dùng nữa
-                        console.log("Đồng bộ ngầm thất bại (Google quá tải). Tiếp tục dùng Cache mượt mà.");
-                    }
-                });
+                .then(res => res.json()).then(data => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data)); renderDataToMap(data); if (!hasCache) hideLoadingScreen(); showToast(`✅ Đã cập nhật mới nhất!`, 3000); })
+                .catch(() => { if (!hasCache) hideLoadingScreen(); showToast(hasCache ? "Đồng bộ ngầm chờ máy chủ phản hồi..." : "⚠️ Không có mạng. Đang xem offline.", 4000); });
         }
 
-        // Ẩn hiện Lớp Cờ Đỏ và Chấm Neon Lớn theo độ phóng đại
         const ZOOM_THRESHOLD = 9;
         function updateLayerVisibility() {
-            if (isPhotoView) return; 
-
-            const currentZoom = map.getZoom();
-            if (currentZoom < ZOOM_THRESHOLD) {
-                if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer);
-                if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
-            } else {
-                if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer);
-                if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer);
-            }
+            if (isPhotoView) return;
+            if (map.getZoom() < ZOOM_THRESHOLD) { if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer); if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer); }
+            else { if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer); if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer); }
         }
         map.on('zoomend', updateLayerVisibility);
 
-        
-// ==========================================
-        // 6. ĐỊNH VỊ GPS VÀ LƯU TRỮ (Đã nâng cấp chống lỗi)
-        // ==========================================
-        let myLocationMarker = null;
-        let myCurrentLat = 0;
-        let myCurrentLng = 0;
-        
         function goToMyLocation() {
-            if (!navigator.geolocation) return alert("Trình duyệt của bạn không hỗ trợ GPS!");
-            
-            const btn = document.querySelector('.location-btn');
-            const originTxt = btn.innerHTML; 
-            btn.innerHTML = "📡 Đang quét...";
-            btn.style.opacity = "0.7";
-            
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 15000, // TĂNG LÊN 15 GIÂY ĐỂ ĐIỆN THOẠI KỊP BẮT VỆ TINH
-                maximumAge: 10000 
-            };
-
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    myCurrentLat = position.coords.latitude.toFixed(4); 
-                    myCurrentLng = position.coords.longitude.toFixed(4);
-                    
-                    if (myLocationMarker) map.removeLayer(myLocationMarker);
-                    
-                    myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
-                    
-                    myLocationMarker.bindPopup(`
-                        <div class="popup-title">🎯 Vị Trí Của Bạn</div>
-                        <button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>
-                    `);
-                    
-                    map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1 });
-                    setTimeout(() => myLocationMarker.openPopup(), 500);
-                    
-                    btn.innerHTML = originTxt;
-                    btn.style.opacity = "1";
-                },
-                err => { 
-                    // PHÂN TÍCH CHÍNH XÁC LỖI ĐỂ BÁO CHO NGƯỜI DÙNG
-                    let errorMsg = "Không thể nhận tín hiệu GPS! Vui lòng bật vị trí.";
-                    if (err.code === 1) {
-                        errorMsg = "Trình duyệt đã bị CHẶN quyền vị trí!\nVui lòng vào Cài đặt của trình duyệt -> Cài đặt trang web -> Xóa dữ liệu & Đặt lại quyền cho trang này.";
-                    } else if (err.code === 2) {
-                        errorMsg = "Không thể xác định được vị trí (Mất kết nối vệ tinh).";
-                    } else if (err.code === 3) {
-                        errorMsg = "Quá thời gian quét GPS (Timeout). Vui lòng thử lại ở nơi thoáng đãng hơn.";
-                    }
-                    
-                    alert(errorMsg); 
-                    btn.innerHTML = originTxt;
-                    btn.style.opacity = "1";
-                },
-                options
-            );
+            if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS!");
+            const btn = document.querySelector('.location-btn'); const originTxt = btn.innerHTML; btn.innerHTML = "📡 Đang quét..."; btn.style.opacity = "0.7";
+            navigator.geolocation.getCurrentPosition(position => {
+                myCurrentLat = position.coords.latitude.toFixed(4); myCurrentLng = position.coords.longitude.toFixed(4);
+                if (myLocationMarker) map.removeLayer(myLocationMarker);
+                myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
+                myLocationMarker.bindPopup(`<div class="popup-title">🎯 Vị Trí Của Bạn</div><button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>`);
+                map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1 }); setTimeout(() => myLocationMarker.openPopup(), 500);
+                btn.innerHTML = originTxt; btn.style.opacity = "1";
+            }, err => {
+                let msg = "Không nhận được tín hiệu GPS!";
+                if (err.code === 1) msg = "Trình duyệt bị chặn vị trí! Hãy cấp lại quyền.";
+                else if (err.code === 3) msg = "Quá thời gian tìm vị trí (Timeout). Hãy thử lại.";
+                alert(msg); btn.innerHTML = originTxt; btn.style.opacity = "1";
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
         }
 
-        function checkInAtMyLocation() { 
-            currentClickLat = myCurrentLat; 
-            currentClickLng = myCurrentLng; 
-            if (myLocationMarker) myLocationMarker.closePopup(); 
-            openCheckInModal(); 
-        }
+        function checkInAtMyLocation() { currentClickLat = myCurrentLat; currentClickLng = myCurrentLng; if (myLocationMarker) myLocationMarker.closePopup(); openCheckInModal(); }
+        function findNearestProvinceOffline(lat, lng) { let min = Infinity; let name = "Việt Nam"; VN_PROVINCES.forEach(p => { let d = Math.sqrt(Math.pow(lat - p.lat,2) + Math.pow(lng - p.lng,2)); if (d < min) { min = d; name = p.name; } }); return name; }
 
-        function findNearestProvinceOffline(lat, lng) {
-            let minDistance = Infinity;
-            let nearestName = "Khu vực Việt Nam";
-            
-            VN_PROVINCES.forEach(prov => {
-                const dLat = lat - prov.lat;
-                const dLng = lng - prov.lng;
-                const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-                
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearestName = prov.name;
-                }
-            });
-            
-            return nearestName;
-        }
-
-        let currentClickLat = 0;
-        let currentClickLng = 0;
-        let currentDetectedRegion = "Việt Nam";
-        
-        const modal = document.getElementById('checkinModal');
-        const autoRegionText = document.getElementById('autoRegionText');
-        const placeNameInput = document.getElementById('placeName');
-        const placeNoteInput = document.getElementById('placeNote');
+        let currentClickLat = 0, currentClickLng = 0, currentDetectedRegion = "Việt Nam";
+        const modal = document.getElementById('checkinModal'), autoRegionText = document.getElementById('autoRegionText'), placeNameInput = document.getElementById('placeName'), placeNoteInput = document.getElementById('placeNote');
 
         function openCheckInModal() {
-            placeNameInput.value = ''; 
-            placeNoteInput.value = ''; 
-            modal.classList.add('active'); 
-            setTimeout(() => placeNameInput.focus(), 100);
+            placeNameInput.value = ''; placeNoteInput.value = ''; hasSelectedStampFile = false;
+            document.getElementById('stampPreviewContainer').style.display = 'none';
+            document.getElementById('stampFileInput').value = ''; fileModelImageGlobal = null;
+            modal.classList.add('active'); setTimeout(() => placeNameInput.focus(), 100);
+            autoRegionText.innerHTML = '<span>⏳ Đang quét tọa độ...</span>'; currentDetectedRegion = "Việt Nam";
             
-            autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang quét tọa độ...</span>'; 
-            currentDetectedRegion = "Việt Nam";
-            
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
-                headers: { 'Accept-Language': 'vi' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.address) {
-                    let p = data.address.city || data.address.province || data.address.state || null;
-                    if (p) {
-                        currentDetectedRegion = p.replace('Thành phố ', 'TP. ').replace('Tỉnh ', '');
-                        autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`;
-                        return; 
-                    }
-                }
-                throw new Error("Không có chi tiết địa giới");
-            })
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, { headers: { 'Accept-Language': 'vi' } })
+            .then(res => res.json()).then(data => { if (data && data.address) { let p = data.address.city || data.address.province || data.address.state; if (p) { currentDetectedRegion = p.replace('Thành phố ', 'TP. ').replace('Tỉnh ', ''); autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; return; } } throw new Error(); })
             .catch(() => {
-                if (GAS_API_URL !== "") {
-                    fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`, { redirect: "follow" })
-                        .then(res => res.json())
-                        .then(data => { 
-                            if (data.province && data.province !== "Khu vực mới") {
-                                currentDetectedRegion = data.province; 
-                                autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; 
-                            } else {
-                                throw new Error("Server GAS trả về rỗng");
-                            }
-                        })
-                        .catch(() => { 
-                            currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
-                            autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
-                        });
-                } else {
-                    currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
-                    autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
-                }
+                fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`, { redirect: "follow" }).then(res => res.json()).then(data => { if (data.province && data.province !== "Khu vực mới") { currentDetectedRegion = data.province; autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; } else throw new Error(); })
+                .catch(() => { currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng); autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`; });
             });
         }
 
-        // Tính năng: Chạm lên bản đồ chỉ lướt Camera (Zoom), Tuyệt đối KHÔNG gọi bảng Check-in
-        map.on('click', e => {
-            map.flyTo(e.latlng, Math.max(map.getZoom() + 2, 10), { duration: 1.2 });
-        });
+        map.on('click', e => { map.flyTo(e.latlng, Math.max(map.getZoom() + 2, 10), { duration: 1.2 }); });
+        function closeModal() { modal.classList.remove('active'); }
 
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-function submitCheckIn() {
-            const name = placeNameInput.value.trim();
-            const note = placeNoteInput.value.trim();
-            
+        // ==========================================
+        // GỬI DỮ LIỆU BẰNG PHƯƠNG THỨC POST AN TOÀN CHỐNG TRÀN LINK
+        // ==========================================
+        function submitCheckIn() {
+            const name = placeNameInput.value.trim(), note = placeNoteInput.value.trim();
             if (!name) return alert("Vui lòng điền tên địa điểm!");
             
-            const btnSubmit = document.querySelector('.btn-submit');
-            const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang tạo Album Drive..."; 
-            btnSubmit.disabled = true;
+            const btnSubmit = document.querySelector('.btn-submit'), oldText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = "⏳ Đang đồng bộ máy chủ..."; btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
-            
             addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
+            const t = new Date(), todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
             
-            const t = new Date();
-            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-            
-            const tempSpot = {
-                region: regionName,
-                name: name,
-                lat: currentClickLat,
-                lng: currentClickLng,
-                date: todayStr,
-                note: note,
-                folderUrl: ""
-            };
-            
-            globalSpotsData.push(tempSpot);
-            
-            const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note);
-            
-            closeModal(); 
-            
-            if (isPhotoView) {
-                renderPhotoLayer();
-            } else {
-                updateLayerVisibility();
-                newMarker.openPopup();
+            // Trích xuất dữ liệu con dấu từ canvas nếu có chụp hình
+            let stampDataBase64 = "";
+            if (hasSelectedStampFile) {
+                stampDataBase64 = document.getElementById('stampCanvas').toDataURL("image/png");
             }
 
-            fetch(`${GAS_API_URL}?action=save&regionName=${encodeURIComponent(regionName)}&placeName=${encodeURIComponent(name)}&lat=${currentClickLat}&lng=${currentClickLng}&date=${encodeURIComponent(todayStr)}&note=${encodeURIComponent(note)}`, { redirect: "follow" })
-                .then(res => res.text())
-                .then(text => {
-                    try {
-                        const respData = JSON.parse(text);
-                        btnSubmit.innerHTML = oldText; 
-                        btnSubmit.disabled = false;
-                        showToast(`⚡ Đã tạo Album Drive & lưu "${name}" thành công!`);
-                        
-                        tempSpot.folderUrl = respData.url; 
-                        if (isPhotoView) renderPhotoLayer();
+            const tempSpot = { region: regionName, name: name, lat: currentClickLat, lng: currentClickLng, date: todayStr, note: note, folderUrl: "", stampUrl: stampDataBase64 };
+            globalSpotsData.push(tempSpot);
+            const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note);
+            
+            closeModal();
+            if (isPhotoView) renderPhotoLayer(); else { updateLayerVisibility(); newMarker.openPopup(); }
 
-                        fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
-                            .then(r => r.json())
-                            .then(newData => {
-                                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-                            });
-                    } catch(e) {
-                        throw new Error("Phản hồi bị lỗi định dạng");
-                    }
+            // CHUYỂN ĐỔI SANG PHƯƠNG THỨC POST ĐỂ BẢO VỆ DỮ LIỆU KHÔNG BỊ PHÁ HỦY LINH HỒN ẢNH
+            fetch(`${GAS_API_URL}?action=save`, {
+                method: "POST",
+                body: JSON.stringify({
+                    regionName: regionName, placeName: name,
+                    lat: currentClickLat, lng: currentClickLng,
+                    date: todayStr, note: note,
+                    stampData: stampDataBase64
                 })
-                .catch(err => { 
-                    // THUẬT TOÁN "KIỂM TRA CHÉO" KHI LỖI MẠNG 1 CHIỀU
-                    showToast(`⏳ Máy chủ phản hồi chậm. Đang kiểm tra chéo...`, 3000);
-                    
-                    setTimeout(() => {
-                        fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
-                            .then(r => r.json())
-                            .then(newData => {
-                                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-                                
-                                // Quét xem Server đã lưu điểm này chưa
-                                const savedSpot = newData.spots.find(s => s.name === name && Math.abs(s.lat - currentClickLat) < 0.0001);
-                                
-                                if (savedSpot && savedSpot.folderUrl) {
-                                    tempSpot.folderUrl = savedSpot.folderUrl; // Vá link ngầm
-                                    if (isPhotoView) renderPhotoLayer();
-                                    showToast(`✅ Đã đồng bộ thành công "${name}"!`, 3000);
-                                } else {
-                                    alert("Lỗi thực sự: Không thể tạo thư mục. Vui lòng kiểm tra lại quyền Drive.");
-                                }
-                                
-                                btnSubmit.innerHTML = oldText; 
-                                btnSubmit.disabled = false; 
-                            })
-                            .catch(e => {
-                                btnSubmit.innerHTML = oldText; 
-                                btnSubmit.disabled = false; 
-                            });
-                    }, 2500);
-                });
+            })
+            .then(res => res.json()).then((respData) => {
+                btnSubmit.innerHTML = oldText; btnSubmit.disabled = false;
+                showToast(`⚡ Đã đóng dấu mộc & lưu "${name}" thành công!`);
+                tempSpot.folderUrl = respData.url;
+                tempSpot.stampUrl = respData.stampUrl; // Vá link mây thật
+                if (isPhotoView) renderPhotoLayer();
+                fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" }).then(r => r.json()).then(newData => { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData)); });
+            })
+            .catch(() => {
+                // SỬ DỤNG BỘ LỌC KIỂM TRA CHÉO TỰ ĐỘNG KHẮC PHỤC LỖI RỚT MẠNG 1 CHIỀU
+                showToast(`⏳ Kết nối nghẽn, đang vá dữ liệu đệm tự động...`, 3000);
+                setTimeout(() => {
+                    fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" }).then(r => r.json()).then(newData => {
+                        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
+                        const saved = newData.spots.find(s => s.name === name && Math.abs(s.lat - currentClickLat) < 0.001);
+                        if (saved && saved.folderUrl) {
+                            tempSpot.folderUrl = saved.folderUrl; tempSpot.stampUrl = saved.stampUrl;
+                            if (isPhotoView) renderPhotoLayer();
+                            showToast(`✅ Đã đồng bộ thành công điểm "${name}"!`, 3000);
+                        } else { alert("Lỗi hệ thống lưu dữ liệu. Hãy kiểm tra lại phân quyền trên Drive!"); }
+                        btnSubmit.innerHTML = oldText; btnSubmit.disabled = false;
+                    }).catch(() => { btnSubmit.innerHTML = oldText; btnSubmit.disabled = false; });
+                }, 3000);
+            });
         }
 
-        document.addEventListener('keydown', e => { 
-            if (!modal.classList.contains('active')) return; 
-            if (e.key === 'Enter') submitCheckIn(); 
-            if (e.key === 'Escape') closeModal(); 
-        });
-        
-        function forceMapRender() { 
-            map.invalidateSize(); 
-            if (!isPhotoView) updateLayerVisibility(); 
-        }
-        
-        setTimeout(forceMapRender, 100); 
-        setTimeout(forceMapRender, 500);
-        
-        window.addEventListener('load', () => { 
-            forceMapRender(); 
-            loadDataFromGoogleSheets(); 
-        });
+        document.addEventListener('keydown', e => { if (!modal.classList.contains('active')) return; if (e.key === 'Enter') submitCheckIn(); if (e.key === 'Escape') closeModal(); });
+        function forceMapRender() { map.invalidateSize(); if (!isPhotoView) updateLayerVisibility(); }
+        setTimeout(forceMapRender, 100); setTimeout(forceMapRender, 500);
+        window.addEventListener('load', () => { forceMapRender(); loadDataFromGoogleSheets(); });
     </script>
 </body>
 </html>

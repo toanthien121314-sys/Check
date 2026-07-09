@@ -14,6 +14,16 @@
 
     <style>
         /* =========================================
+           HỆ THỐNG LÕI MÀU NEON THEO NGÀY
+        ========================================= */
+        :root {
+            --neon-primary: #00f3ff;
+            --neon-primary-rgb: 0, 243, 255;
+            --neon-secondary: #ff007f;
+            --neon-secondary-rgb: 255, 0, 127;
+        }
+
+        /* =========================================
            RESET & BASIC SETUP
         ========================================= */
         * {
@@ -60,15 +70,15 @@
             bottom: max(30px, env(safe-area-inset-bottom)); 
             right: 20px;
             z-index: 1000;
-            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(0, 243, 255, 0.2));
-            color: #00f3ff;
-            border: 1.5px solid #00f3ff;
+            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(var(--neon-primary-rgb), 0.2));
+            color: var(--neon-primary);
+            border: 1.5px solid var(--neon-primary);
             padding: 12px 18px; 
             border-radius: 30px;
             font-weight: bold;
             font-size: 0.95rem;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 8px rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 15px rgba(var(--neon-primary-rgb), 0.4), inset 0 0 8px rgba(var(--neon-primary-rgb), 0.2);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
             display: flex;
@@ -77,9 +87,9 @@
         }
 
         .location-btn:hover {
-            background: #00f3ff;
+            background: var(--neon-primary);
             color: #000;
-            box-shadow: 0 0 25px #00f3ff;
+            box-shadow: 0 0 25px var(--neon-primary);
             transform: scale(1.05);
         }
 
@@ -116,15 +126,15 @@
             top: max(20px, env(safe-area-inset-top));
             right: 20px;
             z-index: 1000;
-            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(255, 0, 127, 0.2));
-            color: #ff007f;
-            border: 1.5px solid #ff007f;
+            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(var(--neon-secondary-rgb), 0.2));
+            color: var(--neon-secondary);
+            border: 1.5px solid var(--neon-secondary);
             padding: 10px 16px;
             border-radius: 30px;
             font-weight: bold;
             font-size: 0.9rem;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 8px rgba(255, 0, 127, 0.2);
+            box-shadow: 0 0 15px rgba(var(--neon-secondary-rgb), 0.4), inset 0 0 8px rgba(var(--neon-secondary-rgb), 0.2);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
             display: none; 
@@ -133,9 +143,9 @@
         }
 
         .install-btn:hover {
-            background: #ff007f;
+            background: var(--neon-secondary);
             color: #fff;
-            box-shadow: 0 0 25px #ff007f;
+            box-shadow: 0 0 25px var(--neon-secondary);
             transform: scale(1.05);
         }
 
@@ -148,13 +158,13 @@
             left: 20px;
             z-index: 1000;
             background: rgba(8, 12, 28, 0.9);
-            border: 1px solid #00f3ff;
-            color: #00f3ff;
+            border: 1px solid var(--neon-primary);
+            color: var(--neon-primary);
             padding: 8px 15px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: bold;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            box-shadow: 0 0 15px rgba(var(--neon-primary-rgb), 0.4);
             backdrop-filter: blur(5px);
             transition: opacity 0.5s ease;
             opacity: 0; 
@@ -177,10 +187,10 @@
         }
 
         .loading-text {
-            color: #00f3ff;
+            color: var(--neon-primary);
             font-size: 1.2rem;
             font-weight: bold;
-            text-shadow: 0 0 15px #00f3ff;
+            text-shadow: 0 0 15px var(--neon-primary);
             margin-top: 15px;
             letter-spacing: 1px;
         }
@@ -188,15 +198,28 @@
         .spinner {
             width: 45px;
             height: 45px;
-            border: 4px solid rgba(0, 243, 255, 0.2);
-            border-top: 4px solid #ff007f;
+            border: 4px solid rgba(var(--neon-primary-rgb), 0.2);
+            border-top: 4px solid var(--neon-secondary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px #ff007f;
+            box-shadow: 0 0 15px var(--neon-secondary);
         }
 
         @keyframes spin { 
             100% { transform: rotate(360deg); } 
+        }
+
+        /* =========================================
+           HIỆU ỨNG ĐƯỜNG VIỀN RANH GIỚI NEON
+        ========================================= */
+        path.neon-province-border {
+            filter: drop-shadow(0 0 3px rgba(var(--neon-primary-rgb), 0.5));
+            transition: fill-opacity 0.5s ease, filter 0.5s ease;
+        }
+        
+        path.neon-province-active {
+            filter: drop-shadow(0 0 6px var(--neon-secondary)) drop-shadow(0 0 12px var(--neon-secondary));
+            transition: fill-opacity 0.5s ease, filter 0.5s ease;
         }
 
         /* =========================================
@@ -213,12 +236,12 @@
         .neon-dot {
             width: 18px;
             height: 18px;
-            background: #ff007f;
+            background: var(--neon-secondary);
             border-radius: 50%;
             border: 2px solid #ffffff;
             position: absolute;
             top: 5px;
-            box-shadow: 0 0 15px #ff007f, 0 0 25px #ff007f, 0 0 35px #ff007f;
+            box-shadow: 0 0 15px var(--neon-secondary), 0 0 25px var(--neon-secondary), 0 0 35px var(--neon-secondary);
             z-index: 2;
             cursor: pointer;
         }
@@ -226,7 +249,7 @@
         .neon-pulse {
             width: 28px;
             height: 28px;
-            background: rgba(255, 0, 127, 0.7);
+            background: rgba(var(--neon-secondary-rgb), 0.7);
             border-radius: 50%;
             position: absolute;
             top: 0;
@@ -237,17 +260,17 @@
         .neon-label {
             position: absolute;
             top: -22px;
-            color: #00f3ff;
+            color: var(--neon-primary);
             font-weight: 800;
             font-size: 0.8rem;
-            text-shadow: 0 0 5px #00f3ff, 0 0 10px #000;
+            text-shadow: 0 0 5px var(--neon-primary), 0 0 10px #000;
             white-space: nowrap;
             letter-spacing: 0.5px;
             pointer-events: none;
             background: rgba(5, 8, 20, 0.7);
             padding: 2px 6px;
             border-radius: 10px;
-            border: 1px solid rgba(0, 243, 255, 0.4);
+            border: 1px solid rgba(var(--neon-primary-rgb), 0.4);
         }
 
         @keyframes ripple {
@@ -269,20 +292,20 @@
         .gps-dot {
             width: 16px;
             height: 16px;
-            background: #00f3ff;
+            background: var(--neon-primary);
             border-radius: 50%;
             border: 2px solid #fff;
             position: absolute;
             top: 6px;
             left: 6px;
-            box-shadow: 0 0 15px #00f3ff, 0 0 30px #00f3ff;
+            box-shadow: 0 0 15px var(--neon-primary), 0 0 30px var(--neon-primary);
             z-index: 2;
         }
 
         .gps-pulse {
             width: 28px;
             height: 28px;
-            background: rgba(0, 243, 255, 0.6);
+            background: rgba(var(--neon-primary-rgb), 0.6);
             border-radius: 50%;
             position: absolute;
             top: 0;
@@ -329,8 +352,8 @@
         .leaflet-popup-content-wrapper {
             background: rgba(8, 12, 28, 0.95) !important;
             color: #fff !important;
-            border: 1px solid #00f3ff;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            border: 1px solid var(--neon-primary);
+            box-shadow: 0 0 20px rgba(var(--neon-primary-rgb), 0.5);
             border-radius: 12px !important;
             backdrop-filter: blur(8px);
             padding: 5px;
@@ -338,17 +361,17 @@
 
         .leaflet-popup-tip {
             background: rgba(8, 12, 28, 0.95) !important;
-            border-bottom: 1px solid #00f3ff;
-            border-right: 1px solid #00f3ff;
+            border-bottom: 1px solid var(--neon-primary);
+            border-right: 1px solid var(--neon-primary);
         }
 
         .popup-title {
-            color: #00f3ff;
+            color: var(--neon-primary);
             font-weight: 700;
             font-size: 1.15rem;
             margin-bottom: 8px;
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
-            border-bottom: 1px dashed rgba(0, 243, 255, 0.3);
+            text-shadow: 0 0 8px rgba(var(--neon-primary-rgb), 0.6);
+            border-bottom: 1px dashed rgba(var(--neon-primary-rgb), 0.3);
             padding-bottom: 5px;
         }
 
@@ -359,26 +382,26 @@
         }
 
         .popup-info b {
-            color: #ff007f;
+            color: var(--neon-secondary);
         }
 
         .btn-gps-checkin {
             margin-top: 8px;
             width: 100%;
             padding: 8px;
-            background: linear-gradient(90deg, #ff007f, #ff00ff);
+            background: linear-gradient(90deg, var(--neon-secondary), #ff00ff);
             color: #fff;
             border: none;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+            box-shadow: 0 0 10px rgba(var(--neon-secondary-rgb), 0.5);
             transition: all 0.2s;
         }
 
         .btn-gps-checkin:hover {
             transform: scale(1.03);
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.8);
+            box-shadow: 0 0 15px rgba(var(--neon-secondary-rgb), 0.8);
         }
 
         /* =========================================
@@ -409,20 +432,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            border-bottom: 1px solid rgba(var(--neon-primary-rgb), 0.2);
         }
 
         .gallery-title {
-            color: #00f3ff;
+            color: var(--neon-primary);
             font-size: 1.2rem;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+            text-shadow: 0 0 10px rgba(var(--neon-primary-rgb), 0.6);
         }
 
         .close-gallery-btn {
-            background: rgba(255, 0, 127, 0.2);
-            color: #ff007f;
-            border: 1px solid #ff007f;
+            background: rgba(var(--neon-secondary-rgb), 0.2);
+            color: var(--neon-secondary);
+            border: 1px solid var(--neon-secondary);
             padding: 6px 12px;
             border-radius: 20px;
             font-weight: bold;
@@ -605,8 +628,8 @@
             max-width: 420px;
             padding: 22px;
             border-radius: 16px;
-            border: 2px solid #00f3ff;
-            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2);
+            border: 2px solid var(--neon-primary);
+            box-shadow: 0 0 25px rgba(var(--neon-primary-rgb), 0.4), inset 0 0 15px rgba(var(--neon-primary-rgb), 0.2);
             transform: translateY(-20px);
             transition: transform 0.3s ease;
             max-height: 92vh;
@@ -622,18 +645,18 @@
         .modal-title {
             font-size: 1.3rem;
             font-weight: bold;
-            color: #00f3ff;
+            color: var(--neon-primary);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 15px;
             text-align: center;
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+            text-shadow: 0 0 10px rgba(var(--neon-primary-rgb), 0.6);
             flex-shrink: 0;
         }
 
         .auto-region-badge {
-            background: rgba(0, 243, 255, 0.08);
-            border: 1px dashed rgba(0, 243, 255, 0.5);
+            background: rgba(var(--neon-primary-rgb), 0.08);
+            border: 1px dashed rgba(var(--neon-primary-rgb), 0.5);
             padding: 10px 12px;
             border-radius: 8px;
             font-size: 0.85rem;
@@ -646,9 +669,9 @@
         }
 
         .auto-region-badge span {
-            color: #00f3ff;
+            color: var(--neon-primary);
             font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+            text-shadow: 0 0 5px rgba(var(--neon-primary-rgb), 0.5);
         }
 
         .step-container {
@@ -685,8 +708,8 @@
         }
 
         .form-control:focus {
-            border-color: #ff007f;
-            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+            border-color: var(--neon-secondary);
+            box-shadow: 0 0 10px rgba(var(--neon-secondary-rgb), 0.5);
         }
 
         .modal-actions {
@@ -721,15 +744,15 @@
         }
 
         .btn-submit {
-            background: linear-gradient(90deg, #00f3ff, #0077ff);
+            background: linear-gradient(90deg, var(--neon-primary), #0077ff);
             color: #000;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 15px rgba(var(--neon-primary-rgb), 0.5);
         }
 
         .btn-submit:hover {
-            background: linear-gradient(90deg, #ff007f, #ff00ff);
+            background: linear-gradient(90deg, var(--neon-secondary), #ff00ff);
             color: #fff;
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
+            box-shadow: 0 0 20px rgba(var(--neon-secondary-rgb), 0.8);
         }
 
         .stamp-preview-container {
@@ -740,18 +763,18 @@
             background: rgba(0, 0, 0, 0.55);
             padding: 12px;
             border-radius: 12px;
-            border: 1px dashed rgba(255, 0, 127, 0.5);
-            box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.1);
+            border: 1px dashed rgba(var(--neon-secondary-rgb), 0.5);
+            box-shadow: inset 0 0 10px rgba(var(--neon-secondary-rgb), 0.1);
         }
         
         .stamp-preview-title {
             font-size: 0.78rem;
-            color: #ff007f;
+            color: var(--neon-secondary);
             margin-bottom: 8px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            text-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
+            text-shadow: 0 0 5px rgba(var(--neon-secondary-rgb), 0.5);
         }
 
         #stampCanvas {
@@ -807,9 +830,8 @@
     <!-- HỘP THOẠI: MENU LỰA CHỌN KHI ẤN ĐÈ TEM KỶ NIỆM -->
     <div class="modal-overlay" id="stampOptionsMenu">
         <div class="modal-box" style="text-align:center; padding: 25px;">
-            <h3 style="color:#00f3ff; margin-bottom: 20px; text-shadow: 0 0 10px rgba(0,243,255,0.6);">TÙY CHỌN MỘC BẢN</h3>
+            <h3 style="color:var(--neon-primary); margin-bottom: 20px; text-shadow: 0 0 10px rgba(var(--neon-primary-rgb),0.6);">TÙY CHỌN MỘC BẢN</h3>
             
-            <!-- Input ẩn để tải ảnh mới -->
             <input type="file" id="updateStampFileInput" accept="image/*" style="display:none;">
 
             <button class="btn btn-submit" style="width:100%; margin-bottom:15px; display:block; padding: 12px; font-size: 0.95rem;" onclick="viewStampFullscreen()">
@@ -832,6 +854,7 @@
                 🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang quét tọa độ...</span>
             </div>
 
+            <!-- BƯỚC 1: NHẬP THÔNG TIN -->
             <div id="step1Inputs" class="step-container">
                 <div class="form-group">
                     <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
@@ -852,6 +875,7 @@
                 </div>
             </div>
 
+            <!-- BƯỚC 2: XEM TRƯỚC TEM VÀ LƯU -->
             <div id="step2Preview" class="step-container" style="display: none;">
                 <div class="stamp-preview-container">
                     <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
@@ -869,10 +893,37 @@
 
     <script>
         // ==========================================
+        // 0. HỆ THỐNG MÀU NEON THEO NGÀY (THAY THẾ HARDCODE MÀU)
+        // ==========================================
+        const appNeonPalettes = [
+            { primary: '#00f3ff', pRgb: '0, 243, 255', secondary: '#ff007f', sRgb: '255, 0, 127' }, // Xanh lam - Hồng (Mặc định)
+            { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, // Bạc hà - Tím
+            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  // Vàng - Đỏ
+            { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, // Xanh biển - Cam
+            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  // Chanh - Đỏ tươi (Magenta)
+        ];
+        
+        function setAppNeonColorByDate() {
+            const today = new Date();
+            // Lấy ngày trong năm để đổi màu ngẫu nhiên nhưng cố định trong ngày
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+            const palette = appNeonPalettes[dayOfYear % appNeonPalettes.length];
+            
+            document.documentElement.style.setProperty('--neon-primary', palette.primary);
+            document.documentElement.style.setProperty('--neon-primary-rgb', palette.pRgb);
+            document.documentElement.style.setProperty('--neon-secondary', palette.secondary);
+            document.documentElement.style.setProperty('--neon-secondary-rgb', palette.sRgb);
+            
+            return palette;
+        }
+        const currentAppColors = setAppNeonColorByDate();
+
+        // ==========================================
         // 1. CẤU HÌNH HỆ THỐNG VÀ API
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7vxQeX0br9PqlWsjE8FcVvdg6zohwHejlEJbxlrKIEDldoHymGNd8gvXe5ZqQmI3q/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
+        const GEOJSON_VN_BORDERS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-provinces.json"; 
 
         let myLocationMarker = null;
         let myCurrentLat = 0;
@@ -883,6 +934,9 @@
         let globalSpotsData = []; 
         let isPhotoView = false; 
         let userCapturedImg = null; 
+
+        let geoJsonBordersData = null;
+        let geoJsonLayer = null;
 
         let pressTimer;
         let isPressing = false;
@@ -1073,9 +1127,6 @@
             activeRegionsTracker.add(regionKey);
         }
 
-        // ==========================================
-        // CƠ CHẾ LONG-PRESS VÀ BỎ EVENT ONCLICK
-        // ==========================================
         function startStampPress(e, lat, lng, nameStr) {
             isPressing = true;
             pressTimer = setTimeout(() => {
@@ -1102,8 +1153,8 @@
             let stampHtml = '';
             if (cleanStampUrl !== '') {
                 stampHtml = `
-                    <div style="text-align:center; margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,243,255,0.3);">
-                        <div style="font-size:0.75rem; color:#00f3ff; margin-bottom:4px; font-weight:bold; letter-spacing:0.5px;">🌸 TEM THƯ KỶ NIỆM 🌸</div>
+                    <div style="text-align:center; margin-top:10px; padding-top:8px; border-top:1px dashed rgba(var(--neon-primary-rgb), 0.3);">
+                        <div style="font-size:0.75rem; color:var(--neon-primary); margin-bottom:4px; font-weight:bold; letter-spacing:0.5px;">🌸 TEM THƯ KỶ NIỆM 🌸</div>
                         <img id="${imgId}" src="${cleanStampUrl}"
                              oncontextmenu="return false;"
                              onmousedown="startStampPress(event, ${lat}, ${lng}, '${safeNameStr}')"
@@ -1130,7 +1181,55 @@
             return marker;
         }
 
-        // BỘ ĐỆM ẢNH TEM THƯ SIÊU TỐC (CACHE API)
+        // ==========================================
+        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH THÀNH ĐỔI MÀU
+        // ==========================================
+        function loadProvinceBorders() {
+            fetch(GEOJSON_VN_BORDERS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    geoJsonBordersData = data;
+                    renderProvinceBorders();
+                })
+                .catch(err => console.log("Không tải được ranh giới tỉnh:", err));
+        }
+
+        function renderProvinceBorders() {
+            if (!geoJsonBordersData) return;
+            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
+
+            geoJsonLayer = L.geoJSON(geoJsonBordersData, {
+                interactive: false, 
+                style: function (feature) {
+                    let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "";
+                    let normalized = propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
+                    let isActive = activeRegionsTracker.has(normalized);
+
+                    if (isActive) {
+                        return {
+                            color: currentAppColors.secondary,
+                            weight: 2,
+                            opacity: 0.9,
+                            fillColor: currentAppColors.secondary,
+                            fillOpacity: 0.1,
+                            className: 'neon-province-active'
+                        };
+                    } else {
+                        return {
+                            color: currentAppColors.primary,
+                            weight: 1.5,
+                            opacity: 0.4,
+                            fillColor: 'transparent',
+                            fillOpacity: 0,
+                            className: 'neon-province-border'
+                        };
+                    }
+                }
+            }).addTo(map);
+
+            geoJsonLayer.bringToBack(); 
+        }
+
         function preloadStampsIntoCache(spots) {
             if (!window.caches) return;
             caches.open('neon-stamps-cache-v1').then(cache => {
@@ -1139,7 +1238,6 @@
                     if (cleanUrl.startsWith('http')) {
                         cache.match(cleanUrl).then(res => {
                             if (!res) {
-                                // Tải ngầm ảnh tem thư bằng chế độ no-cors để ép vào bộ nhớ đệm trình duyệt
                                 fetch(cleanUrl, { mode: 'no-cors' }).then(networkRes => {
                                     cache.put(cleanUrl, networkRes);
                                 }).catch(() => {});
@@ -1179,6 +1277,8 @@
             } else {
                 updateLayerVisibility();
             }
+
+            renderProvinceBorders();
 
             return { regCount: uniqueRegionsCount, spotCount };
         }
@@ -1404,9 +1504,6 @@
             }
         });
 
-        // ==========================================
-        // CÁC CHỨC NĂNG CỦA MENU TÙY CHỌN MỘC BẢN
-        // ==========================================
         function closeStampOptionsMenu() {
             document.getElementById('stampOptionsMenu').classList.remove('active');
         }
@@ -1530,9 +1627,8 @@
                 }
             }
 
-            // Tích hợp AbortController để chống treo mạng
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 giây ngắt
+            const timeoutId = setTimeout(() => controller.abort(), 12000); 
 
             fetch(`${GAS_API_URL}?action=get`, { redirect: "follow", signal: controller.signal })
                 .then(res => {
@@ -1558,7 +1654,8 @@
                 });
         }
 
-        const ZOOM_THRESHOLD = 9;
+        // TĂNG NGƯỠNG ZOOM CHO CỜ ĐỎ LÊN 11
+        const ZOOM_THRESHOLD = 11;
         function updateLayerVisibility() {
             if (isPhotoView) return; 
             const currentZoom = map.getZoom();
@@ -1661,9 +1758,6 @@
             }
         });
 
-        // ==========================================
-        // CƠ CHẾ ĐIỀU HƯỚNG 2 BƯỚC (WIZARD)
-        // ==========================================
         function goToStep2() {
             const nameVal = placeNameInput.value.trim();
             if (!nameVal) {
@@ -1852,14 +1946,12 @@
             stampPhotoInput.value = ''; 
             userCapturedImg = null;    
 
-            currentStampColor = vintageColors[Math.floor(Math.random() * vintageColors.length)];
-
             goToStep1();
 
             modal.classList.add('active'); 
             setTimeout(() => placeNameInput.focus(), 100);
             
-            autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang quét tọa độ...</span>'; 
+            autoRegionText.innerHTML = '<span style="color:var(--neon-primary);">⏳ Đang quét tọa độ...</span>'; 
             currentDetectedRegion = "Việt Nam";
             
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
@@ -2034,7 +2126,6 @@
         }
         
         window.addEventListener('load', () => { 
-            // Cứu cánh: Nếu mạng bị treo quá 7 giây, ép tắt màn hình Loading và chạy Offline
             setTimeout(() => {
                 const loader = document.getElementById('loadingOverlay');
                 if (loader && loader.style.opacity !== '0') {
@@ -2045,6 +2136,8 @@
             
             setTimeout(forceMapRender, 100); 
             setTimeout(forceMapRender, 500);
+            
+            loadProvinceBorders();
             loadDataFromGoogleSheets(); 
         });
     </script>

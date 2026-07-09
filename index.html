@@ -786,7 +786,7 @@
         }
 
         /* =========================================
-           TỐI ƯU HÓA HIỆU NĂNG RENDER (PHƯƠNG ÁN 1 & 2)
+           TỐI ƯU HÓA HIỆU NĂNG RENDER
            Tắt bóng đổ và animation khi bản đồ đang zoom/di chuyển
         ========================================= */
         .map-zooming path,
@@ -909,19 +909,34 @@
 
     <script>
         // ==========================================
-        // 0. HỆ THỐNG MÀU NEON THEO NGÀY (THAY THẾ HARDCODE MÀU)
+        // THỦ THUẬT OVERSCAN (TẢI TRƯỚC NGÓI TRÀN VIỀN NHƯ GOOGLE MAPS)
+        // Buộc Leaflet phải tải sẵn ngói bản đồ ra ngoài mép màn hình 50%
+        // ==========================================
+        const originalGetTiledPixelBounds = L.TileLayer.prototype._getTiledPixelBounds;
+        L.TileLayer.prototype._getTiledPixelBounds = function (center) {
+            const bounds = originalGetTiledPixelBounds.call(this, center);
+            const size = bounds.max.subtract(bounds.min);
+            const padX = Math.floor(size.x * 0.25);
+            const padY = Math.floor(size.y * 0.25);
+            return new L.Bounds(
+                bounds.min.subtract([padX, padY]),
+                bounds.max.add([padX, padY])
+            );
+        };
+
+        // ==========================================
+        // 0. HỆ THỐNG MÀU NEON THEO NGÀY
         // ==========================================
         const appNeonPalettes = [
-            { primary: '#00f3ff', pRgb: '0, 243, 255', secondary: '#ff007f', sRgb: '255, 0, 127' }, // Xanh lam - Hồng (Mặc định)
-            { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, // Bạc hà - Tím
-            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  // Vàng - Đỏ
-            { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, // Xanh biển - Cam
-            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  // Chanh - Đỏ tươi (Magenta)
+            { primary: '#00f3ff', pRgb: '0, 243, 255', secondary: '#ff007f', sRgb: '255, 0, 127' }, 
+            { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, 
+            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  
+            { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, 
+            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  
         ];
         
         function setAppNeonColorByDate() {
             const today = new Date();
-            // Lấy ngày trong năm để đổi màu ngẫu nhiên nhưng cố định trong ngày
             const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
             const palette = appNeonPalettes[dayOfYear % appNeonPalettes.length];
             
@@ -1005,9 +1020,8 @@
             maxZoom: 18, 
             zoomControl: false, 
             attributionControl: false,
-            // --- TỐI ƯU HÓA PHƯƠNG ÁN 1 & 2: Vẽ ngầm ranh giới rộng 50% ra mép + Zoom mượt ---
             preferCanvas: true,
-            renderer: L.canvas({ padding: 0.5 }), // Ép vẽ ngầm sẵn ra xung quanh 50% để không bao giờ viền đen
+            renderer: L.canvas({ padding: 0.5 }), 
             zoomSnap: 0.25,
             zoomDelta: 0.25,
             wheelDebounceTime: 40,
@@ -1016,13 +1030,13 @@
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
             maxZoom: 20,
-            // --- TỐI ƯU HÓA PHƯƠNG ÁN 1 & 2: Bộ nhớ RAM 8 lớp & Tắt tải ngói khi đang vuốt ---
-            keepBuffer: 8,            // Giữ sẵn 8 lớp ngói xung quanh trong RAM
-            updateWhenZooming: false, // Dừng tải ngói mới khi đang zoom/vuốt để nhường 100% CPU cho mượt
-            updateWhenIdle: true      // Chỉ tải ngói khi tay vừa dừng thao tác
+            // --- TỐI ƯU HÓA TRẢI NGHIỆM NHƯ GOOGLE MAPS ---
+            keepBuffer: 16,            // Giữ lại 16 lớp ngói trong RAM để vuốt qua lại không tốn mạng
+            updateWhenZooming: false,  // Nhường 100% CPU khi đang phóng to/thu nhỏ
+            updateWhenIdle: false,     // TẢI LIÊN TỤC ngay trong lúc tay đang vuốt/kéo (Không chờ dừng tay!)
+            updateInterval: 50         // Tần suất tải siêu nhạy 50ms (Mặc định 200ms)
         }).addTo(map);
 
-        // --- TỐI ƯU HÓA: Tắt bóng đổ/hiệu ứng nặng khi đang zoom hoặc vuốt ---
         const mapContainer = document.getElementById('map');
         map.on('zoomstart movestart', () => {
             mapContainer.classList.add('map-zooming');

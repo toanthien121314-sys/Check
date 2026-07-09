@@ -291,7 +291,6 @@
             z-index: 1;
         }
 
-        /* Marker Album Ảnh */
         .photo-album-marker {
             width: 65px;
             height: 65px;
@@ -576,7 +575,7 @@
         }
 
         /* =========================================
-           HỘP THOẠI NHẬP LIỆU CHECK-IN (MODAL)
+           HỘP THOẠI NHẬP LIỆU CHECK-IN (MODAL) VÀ HIỆU ỨNG HIỂN THỊ THÔNG MINH
         ========================================= */
         .modal-overlay {
             position: fixed;
@@ -612,6 +611,15 @@
             transition: transform 0.3s ease;
             max-height: 92vh;
             overflow-y: auto;
+        }
+
+        /* Ẩn thanh cuộn để modal luôn gọn gàng đẹp mắt */
+        .modal-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .modal-box::-webkit-scrollbar-thumb {
+            background: rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
         }
 
         .modal-overlay.active .modal-box {
@@ -692,6 +700,8 @@
             background: linear-gradient(90deg, #00f3ff, #0077ff);
             color: #000;
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            display: none; /* Ẩn đi chờ lật mở */
+            animation: fadeIn 0.4s ease forwards;
         }
 
         .btn-submit:hover {
@@ -721,7 +731,7 @@
 
         /* KHUNG HIỂN THỊ CON DẤU TEM THƯ TRONG MODAL */
         .stamp-preview-container {
-            display: flex;
+            display: none; /* Bị ẩn ban đầu, khi điền hoặc chọn ảnh mới trượt ra */
             flex-direction: column;
             align-items: center;
             margin: 12px 0;
@@ -730,7 +740,14 @@
             border-radius: 12px;
             border: 1px dashed rgba(255, 0, 127, 0.5);
             box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.1);
+            animation: fadeIn 0.4s ease forwards;
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .stamp-preview-title {
             font-size: 0.78rem;
             color: #ff007f;
@@ -742,7 +759,7 @@
         }
         #stampCanvas {
             width: 240px;
-            height: 315px; /* Tỉ lệ tem Đông Dương */
+            height: 315px; 
             border-radius: 4px;
             box-shadow: 0 0 18px rgba(255, 255, 255, 0.2);
             background: transparent;
@@ -811,15 +828,15 @@
                 <input type="file" id="stampPhotoInput" accept="image/*" class="form-control" style="padding: 6px; cursor: pointer;">
             </div>
 
-            <div class="stamp-preview-container">
-                <div class="stamp-preview-title">🌸 Tem Thư Bưu Chính Kỷ Niệm 🌸</div>
-                <!-- Kích thước chuẩn tỷ lệ Tem Bưu Chính Đông Dương -->
+            <!-- CHỈ HIỂN THỊ KHI CÓ DỮ LIỆU ĐẦU VÀO -->
+            <div class="stamp-preview-container" id="stampPreviewContainer">
+                <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
                 <canvas id="stampCanvas" width="320" height="420"></canvas>
             </div>
 
             <div class="modal-actions">
                 <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn btn-submit" onclick="submitCheckIn()">Lưu Điểm</button>
+                <button class="btn btn-submit" id="btnSubmitCheckIn" onclick="submitCheckIn()">Lưu Điểm</button>
             </div>
         </div>
     </div>
@@ -840,6 +857,16 @@
         let globalSpotsData = []; 
         let isPhotoView = false; 
         let userCapturedImg = null; 
+
+        // --- HỆ THỐNG MÀU MỰC TEM NGẪU NHIÊN CỔ ĐIỂN ---
+        const vintageColors = [
+            { hex: '#1b3b6f', r: 27, g: 59, b: 111 },   // Xanh Navy (Chuẩn bưu chính)
+            { hex: '#8b1c1c', r: 139, g: 28, b: 28 },   // Đỏ Bordeaux (Cổ điển)
+            { hex: '#1c5236', r: 28, g: 82, b: 54 },    // Xanh Lá Rừng (Forest Green)
+            { hex: '#4a2c5e', r: 74, g: 44, b: 94 },    // Tím Than (Deep Purple)
+            { hex: '#5c4033', r: 92, g: 64, b: 51 }     // Nâu Sepia (Vintage)
+        ];
+        let currentStampColor = vintageColors[0];
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -1439,6 +1466,21 @@
         const placeNoteInput = document.getElementById('placeNote');
         const stampPhotoInput = document.getElementById('stampPhotoInput');
 
+        // --- CƠ CHẾ HIỆN/ẨN THÔNG MINH CHO MODAL (SMART REVEAL) ---
+        function checkAndRevealStamp() {
+            const nameVal = placeNameInput.value.trim();
+            const previewContainer = document.getElementById('stampPreviewContainer');
+            const btnSubmit = document.getElementById('btnSubmitCheckIn');
+
+            if (nameVal !== '' || userCapturedImg !== null) {
+                previewContainer.style.display = 'flex';
+                btnSubmit.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+                btnSubmit.style.display = 'none';
+            }
+        }
+
         stampPhotoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -1447,6 +1489,7 @@
                     const img = new Image();
                     img.onload = function() {
                         userCapturedImg = img;
+                        checkAndRevealStamp(); // Mở khóa giao diện hiển thị
                         const t = new Date();
                         const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
                         drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
@@ -1457,21 +1500,27 @@
             }
         });
 
+        placeNameInput.addEventListener('input', () => {
+            checkAndRevealStamp(); // Kiểm tra liên tục khi gõ tên
+            const t = new Date();
+            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
+            drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
+        });
+
         // ==========================================
-        // THUẬT TOÁN VẼ TEM THƯ IN KHẮC KẼM (LITHOGRAPHY ENGRAVING FILTER)
+        // THUẬT TOÁN VẼ TEM THƯ IN KHẮC KẼM KẾT HỢP MÀU RANDOM
         // ==========================================
         function drawNeonStamp(placeName, regionName, dateStr) {
             const canvas = document.getElementById('stampCanvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            const w = canvas.width;  // 320px
-            const h = canvas.height; // 420px
+            const w = canvas.width;  
+            const h = canvas.height; 
 
-            // Màu Vintage (Phong cách Indochine)
-            const inkColor = '#1b3b6f';   // Xanh Navy mực in cổ
-            const paperColor = '#f4f0e6'; // Giấy ngà vàng
+            // Áp dụng màu mực Random đã chọn
+            const inkColor = currentStampColor.hex;   
+            const paperColor = '#f4f0e6'; // Giấy ngà vàng không đổi
 
-            // --- 1. VẼ NỀN TEM VÀ ĐỤC LỖ RĂNG CƯA ---
             ctx.clearRect(0, 0, w, h);
             ctx.fillStyle = paperColor;
             ctx.fillRect(10, 10, w - 20, h - 20);
@@ -1481,51 +1530,41 @@
             ctx.fillStyle = '#000000';
             const radius = 6;
             const step = 20;
-            // Lỗ trên/dưới
             for (let x = 10; x <= w - 10; x += step) {
                 ctx.beginPath(); ctx.arc(x, 10, radius, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.arc(x, h - 10, radius, 0, Math.PI * 2); ctx.fill();
             }
-            // Lỗ trái/phải
             for (let y = 10; y <= h - 10; y += step) {
                 ctx.beginPath(); ctx.arc(10, y, radius, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.arc(w - 10, y, radius, 0, Math.PI * 2); ctx.fill();
             }
             ctx.restore();
 
-            // --- 2. VẼ KHUNG VIỀN ĐÔI CỔ ĐIỂN ---
             ctx.strokeStyle = inkColor;
             ctx.lineWidth = 1;
             ctx.strokeRect(22, 22, w - 44, h - 44);
             ctx.lineWidth = 3;
             ctx.strokeRect(26, 26, w - 52, h - 52);
 
-            // --- 3. TYPOGRAPHY PHẦN TRÊN TEM ---
             ctx.fillStyle = inkColor;
             ctx.font = 'bold 16px "Times New Roman", Times, serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            
-            // Chữ: .. CHECK-IN ..
             ctx.fillText('.. CHECK-IN ..', w / 2, 42);
             
-            // Chữ: VIETNAM 2026
             ctx.font = 'bold 14px "Times New Roman", Times, serif';
             let topRegion = (regionName || 'VIETNAM').toUpperCase();
             if (topRegion.length > 18) topRegion = topRegion.substring(0, 18) + '..';
             ctx.fillText(topRegion + ' ' + (new Date().getFullYear()), w / 2, 60);
 
-            // --- 4. XỬ LÝ KHUNG ẢNH TRUNG TÂM (LITHOGRAPHY FILTER) ---
             const imgX = 32, imgY = 74, imgW = w - 64, imgH = h - 168;
 
             if (userCapturedImg) {
-                // Sử dụng Canvas ẩn để xử lý thuật toán In Khắc (Halftone / Engraving)
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = imgW;
                 tempCanvas.height = imgH;
                 const tCtx = tempCanvas.getContext('2d');
 
-                // Canh giữa và Crop tỷ lệ ảnh
                 const imgRatio = userCapturedImg.width / userCapturedImg.height;
                 const boxRatio = imgW / imgH;
                 let drawW, drawH, drawX, drawY;
@@ -1538,21 +1577,17 @@
                 }
                 tCtx.drawImage(userCapturedImg, drawX, drawY, drawW, drawH);
 
-                // Lấy Pixel Data để áp dụng bộ lọc in cổ điển
                 const imgData = tCtx.getImageData(0, 0, imgW, imgH);
                 const data = imgData.data;
                 
-                // RGB của màu Mực (Navy) và Giấy (Cream)
-                const iR = 27, iG = 59, iB = 111;
+                // Trích xuất mã RGB ngẫu nhiên của màu mực
+                const iR = currentStampColor.r, iG = currentStampColor.g, iB = currentStampColor.b;
                 const pR = 244, pG = 240, pB = 230;
 
                 for (let i = 0; i < data.length; i += 4) {
                     let r = data[i], g = data[i+1], b = data[i+2];
-                    
-                    // Bước 1: Chuyển sang ảnh đen trắng (Grayscale)
                     let gray = 0.299 * r + 0.587 * g + 0.114 * b;
 
-                    // Bước 2: Tạo hiệu ứng nhiễu sọc (Halftone / Engraving Line Noise)
                     let px = (i / 4) % imgW;
                     let py = Math.floor((i / 4) / imgW);
                     let linePattern = (Math.sin(px * 1.5) + Math.sin(py * 1.5)) * 15;
@@ -1560,36 +1595,28 @@
                     
                     gray += noise;
 
-                    // Bước 3: Ép ngưỡng in (Posterize/Threshold) để tạo vết mực
                     let blend;
-                    if (gray < 110) blend = 0;      // 0 = Mực đậm đặc (Đen)
-                    else if (gray < 170) blend = 0.4; // 0.4 = Nét gạch mờ (Xám)
-                    else blend = 1;                 // 1 = Không in mực (Giấy)
+                    if (gray < 110) blend = 0;      
+                    else if (gray < 170) blend = 0.4; 
+                    else blend = 1;                 
 
-                    // Bước 4: Đổ màu Duotone (Ép dải màu Grayscale thành Navy & Cream)
                     data[i]   = iR + (pR - iR) * blend;
                     data[i+1] = iG + (pG - iG) * blend;
                     data[i+2] = iB + (pB - iB) * blend;
                 }
                 tCtx.putImageData(imgData, 0, 0);
-                
-                // Vẽ ảnh đã xử lý lên Canvas chính
                 ctx.drawImage(tempCanvas, imgX, imgY);
             } else {
-                // Nếu chưa có ảnh, vẽ khung cảnh minh họa giả lập khắc kẽm
                 ctx.fillStyle = paperColor;
                 ctx.fillRect(imgX, imgY, imgW, imgH);
-                
                 ctx.strokeStyle = inkColor;
                 ctx.lineWidth = 1;
                 
-                // Vẽ mặt trời bằng những đường kẻ sọc (Engraving style)
                 for(let r = 2; r < 40; r += 4) {
                     ctx.beginPath();
                     ctx.arc(imgX + imgW/2, imgY + imgH/2, r, 0, Math.PI, true);
                     ctx.stroke();
                 }
-                // Vẽ những gợn sóng (Biển/Mây)
                 for(let y = imgY + imgH/2 + 10; y < imgY + imgH; y += 8) {
                     ctx.beginPath();
                     ctx.moveTo(imgX, y);
@@ -1599,18 +1626,13 @@
                     }
                     ctx.stroke();
                 }
-                // Khung viền ảnh trong
                 ctx.strokeRect(imgX, imgY, imgW, imgH);
             }
 
-            // Kẻ viền đóng khung tấm ảnh
             ctx.strokeStyle = inkColor;
             ctx.lineWidth = 2;
             ctx.strokeRect(imgX, imgY, imgW, imgH);
-
-            // --- 5. TYPOGRAPHY PHẦN DƯỚI TEM ---
             
-            // Ký hiệu Giá trị (CENTS / ĐỒNG)
             ctx.fillStyle = paperColor;
             ctx.fillRect(w - 70, h - 86, 38, 38);
             ctx.strokeStyle = inkColor;
@@ -1619,16 +1641,14 @@
             
             ctx.fillStyle = inkColor;
             ctx.font = 'bold 22px "Times New Roman", Times, serif';
-            ctx.fillText('10', w - 51, h - 70); // Giá trị
+            ctx.fillText('10', w - 51, h - 70); 
             ctx.font = '10px "Times New Roman", Times, serif';
             ctx.fillText('XU', w - 51, h - 54);
 
-            // Chữ: POSTES lớn
             ctx.textAlign = 'left';
             ctx.font = 'bold 20px "Times New Roman", Times, serif';
             ctx.fillText('POSTES', 32, h - 74);
 
-            // Tên Địa điểm (Thay thế chữ INDOCHINE)
             let nameText = (placeName || 'ĐIỂM CHECK-IN').toUpperCase();
             if (nameText.length <= 15) {
                 ctx.font = 'bold 18px "Times New Roman", Times, serif';
@@ -1638,40 +1658,36 @@
                 ctx.fillText(nameText.substring(0, 20), 32, h - 55);
             }
 
-            // Đường gạch dưới cùng
             ctx.beginPath();
             ctx.moveTo(32, h - 38);
             ctx.lineTo(w - 32, h - 38);
             ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            // Chữ kỹ thuật (Tên khắc giả)
             ctx.font = '9px Arial';
             ctx.fillText('MỘC BẢN', 32, h - 30);
             ctx.textAlign = 'right';
             ctx.fillText(dateStr || '09/07/2026', w - 32, h - 30);
         }
 
-        placeNameInput.addEventListener('input', () => {
-            const t = new Date();
-            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-            drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
-        });
-
         function openCheckInModal() {
             placeNameInput.value = ''; 
             placeNoteInput.value = ''; 
             stampPhotoInput.value = ''; 
-            userCapturedImg = null;     
+            userCapturedImg = null;    
+
+            // QUAY LÔ TÔ MÀU MỰC CHO LẦN MỞ MỚI
+            currentStampColor = vintageColors[Math.floor(Math.random() * vintageColors.length)];
+
+            // Reset UI thu gọn
+            document.getElementById('stampPreviewContainer').style.display = 'none';
+            document.getElementById('btnSubmitCheckIn').style.display = 'none';
+
             modal.classList.add('active'); 
             setTimeout(() => placeNameInput.focus(), 100);
             
             autoRegionText.innerHTML = '<span style="color:#00f3ff;">⏳ Đang quét tọa độ...</span>'; 
             currentDetectedRegion = "Việt Nam";
-            
-            const t = new Date();
-            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-            drawNeonStamp("ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
             
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
                 headers: { 'Accept-Language': 'vi' }
@@ -1683,7 +1699,6 @@
                     if (p) {
                         currentDetectedRegion = p.replace('Thành phố ', 'TP. ').replace('Tỉnh ', '');
                         autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`;
-                        drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
                         return; 
                     }
                 }
@@ -1697,7 +1712,6 @@
                             if (data.province && data.province !== "Khu vực mới") {
                                 currentDetectedRegion = data.province; 
                                 autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; 
-                                drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
                             } else {
                                 throw new Error("Server GAS trả về rỗng");
                             }
@@ -1705,12 +1719,10 @@
                         .catch(() => { 
                             currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
                             autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
-                            drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
                         });
                 } else {
                     currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
                     autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
-                    drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
                 }
             });
         }
@@ -1731,7 +1743,7 @@
             const note = placeNoteInput.value.trim();
             if (!name) return alert("Vui lòng điền tên địa điểm!");
             
-            const btnSubmit = document.querySelector('.btn-submit');
+            const btnSubmit = document.getElementById('btnSubmitCheckIn');
             const oldText = btnSubmit.innerHTML;
             btnSubmit.innerHTML = "⏳ Đang lưu Tem Bưu Chính..."; 
             btnSubmit.disabled = true;

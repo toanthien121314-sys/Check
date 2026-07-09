@@ -786,7 +786,7 @@
         }
 
         /* =========================================
-           TỐI ƯU HÓA HIỆU NĂNG RENDER (PHƯƠNG ÁN 1)
+           TỐI ƯU HÓA HIỆU NĂNG RENDER (PHƯƠNG ÁN 1 & 2)
            Tắt bóng đổ và animation khi bản đồ đang zoom/di chuyển
         ========================================= */
         .map-zooming path,
@@ -1005,8 +1005,9 @@
             maxZoom: 18, 
             zoomControl: false, 
             attributionControl: false,
-            // TỐI ƯU HÓA PHƯƠNG ÁN 2: Bật chế độ vẽ Canvas + Zoom mượt
+            // --- TỐI ƯU HÓA PHƯƠNG ÁN 1 & 2: Vẽ ngầm ranh giới rộng 50% ra mép + Zoom mượt ---
             preferCanvas: true,
+            renderer: L.canvas({ padding: 0.5 }), // Ép vẽ ngầm sẵn ra xung quanh 50% để không bao giờ viền đen
             zoomSnap: 0.25,
             zoomDelta: 0.25,
             wheelDebounceTime: 40,
@@ -1014,10 +1015,14 @@
         });
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
-            maxZoom: 20 
+            maxZoom: 20,
+            // --- TỐI ƯU HÓA PHƯƠNG ÁN 1 & 2: Bộ nhớ RAM 8 lớp & Tắt tải ngói khi đang vuốt ---
+            keepBuffer: 8,            // Giữ sẵn 8 lớp ngói xung quanh trong RAM
+            updateWhenZooming: false, // Dừng tải ngói mới khi đang zoom/vuốt để nhường 100% CPU cho mượt
+            updateWhenIdle: true      // Chỉ tải ngói khi tay vừa dừng thao tác
         }).addTo(map);
 
-        // TỐI ƯU HÓA PHƯƠNG ÁN 1: Tắt bóng đổ/hiệu ứng nặng khi đang zoom hoặc vuốt
+        // --- TỐI ƯU HÓA: Tắt bóng đổ/hiệu ứng nặng khi đang zoom hoặc vuốt ---
         const mapContainer = document.getElementById('map');
         map.on('zoomstart movestart', () => {
             mapContainer.classList.add('map-zooming');

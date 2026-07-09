@@ -604,14 +604,14 @@
         .modal-box {
             background: linear-gradient(135deg, rgba(10, 16, 38, 0.95), rgba(5, 8, 20, 0.98));
             width: 90%;
-            max-width: 400px;
-            padding: 25px;
+            max-width: 420px;
+            padding: 22px;
             border-radius: 16px;
             border: 2px solid #00f3ff;
             box-shadow: 0 0 25px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2);
             transform: translateY(-20px);
             transition: transform 0.3s ease;
-            max-height: 90vh;
+            max-height: 92vh;
             overflow-y: auto;
         }
 
@@ -631,7 +631,7 @@
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 14px;
         }
 
         .form-group label {
@@ -662,7 +662,7 @@
         .modal-actions {
             display: flex;
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 18px;
         }
 
         .btn {
@@ -708,7 +708,7 @@
             border-radius: 8px;
             font-size: 0.85rem;
             color: #a5b4fc;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -720,13 +720,13 @@
             text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
         }
 
-        /* KHUNG HIỂN THỊ CON DẤU TRONG MODAL */
+        /* KHUNG HIỂN THỊ CON DẤU TEM THƯ TRONG MODAL */
         .stamp-preview-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 15px 0;
-            background: rgba(0, 0, 0, 0.45);
+            margin: 12px 0;
+            background: rgba(0, 0, 0, 0.55);
             padding: 12px;
             border-radius: 12px;
             border: 1px dashed rgba(255, 0, 127, 0.5);
@@ -742,12 +742,11 @@
             text-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
         }
         #stampCanvas {
-            width: 160px;
-            height: 160px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
+            width: 240px;
+            height: 300px;
+            border-radius: 6px;
+            box-shadow: 0 0 18px rgba(0, 243, 255, 0.35);
             background: #03050a;
-            border: 1px solid rgba(0, 243, 255, 0.3);
         }
     </style>
 </head>
@@ -808,10 +807,15 @@
                 <label for="placeNote">Ghi chú / Kỷ niệm</label>
                 <input type="text" id="placeNote" class="form-control" placeholder="VD: Trải nghiệm cực kỳ chill..." autocomplete="off">
             </div>
+            <div class="form-group">
+                <label for="stampPhotoInput">📸 Chọn / Chụp ảnh đưa vào Tem Bưu Chính:</label>
+                <input type="file" id="stampPhotoInput" accept="image/*" class="form-control" style="padding: 6px; cursor: pointer;">
+            </div>
 
             <div class="stamp-preview-container">
-                <div class="stamp-preview-title">🌸 Mộc Bản Kỷ Niệm Check-in 🌸</div>
-                <canvas id="stampCanvas" width="300" height="300"></canvas>
+                <div class="stamp-preview-title">🌸 Tem Thư Bưu Chính Kỷ Niệm 🌸</div>
+                <!-- Kích thước tiêu chuẩn tỷ lệ Tem Bưu Chính 4:5 -->
+                <canvas id="stampCanvas" width="320" height="400"></canvas>
             </div>
 
             <div class="modal-actions">
@@ -837,6 +841,7 @@
         let currentDetectedRegion = "Việt Nam";
         let globalSpotsData = []; 
         let isPhotoView = false; 
+        let userCapturedImg = null; // Biến lưu ảnh người dùng chụp đưa vào tem thư
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -1023,8 +1028,8 @@
             if (cleanStampUrl !== '') {
                 stampHtml = `
                     <div style="text-align:center; margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,243,255,0.3);">
-                        <div style="font-size:0.75rem; color:#00f3ff; margin-bottom:4px; font-weight:bold; letter-spacing:0.5px;">🌸 MỘC BẢN KỶ NIỆM 🌸</div>
-                        <img src="${cleanStampUrl}" style="width:130px; height:130px; object-fit:contain; border-radius:10px; border:1.5px dashed #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.4); background: rgba(5, 8, 20, 0.8); padding: 5px; cursor:pointer; transition:transform 0.2s;" onclick="window.open('${cleanStampUrl}', '_blank')" title="Bấm để tải ảnh dấu rõ nét" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <div style="font-size:0.75rem; color:#00f3ff; margin-bottom:4px; font-weight:bold; letter-spacing:0.5px;">🌸 TEM THƯ KỶ NIỆM 🌸</div>
+                        <img src="${cleanStampUrl}" style="width:140px; height:175px; object-fit:contain; border-radius:6px; border:1.5px dashed #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.4); background: rgba(5, 8, 20, 0.8); padding: 4px; cursor:pointer; transition:transform 0.2s;" onclick="window.open('${cleanStampUrl}', '_blank')" title="Bấm để tải ảnh tem thư rõ nét" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     </div>
                 `;
             }
@@ -1435,112 +1440,176 @@
         const autoRegionText = document.getElementById('autoRegionText');
         const placeNameInput = document.getElementById('placeName');
         const placeNoteInput = document.getElementById('placeNote');
+        const stampPhotoInput = document.getElementById('stampPhotoInput');
 
+        // BẮT SỰ KIỆN KHI NGƯỜI DÙNG CHỌN HỌẶC CHỤP ẢNH MỚI
+        stampPhotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        userCapturedImg = img;
+                        const t = new Date();
+                        const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
+                        drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // ==========================================
+        // THUẬT TOÁN VẼ TEM THƯ BƯU CHÍNH (POSTAGE STAMP GENERATOR)
+        // ==========================================
         function drawNeonStamp(placeName, regionName, dateStr) {
             const canvas = document.getElementById('stampCanvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            const w = canvas.width;
-            const h = canvas.height;
-            const cx = w / 2;
-            const cy = h / 2;
+            const w = canvas.width;  // 320px
+            const h = canvas.height; // 400px
 
             ctx.clearRect(0, 0, w, h);
 
-            ctx.beginPath();
-            ctx.arc(cx, cy, 135, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(10, 16, 38, 0.9)';
-            ctx.fill();
+            // 1. NỀN TEM (Màu giấy cổ điển Vintage Cream sứ)
+            ctx.fillStyle = '#f5f2eb';
+            ctx.fillRect(8, 8, w - 16, h - 16);
 
+            // 2. TẠO RĂNG CƯA TEM THƯ (Perforations) bằng kỹ thuật đục lỗ nền trong suốt
             ctx.save();
-            ctx.beginPath();
-            ctx.arc(cx, cy, 135, 0, Math.PI * 2);
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = '#ff007f';
-            ctx.shadowColor = '#ff007f';
-            ctx.shadowBlur = 15;
-            ctx.stroke();
-            ctx.restore();
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = '#000000';
+            const radius = 5;
+            const step = 18;
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(cx, cy, 120, 0, Math.PI * 2);
-            ctx.lineWidth = 2.5;
-            ctx.strokeStyle = '#00f3ff';
-            ctx.setLineDash([10, 8]);
-            ctx.shadowColor = '#00f3ff';
-            ctx.shadowBlur = 8;
-            ctx.stroke();
-            ctx.restore();
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(cx - 80, cy - 45);
-            ctx.lineTo(cx + 80, cy - 45);
-            ctx.moveTo(cx - 80, cy + 50);
-            ctx.lineTo(cx + 80, cy + 50);
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#bd00ff';
-            ctx.shadowColor = '#bd00ff';
-            ctx.shadowBlur = 10;
-            ctx.stroke();
-            ctx.restore();
-
-            ctx.fillStyle = '#00f3ff';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('★', cx - 95, cy - 45);
-            ctx.fillText('★', cx + 95, cy - 45);
-            ctx.fillText('★', cx - 95, cy + 50);
-            ctx.fillText('★', cx + 95, cy + 50);
-
-            ctx.save();
-            ctx.fillStyle = '#00f3ff';
-            ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = '#00f3ff';
-            ctx.shadowBlur = 10;
-            let topText = (regionName || 'VIETNAM').toUpperCase();
-            if (topText.length > 18) topText = topText.substring(0, 18) + '...';
-            ctx.fillText(topText, cx, cy - 75);
-            ctx.restore();
-
-            ctx.save();
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = '#ff007f';
-            ctx.shadowBlur = 12;
-            
-            let nameText = (placeName || 'ĐIỂM CHECK-IN').toUpperCase();
-            if (nameText.length <= 10) {
-                ctx.font = '800 24px "Segoe UI", Arial, sans-serif';
-                ctx.fillText(nameText, cx, cy + 3);
-            } else if (nameText.length <= 20) {
-                ctx.font = '800 18px "Segoe UI", Arial, sans-serif';
-                let words = nameText.split(' ');
-                let line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                let line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-                ctx.fillText(line1, cx, cy - 12);
-                ctx.fillText(line2, cx, cy + 16);
-            } else {
-                ctx.font = '800 15px "Segoe UI", Arial, sans-serif';
-                let words = nameText.split(' ');
-                let mid = Math.ceil(words.length / 2);
-                ctx.fillText(words.slice(0, mid).join(' '), cx, cy - 12);
-                ctx.fillText(words.slice(mid).join(' ').substring(0, 18), cx, cy + 16);
+            // Đục lỗ cạnh trên và dưới
+            for (let x = 8; x <= w - 8; x += step) {
+                ctx.beginPath(); ctx.arc(x, 8, radius, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x, h - 8, radius, 0, Math.PI * 2); ctx.fill();
+            }
+            // Đục lỗ cạnh trái và phải
+            for (let y = 8; y <= h - 8; y += step) {
+                ctx.beginPath(); ctx.arc(8, y, radius, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(w - 8, y, radius, 0, Math.PI * 2); ctx.fill();
             }
             ctx.restore();
 
+            // 3. VIỀN TRANG TRÍ BÊN TRONG (Decorative Frame)
+            ctx.strokeStyle = '#2b3a4a'; // Màu xanh Navy bưu chính cổ điển
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(20, 20, w - 40, h - 40);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(24, 24, w - 48, h - 48);
+
+            // 4. KHUNG ẢNH CHÍNH GIỮA (Illustration / Photo Window)
+            const imgX = 30, imgY = 62, imgW = w - 60, imgH = h - 146;
             ctx.save();
-            ctx.fillStyle = '#ff00ff';
-            ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = '#ff00ff';
-            ctx.shadowBlur = 10;
-            ctx.fillText(dateStr || '01/01/2026', cx, cy + 80);
+            ctx.beginPath();
+            ctx.rect(imgX, imgY, imgW, imgH);
+            ctx.clip(); // Cắt mọi thứ gá ra ngoài khung ảnh
+
+            if (userCapturedImg) {
+                // Vẽ ảnh người dùng chụp/chọn (tự động canh giữa và tỉ lệ cover)
+                const imgRatio = userCapturedImg.width / userCapturedImg.height;
+                const boxRatio = imgW / imgH;
+                let drawW, drawH, drawX, drawY;
+                if (imgRatio > boxRatio) {
+                    drawH = imgH; drawW = imgH * imgRatio;
+                    drawX = imgX - (drawW - imgW) / 2; drawY = imgY;
+                } else {
+                    drawW = imgW; drawH = imgW / imgRatio;
+                    drawX = imgX; drawY = imgY - (drawH - imgH) / 2;
+                }
+                ctx.drawImage(userCapturedImg, drawX, drawY, drawW, drawH);
+            } else {
+                // Vẽ tranh minh họa mặc định (Hoàng hôn trên đỉnh núi phong cách Tem Retro)
+                // Bầu trời chuyển sắc
+                let skyGrad = ctx.createLinearGradient(imgX, imgY, imgX, imgY + imgH);
+                skyGrad.addColorStop(0, '#e06666');
+                skyGrad.addColorStop(0.5, '#f6b26b');
+                skyGrad.addColorStop(1, '#ffd966');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(imgX, imgY, imgW, imgH);
+
+                // Mặt trời
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(imgX + imgW / 2, imgY + imgH * 0.55, 36, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Núi xa
+                ctx.fillStyle = '#76a5af';
+                ctx.beginPath();
+                ctx.moveTo(imgX, imgY + imgH);
+                ctx.lineTo(imgX + imgW * 0.25, imgY + imgH * 0.35);
+                ctx.lineTo(imgX + imgW * 0.65, imgY + imgH * 0.75);
+                ctx.lineTo(imgX + imgW, imgY + imgH * 0.45);
+                ctx.lineTo(imgX + imgW, imgY + imgH);
+                ctx.fill();
+
+                // Núi gần
+                ctx.fillStyle = '#2b3a4a';
+                ctx.beginPath();
+                ctx.moveTo(imgX, imgY + imgH);
+                ctx.lineTo(imgX + imgW * 0.45, imgY + imgH * 0.55);
+                ctx.lineTo(imgX + imgW * 0.8, imgY + imgH * 0.3);
+                ctx.lineTo(imgX + imgW, imgY + imgH * 0.65);
+                ctx.lineTo(imgX + imgW, imgY + imgH);
+                ctx.fill();
+            }
             ctx.restore();
+
+            // Viền sắc nét cho khung ảnh
+            ctx.strokeStyle = '#2b3a4a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(imgX, imgY, imgW, imgH);
+
+            // 5. BANNER TRÊN (Tên Tỉnh thành & Con số Bưu chính)
+            ctx.fillStyle = '#2b3a4a';
+            ctx.fillRect(30, 30, w - 60, 26);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 13px "Segoe UI", Arial, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            let topRegion = (regionName || 'VIETNAM').toUpperCase();
+            if (topRegion.length > 15) topRegion = topRegion.substring(0, 15) + '..';
+            ctx.fillText('VN 🇻🇳 ' + topRegion, 36, 43);
+
+            // Con số bưu chính "100" góc phải tem
+            ctx.fillStyle = '#c0392b'; // Đỏ bưu chính cổ điển
+            ctx.fillRect(w - 62, 32, 30, 22);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('100', w - 47, 43);
+
+            // 6. BANNER DƯỚI (Tên địa điểm Check-in phong cách tem bưu chính)
+            ctx.fillStyle = '#2b3a4a';
+            ctx.fillRect(26, h - 76, w - 52, 30);
+            ctx.strokeStyle = '#d35400'; // Cam đất viền trong
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(28, h - 74, w - 56, 26);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let nameText = (placeName || 'ĐIỂM CHECK-IN').toUpperCase();
+            if (nameText.length <= 14) {
+                ctx.font = '800 15px "Segoe UI", Arial, sans-serif';
+                ctx.fillText(nameText, w / 2, h - 61);
+            } else {
+                ctx.font = '800 11px "Segoe UI", Arial, sans-serif';
+                ctx.fillText(nameText.substring(0, 24), w / 2, h - 61);
+            }
+
+            // 7. DÒNG CHỮ BƯU CHÍNH VÀ NGÀY THÁNG DƯỚI CÙNG
+            ctx.fillStyle = '#555555';
+            ctx.font = 'bold 11px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('POSTAGE CHECK-IN • ' + (dateStr || '09/07/2026'), w / 2, h - 34);
         }
 
         placeNameInput.addEventListener('input', () => {
@@ -1552,6 +1621,8 @@
         function openCheckInModal() {
             placeNameInput.value = ''; 
             placeNoteInput.value = ''; 
+            stampPhotoInput.value = ''; // Reset input chọn ảnh
+            userCapturedImg = null;     // Reset ảnh chụp tạm
             modal.classList.add('active'); 
             setTimeout(() => placeNameInput.focus(), 100);
             
@@ -1622,7 +1693,7 @@
             
             const btnSubmit = document.querySelector('.btn-submit');
             const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang tạo Album & Mộc bản..."; 
+            btnSubmit.innerHTML = "⏳ Đang lưu Tem Bưu Chính..."; 
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
@@ -1679,7 +1750,7 @@
                     btnSubmit.innerHTML = oldText; 
                     btnSubmit.disabled = false;
                     if (respData.success) {
-                        showToast(`⚡ Đã tạo Album Drive & Con dấu mộc bản cho "${name}" thành công!`);
+                        showToast(`⚡ Đã tạo Album Drive & Tem thư bưu chính cho "${name}" thành công!`);
                         tempSpot.folderUrl = respData.url; 
                         if (respData.stampUrl) tempSpot.stampUrl = respData.stampUrl;
                         if (isPhotoView) renderPhotoLayer();
@@ -1707,7 +1778,7 @@
                                 tempSpot.folderUrl = savedSpot.folderUrl; 
                                 if (savedSpot.stampUrl) tempSpot.stampUrl = savedSpot.stampUrl;
                                 if (isPhotoView) renderPhotoLayer();
-                                showToast(`✅ Đã đồng bộ thành công "${name}" cùng con dấu!`, 3000);
+                                showToast(`✅ Đã đồng bộ thành công "${name}" cùng tem thư!`, 3000);
                             } else {
                                 alert("Lỗi thực sự: Không thể tạo thư mục hoặc lưu ảnh. Vui lòng kiểm tra lại quyền Drive và BẢN TRIỂN KHAI MỚI của Apps Script!");
                             }

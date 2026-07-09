@@ -575,7 +575,7 @@
         }
 
         /* =========================================
-           HỘP THOẠI NHẬP LIỆU CHECK-IN (MODAL) VÀ HIỆU ỨNG HIỂN THỊ THÔNG MINH
+           HỘP THOẠI NHẬP LIỆU (SMART 2-STEP MODAL)
         ========================================= */
         .modal-overlay {
             position: fixed;
@@ -610,16 +610,9 @@
             transform: translateY(-20px);
             transition: transform 0.3s ease;
             max-height: 92vh;
-            overflow-y: auto;
-        }
-
-        /* Ẩn thanh cuộn để modal luôn gọn gàng đẹp mắt */
-        .modal-box::-webkit-scrollbar {
-            width: 4px;
-        }
-        .modal-box::-webkit-scrollbar-thumb {
-            background: rgba(0, 243, 255, 0.3);
-            border-radius: 10px;
+            overflow: hidden; /* Cấm thanh cuộn, giữ size cố định */
+            display: flex;
+            flex-direction: column;
         }
 
         .modal-overlay.active .modal-box {
@@ -635,6 +628,37 @@
             margin-bottom: 15px;
             text-align: center;
             text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+            flex-shrink: 0;
+        }
+
+        .auto-region-badge {
+            background: rgba(0, 243, 255, 0.08);
+            border: 1px dashed rgba(0, 243, 255, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .auto-region-badge span {
+            color: #00f3ff;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
+
+        /* Animation cho việc lật trang (Step 1 -> Step 2) */
+        .step-container {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .form-group {
@@ -670,6 +694,7 @@
             display: flex;
             gap: 12px;
             margin-top: 18px;
+            flex-shrink: 0;
         }
 
         .btn {
@@ -700,8 +725,6 @@
             background: linear-gradient(90deg, #00f3ff, #0077ff);
             color: #000;
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
-            display: none; /* Ẩn đi chờ lật mở */
-            animation: fadeIn 0.4s ease forwards;
         }
 
         .btn-submit:hover {
@@ -710,44 +733,19 @@
             box-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
         }
 
-        .auto-region-badge {
-            background: rgba(0, 243, 255, 0.08);
-            border: 1px dashed rgba(0, 243, 255, 0.5);
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            color: #a5b4fc;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .auto-region-badge span {
-            color: #00f3ff;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
-        }
-
-        /* KHUNG HIỂN THỊ CON DẤU TEM THƯ TRONG MODAL */
+        /* KHUNG HIỂN THỊ TEM TRONG STEP 2 */
         .stamp-preview-container {
-            display: none; /* Bị ẩn ban đầu, khi điền hoặc chọn ảnh mới trượt ra */
+            display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 12px 0;
+            margin: 5px 0;
             background: rgba(0, 0, 0, 0.55);
             padding: 12px;
             border-radius: 12px;
             border: 1px dashed rgba(255, 0, 127, 0.5);
             box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.1);
-            animation: fadeIn 0.4s ease forwards;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         .stamp-preview-title {
             font-size: 0.78rem;
             color: #ff007f;
@@ -757,6 +755,7 @@
             letter-spacing: 1px;
             text-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
         }
+
         #stampCanvas {
             width: 240px;
             height: 315px; 
@@ -815,29 +814,38 @@
                 🌐 Tỉnh/Thành: <span id="autoRegionText">⏳ Đang quét tọa độ...</span>
             </div>
 
-            <div class="form-group">
-                <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
-                <input type="text" id="placeName" class="form-control" placeholder="VD: Bến Nhà Rồng, Quán cà phê..." autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label for="placeNote">Ghi chú / Kỷ niệm</label>
-                <input type="text" id="placeNote" class="form-control" placeholder="VD: Trải nghiệm cực kỳ chill..." autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label for="stampPhotoInput">📸 Chọn / Chụp ảnh đưa vào Tem Bưu Chính:</label>
-                <input type="file" id="stampPhotoInput" accept="image/*" class="form-control" style="padding: 6px; cursor: pointer;">
+            <div id="step1Inputs" class="step-container">
+                <div class="form-group">
+                    <label for="placeName">Tên địa điểm chi tiết (Cờ đỏ 🚩)</label>
+                    <input type="text" id="placeName" class="form-control" placeholder="VD: Bến Nhà Rồng, Quán cà phê..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="placeNote">Ghi chú / Kỷ niệm</label>
+                    <input type="text" id="placeNote" class="form-control" placeholder="VD: Trải nghiệm cực kỳ chill..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="stampPhotoInput">📸 Chọn / Chụp ảnh đưa vào Tem Bưu Chính:</label>
+                    <input type="file" id="stampPhotoInput" accept="image/*" class="form-control" style="padding: 6px; cursor: pointer;">
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn btn-submit" onclick="goToStep2()">Tạo Tem</button>
+                </div>
             </div>
 
-            <!-- CHỈ HIỂN THỊ KHI CÓ DỮ LIỆU ĐẦU VÀO -->
-            <div class="stamp-preview-container" id="stampPreviewContainer">
-                <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
-                <canvas id="stampCanvas" width="320" height="420"></canvas>
+            <div id="step2Preview" class="step-container" style="display: none;">
+                <div class="stamp-preview-container">
+                    <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
+                    <canvas id="stampCanvas" width="320" height="420"></canvas>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-cancel" onclick="goToStep1()">Quay Lại</button>
+                    <button class="btn btn-submit" id="btnSubmitCheckIn" onclick="submitCheckIn()">Lưu Điểm</button>
+                </div>
             </div>
 
-            <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn btn-submit" id="btnSubmitCheckIn" onclick="submitCheckIn()">Lưu Điểm</button>
-            </div>
         </div>
     </div>
 
@@ -858,13 +866,13 @@
         let isPhotoView = false; 
         let userCapturedImg = null; 
 
-        // --- HỆ THỐNG MÀU MỰC TEM NGẪU NHIÊN CỔ ĐIỂN ---
+        // --- HỆ THỐNG MÀU MỰC TEM NGẪU NHIÊN ---
         const vintageColors = [
-            { hex: '#1b3b6f', r: 27, g: 59, b: 111 },   // Xanh Navy (Chuẩn bưu chính)
-            { hex: '#8b1c1c', r: 139, g: 28, b: 28 },   // Đỏ Bordeaux (Cổ điển)
-            { hex: '#1c5236', r: 28, g: 82, b: 54 },    // Xanh Lá Rừng (Forest Green)
-            { hex: '#4a2c5e', r: 74, g: 44, b: 94 },    // Tím Than (Deep Purple)
-            { hex: '#5c4033', r: 92, g: 64, b: 51 }     // Nâu Sepia (Vintage)
+            { hex: '#1b3b6f', r: 27, g: 59, b: 111 },   // Xanh Navy
+            { hex: '#8b1c1c', r: 139, g: 28, b: 28 },   // Đỏ Bordeaux
+            { hex: '#1c5236', r: 28, g: 82, b: 54 },    // Xanh Lá Rừng
+            { hex: '#4a2c5e', r: 74, g: 44, b: 94 },    // Tím Than
+            { hex: '#5c4033', r: 92, g: 64, b: 51 }     // Nâu Sepia
         ];
         let currentStampColor = vintageColors[0];
 
@@ -1466,21 +1474,7 @@
         const placeNoteInput = document.getElementById('placeNote');
         const stampPhotoInput = document.getElementById('stampPhotoInput');
 
-        // --- CƠ CHẾ HIỆN/ẨN THÔNG MINH CHO MODAL (SMART REVEAL) ---
-        function checkAndRevealStamp() {
-            const nameVal = placeNameInput.value.trim();
-            const previewContainer = document.getElementById('stampPreviewContainer');
-            const btnSubmit = document.getElementById('btnSubmitCheckIn');
-
-            if (nameVal !== '' || userCapturedImg !== null) {
-                previewContainer.style.display = 'flex';
-                btnSubmit.style.display = 'block';
-            } else {
-                previewContainer.style.display = 'none';
-                btnSubmit.style.display = 'none';
-            }
-        }
-
+        // Bắt sự kiện chọn ảnh chỉ để lưu vào bộ nhớ, chưa vẽ tem
         stampPhotoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -1489,26 +1483,43 @@
                     const img = new Image();
                     img.onload = function() {
                         userCapturedImg = img;
-                        checkAndRevealStamp(); // Mở khóa giao diện hiển thị
-                        const t = new Date();
-                        const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-                        drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
                     };
                     img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
+            } else {
+                userCapturedImg = null;
             }
         });
 
-        placeNameInput.addEventListener('input', () => {
-            checkAndRevealStamp(); // Kiểm tra liên tục khi gõ tên
+        // ==========================================
+        // CƠ CHẾ ĐIỀU HƯỚNG 2 BƯỚC (WIZARD)
+        // ==========================================
+        function goToStep2() {
+            const nameVal = placeNameInput.value.trim();
+            if (!nameVal) {
+                alert("Vui lòng điền tên địa điểm trước khi Tạo Tem!");
+                placeNameInput.focus();
+                return;
+            }
+
+            // Đổi giao diện
+            document.getElementById('step1Inputs').style.display = 'none';
+            document.getElementById('step2Preview').style.display = 'block';
+
+            // Vẽ tem với dữ liệu đã nhập
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-            drawNeonStamp(placeNameInput.value || "ĐIỂM CHECK-IN", currentDetectedRegion, todayStr);
-        });
+            drawNeonStamp(nameVal, currentDetectedRegion, todayStr);
+        }
+
+        function goToStep1() {
+            document.getElementById('step1Inputs').style.display = 'block';
+            document.getElementById('step2Preview').style.display = 'none';
+        }
 
         // ==========================================
-        // THUẬT TOÁN VẼ TEM THƯ IN KHẮC KẼM KẾT HỢP MÀU RANDOM
+        // THUẬT TOÁN VẼ TEM THƯ IN KHẮC KẼM
         // ==========================================
         function drawNeonStamp(placeName, regionName, dateStr) {
             const canvas = document.getElementById('stampCanvas');
@@ -1517,9 +1528,8 @@
             const w = canvas.width;  
             const h = canvas.height; 
 
-            // Áp dụng màu mực Random đã chọn
             const inkColor = currentStampColor.hex;   
-            const paperColor = '#f4f0e6'; // Giấy ngà vàng không đổi
+            const paperColor = '#f4f0e6'; 
 
             ctx.clearRect(0, 0, w, h);
             ctx.fillStyle = paperColor;
@@ -1580,7 +1590,6 @@
                 const imgData = tCtx.getImageData(0, 0, imgW, imgH);
                 const data = imgData.data;
                 
-                // Trích xuất mã RGB ngẫu nhiên của màu mực
                 const iR = currentStampColor.r, iG = currentStampColor.g, iB = currentStampColor.b;
                 const pR = 244, pG = 240, pB = 230;
 
@@ -1671,17 +1680,17 @@
         }
 
         function openCheckInModal() {
+            // Reset dữ liệu
             placeNameInput.value = ''; 
             placeNoteInput.value = ''; 
             stampPhotoInput.value = ''; 
             userCapturedImg = null;    
 
-            // QUAY LÔ TÔ MÀU MỰC CHO LẦN MỞ MỚI
+            // Chọn màu ngẫu nhiên cho lần mở này
             currentStampColor = vintageColors[Math.floor(Math.random() * vintageColors.length)];
 
-            // Reset UI thu gọn
-            document.getElementById('stampPreviewContainer').style.display = 'none';
-            document.getElementById('btnSubmitCheckIn').style.display = 'none';
+            // Đặt về Bước 1
+            goToStep1();
 
             modal.classList.add('active'); 
             setTimeout(() => placeNameInput.focus(), 100);
@@ -1737,7 +1746,6 @@
             modal.classList.remove('active');
         }
 
-        // CHUẨN HÓA FETCH POST CÓ CHUYỂN HƯỚNG 302
         function submitCheckIn() {
             const name = placeNameInput.value.trim();
             const note = placeNoteInput.value.trim();
@@ -1845,10 +1853,17 @@
             });
         }
 
+        // Fix lỗi ấn Enter kích hoạt submit khi đang ở bước 1
         document.addEventListener('keydown', e => { 
             if (!modal.classList.contains('active')) return; 
-            if (e.key === 'Enter') submitCheckIn(); 
             if (e.key === 'Escape') closeModal(); 
+            if (e.key === 'Enter') {
+                if (document.getElementById('step1Inputs').style.display !== 'none') {
+                    goToStep2(); // Đang ở bước 1 thì sang bước 2
+                } else {
+                    submitCheckIn(); // Đang ở bước 2 thì lưu điểm
+                }
+            }
         });
         
         function forceMapRender() { 

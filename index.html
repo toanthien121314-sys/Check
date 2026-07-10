@@ -2170,10 +2170,19 @@
             }
         });
         
-        function forceMapRender() { 
-            map.invalidateSize(); 
+function forceMapRender() { 
+            map.invalidateSize();
+            // Bắt buộc Leaflet phải lấy lại đúng tọa độ trung tâm của Việt Nam sau khi cập nhật kích thước
+            map.setView([16.047079, 108.206230], map.getZoom(), { animate: false });
             if (!isPhotoView) updateLayerVisibility(); 
         }
+
+        // Bổ sung: Lắng nghe sự kiện xoay màn hình hoặc co giãn do thanh địa chỉ di động
+        window.addEventListener('resize', () => {
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 150);
+        });
         
         window.addEventListener('load', () => { 
             setTimeout(() => {

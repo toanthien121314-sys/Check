@@ -1030,14 +1030,12 @@
         ];
         let currentStampColor = vintageColors[0];
 
-
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('Lỗi khởi chạy SW:', err));
             });
         }
       
-
         let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
 
@@ -1125,18 +1123,13 @@
             { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
             { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
             { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Phú Quốc", lat: 10.2289, lng: 103.9572 },
             { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 },
             { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
             { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
-            { name: "Đà Lạt", lat: 11.9404, lng: 108.4583 },
-            { name: "Nha Trang", lat: 12.2388, lng: 109.1967 },
             { name: "Huế", lat: 16.4637, lng: 107.5909 },
-            { name: "Vũng Tàu", lat: 10.3460, lng: 107.0843 },
+            { name: "Bà Rịa - Vũng Tàu", lat: 10.3460, lng: 107.0843 },
             { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
             { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 },
-            { name: "Quy Nhơn", lat: 13.7830, lng: 109.2197 },
-            { name: "Hội An", lat: 15.8801, lng: 108.3380 },
             { name: "An Giang", lat: 10.5216, lng: 105.1259 },
             { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 },
             { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
@@ -1150,7 +1143,6 @@
             { name: "Bạc Liêu", lat: 9.2833, lng: 105.7167 },
             { name: "Cà Mau", lat: 9.1833, lng: 105.1500 },
             { name: "Lào Cai", lat: 22.4833, lng: 103.9500 },
-            { name: "Sa Pa", lat: 22.3364, lng: 103.8438 },
             { name: "Thanh Hóa", lat: 19.8067, lng: 105.7714 },
             { name: "Nghệ An", lat: 19.8067, lng: 105.7714 },
             { name: "Hà Tĩnh", lat: 18.6796, lng: 105.6813 },
@@ -1212,7 +1204,7 @@
             });
         });
 
-// 1. Thêm bộ lọc gọt sạch dấu tiếng Việt để máy tính không bao giờ so sánh trượt
+        // 1. Thêm bộ lọc gọt sạch dấu tiếng Việt để máy tính không bao giờ so sánh trượt
         function removeVietnameseTones(str) {
             str = str.replace(/à|á|ạ|ả|ã|â|ă|ằ|ắ|ặ|ẳ|ẵ|â|ầ|ấ|ậ|ẩ|ẫ/g, "a");
             str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
@@ -1242,10 +1234,34 @@
             let finalLat = lat;
             let finalLng = lng;
             
-            const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
-            if (standardProv) {
-                finalLat = standardProv.lat;
-                finalLng = standardProv.lng;
+            // ==============================================================
+            // BẢN VÁ LỖI TỌA ĐỘ: Tự động trích xuất trung tâm địa lý (GeoCenter) 
+            // từ lớp GeoJSON thay vì bị lệch theo fix cứng hành chính.
+            // ==============================================================
+            let foundGeoCenter = false;
+            if (geoJsonBordersData) {
+                const normalizedTarget = removeVietnameseTones(regionKey.replace(/thành phố |tỉnh |tp\. /gi, '').trim());
+                const feature = geoJsonBordersData.features.find(f => {
+                    const fName = removeVietnameseTones((f.properties.Name || f.properties.name || f.properties.ten_tinh || "").toLowerCase().replace(/thành phố |tỉnh |tp\. /gi, '').trim());
+                    return fName === normalizedTarget;
+                });
+                
+                if (feature) {
+                    const tempLayer = L.geoJSON(feature);
+                    const center = tempLayer.getBounds().getCenter();
+                    finalLat = center.lat;
+                    finalLng = center.lng;
+                    foundGeoCenter = true;
+                }
+            }
+
+            // Fallback trong trường hợp GeoJSON chưa tải xong
+            if (!foundGeoCenter) {
+                const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
+                if (standardProv) {
+                    finalLat = standardProv.lat;
+                    finalLng = standardProv.lng;
+                }
             }
 
             const marker = L.marker([finalLat, finalLng], { icon: createRegionalIcon(name) }).addTo(regionalLayer);
@@ -2188,15 +2204,21 @@
             autoRegionText.innerHTML = '<span style="color:var(--neon-primary);">⏳ Đang quét tọa độ...</span>'; 
             currentDetectedRegion = "Việt Nam";
             
+            // ==============================================================
+            // BẢN VÁ LỖI NOMINATIM: Lấy tỉnh (state/province) trước, tránh 
+            // lấy nhầm "Thành phố Long Xuyên" thay cho "Tỉnh An Giang".
+            // ==============================================================
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
                 headers: { 'Accept-Language': 'vi' }
             })
             .then(res => res.json())
             .then(data => {
                 if (data && data.address) {
-                    let p = data.address.city || data.address.province || data.address.state || null;
+                    // Lấy tỉnh trước theo yêu cầu của user:
+                    // state (Tỉnh/Thành phố Trung Ương) -> province -> city (Thành phố trực thuộc tỉnh)
+                    let p = data.address.state || data.address.province || data.address.city || null;
                     if (p) {
-                        currentDetectedRegion = p.replace('Thành phố ', 'TP. ').replace('Tỉnh ', '');
+                        currentDetectedRegion = p.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
                         autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`;
                         return; 
                     }

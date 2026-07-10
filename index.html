@@ -2171,27 +2171,21 @@
         });
         
 function forceMapRender() { 
-            // 1. Ép Leaflet xóa cache kích thước để bắt buộc tính toán lại từ đầu
-            map._sizeChanged = true; 
-            map.invalidateSize(true);
-            
-            // 2. Kích hoạt vi-chuyển-động (micro-pan) để reset toàn bộ trục tọa độ của pane
-            map.panBy([1, 0], { animate: false });
-            map.panBy([-1, 0], { animate: false });
-            
-            // 3. Trả về đúng tọa độ trung tâm (Đà Nẵng)
-            map.setView([16.047079, 108.206230], map.getZoom(), { animate: false });
-
+            map.invalidateSize(); 
             if (!isPhotoView) updateLayerVisibility(); 
         }
-
-        // 4. Dùng ResizeObserver theo dõi DOM - cách chuẩn nhất để trị lỗi responsive trên Mobile
-        const mapObserver = new ResizeObserver(() => {
-            requestAnimationFrame(() => forceMapRender());
-        });
-        mapObserver.observe(document.getElementById('map'));
         
         window.addEventListener('load', () => { 
+            // KHẮC PHỤC LỖI LỆCH BẢN ĐỒ Ở ĐÂY:
+            // Đợi viewport điện thoại co lại đúng kích thước thật (250ms), 
+            // sau đó đánh thức lại sự kiện resize và ghim lại tâm bản đồ.
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize')); 
+                map.invalidateSize(true);                  
+                map.setView([16.047079, 108.206230], 6, { animate: false }); 
+            }, 250);
+
+            // CÁC HÀM CŨ CỦA BẠN GIỮ NGUYÊN BÊN DƯỚI:
             setTimeout(() => {
                 const loader = document.getElementById('loadingOverlay');
                 if (loader && loader.style.opacity !== '0') {

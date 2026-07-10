@@ -1196,9 +1196,27 @@
             L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
         });
 
+// 1. Thêm bộ lọc gọt sạch dấu tiếng Việt để máy tính không bao giờ so sánh trượt
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ă|ằ|ắ|ặ|ẳ|ẵ|â|ầ|ấ|ậ|ẩ|ẫ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            return str;
+        }
+
+        // 2. Cập nhật lại hàm tìm vùng: Đưa tất cả về không dấu trước khi dò tìm
         function getRegionForProvince(provinceName) {
-            const normalized = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
-            return REGIONS_DATA.find(r => r.provinces.some(p => normalized.includes(p))) || null;
+            const rawName = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
+            const normalizedMap = removeVietnameseTones(rawName); // Tên từ bản đồ (đã bỏ dấu)
+            
+            return REGIONS_DATA.find(r => r.provinces.some(p => {
+                const normalizedArray = removeVietnameseTones(p.toLowerCase()); // Tên từ mảng code (đã bỏ dấu)
+                return normalizedMap.includes(normalizedArray);
+            })) || null;
         }
 
         function addRegionalMarker(name, lat, lng, desc) {

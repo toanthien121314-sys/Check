@@ -1197,7 +1197,6 @@
             });
             const marker = L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
             
-            // --- CẬP NHẬT: Thêm sự kiện Click để zoom và focus thẳng vào vùng ---
             marker.on('click', () => {
                 activeRegionId = region.id;
                 map.flyTo(region.center, 8.5, { duration: 1.2 });
@@ -1219,12 +1218,61 @@
         // 2. Cập nhật lại hàm tìm vùng: Đưa tất cả về không dấu trước khi dò tìm
         function getRegionForProvince(provinceName) {
             const rawName = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
-            const normalizedMap = removeVietnameseTones(rawName); // Tên từ bản đồ (đã bỏ dấu)
+            const normalizedMap = removeVietnameseTones(rawName); 
             
             return REGIONS_DATA.find(r => r.provinces.some(p => {
-                const normalizedArray = removeVietnameseTones(p.toLowerCase()); // Tên từ mảng code (đã bỏ dấu)
+                const normalizedArray = removeVietnameseTones(p.toLowerCase()); 
                 return normalizedMap.includes(normalizedArray);
             })) || null;
+        }
+
+        // ==============================================================
+        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID)
+        // Neo điểm ảnh chính xác giữa diện tích đất thực tế thay vì hình vuông ảo.
+        // ==============================================================
+        function getPolygonCentroid(feature) {
+            try {
+                let coords = feature.geometry.coordinates;
+                let type = feature.geometry.type;
+                let bestRing = [];
+                
+                if (type === "Polygon") {
+                    bestRing = coords[0];
+                } else if (type === "MultiPolygon") {
+                    let maxArea = 0;
+                    for (let poly of coords) {
+                        let ring = poly[0];
+                        let area = 0;
+                        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                            area += ring[i][0] * ring[j][1] - ring[j][0] * ring[i][1];
+                        }
+                        if (Math.abs(area) > maxArea) {
+                            maxArea = Math.abs(area);
+                            bestRing = ring;
+                        }
+                    }
+                }
+                
+                if (!bestRing || bestRing.length === 0) return null;
+
+                let twiceArea = 0, x = 0, y = 0, nPts = bestRing.length;
+                let p1, p2, f;
+                for (let i = 0, j = nPts - 1; i < nPts; j = i++) {
+                    p1 = bestRing[i];
+                    p2 = bestRing[j];
+                    f = p1[0] * p2[1] - p2[0] * p1[1];
+                    twiceArea += f;
+                    x += (p1[0] + p2[0]) * f;
+                    y += (p1[1] + p2[1]) * f;
+                }
+                
+                if (twiceArea === 0) return null;
+                f = twiceArea * 3;
+                return { lat: y / f, lng: x / f };
+            } catch (e) {
+                console.error("Lỗi thuật toán Centroid:", e);
+                return null;
+            }
         }
 
         function addRegionalMarker(name, lat, lng, desc) {
@@ -1234,11 +1282,8 @@
             let finalLat = lat;
             let finalLng = lng;
             
-            // ==============================================================
-            // BẢN VÁ LỖI TỌA ĐỘ: Tự động trích xuất trung tâm địa lý (GeoCenter) 
-            // từ lớp GeoJSON thay vì bị lệch theo fix cứng hành chính.
-            // ==============================================================
             let foundGeoCenter = false;
+            // 3. Tự động bám vào Trọng tâm thực tế khi tải xong GeoJSON
             if (geoJsonBordersData) {
                 const normalizedTarget = removeVietnameseTones(regionKey.replace(/thành phố |tỉnh |tp\. /gi, '').trim());
                 const feature = geoJsonBordersData.features.find(f => {
@@ -1247,15 +1292,23 @@
                 });
                 
                 if (feature) {
-                    const tempLayer = L.geoJSON(feature);
-                    const center = tempLayer.getBounds().getCenter();
-                    finalLat = center.lat;
-                    finalLng = center.lng;
-                    foundGeoCenter = true;
+                    const centroid = getPolygonCentroid(feature);
+                    if (centroid) {
+                        finalLat = centroid.lat;
+                        finalLng = centroid.lng;
+                        foundGeoCenter = true;
+                    } else {
+                        // Dự phòng nếu lỗi thuật toán: Lấy tâm Bounding Box
+                        const tempLayer = L.geoJSON(feature);
+                        const center = tempLayer.getBounds().getCenter();
+                        finalLat = center.lat;
+                        finalLng = center.lng;
+                        foundGeoCenter = true;
+                    }
                 }
             }
 
-            // Fallback trong trường hợp GeoJSON chưa tải xong
+            // Fallback (Xảy ra nếu Google Sheets render quá nhanh trước khi có GeoJSON)
             if (!foundGeoCenter) {
                 const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
                 if (standardProv) {
@@ -1358,6 +1411,16 @@
                 .then(data => {
                     geoJsonBordersData = data;
                     renderProvinceBorders();
+                    
+                    // =========================================================
+                    // CHỐT CHẶN RACE CONDITION: 
+                    // Nếu Sheets tải nhanh hơn GeoJSON làm Marker bị vẽ ở tọa độ
+                    // dự phòng, lệnh này sẽ vẽ lại bản đồ ép Marker về đúng Tâm.
+                    // =========================================================
+                    const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (cachedDataStr) {
+                        renderDataToMap(JSON.parse(cachedDataStr));
+                    }
                 })
                 .catch(err => console.log("Không tải được ranh giới tỉnh:", err));
         }
@@ -1370,16 +1433,13 @@
 
             let region = getRegionForProvince(propName);
 
-            // Nếu tỉnh này thuộc vùng đang được focus (activeRegionId)
             if (activeRegionId && region && region.id === activeRegionId) {
                 if (isActiveTracker) {
-                    // Nếu tỉnh này ĐÃ ĐƯỢC CHECK-IN (neon sáng rực)
                     return {
                         color: currentAppColors.secondary, weight: 2.5, opacity: 0.9,
                         fillColor: currentAppColors.secondary, fillOpacity: 0.15, className: 'neon-province-active'
                     };
                 } else {
-                    // Nằm trong vùng nhưng CHƯA ĐƯỢC CHECK-IN (neon viền nhẹ nhàng)
                     return {
                         color: currentAppColors.primary, weight: 1.5, opacity: 0.6,
                         fillColor: 'transparent', fillOpacity: 0, className: 'neon-province-border'
@@ -1387,7 +1447,6 @@
                 }
             }
 
-            // Nếu KHÔNG nằm trong vùng đang focus -> KHÔNG KẺ LINE GÌ CẢ (Trong suốt)
             return {
                 color: 'transparent', weight: 0, opacity: 0,
                 fillColor: 'transparent', fillOpacity: 0

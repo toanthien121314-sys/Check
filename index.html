@@ -1119,18 +1119,19 @@
             popupAnchor: [0, -14] 
         });
 
+        // BẢN VÁ TỌA ĐỘ VĨNH LONG - AN GIANG CHUẨN XÁC NẾU RỚT MẠNG GEOJSON
         const VN_PROVINCES = [
             { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
             { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
             { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Vĩnh Long", lat: 10.2537, lng: 105.9722 },
+            { name: "Vĩnh Long", lat: 10.1500, lng: 106.0000 }, // Đã kéo về Tâm Hình Học (Trà Ôn/Tam Bình)
             { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
             { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
             { name: "Huế", lat: 16.4637, lng: 107.5909 },
             { name: "Bà Rịa - Vũng Tàu", lat: 10.3460, lng: 107.0843 },
             { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
             { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 },
-            { name: "An Giang", lat: 10.5216, lng: 105.1259 },
+            { name: "An Giang", lat: 10.5000, lng: 105.1500 }, // Đã kéo về Tâm Hình Học (Châu Phú)
             { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 },
             { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
             { name: "Bình Dương", lat: 11.1667, lng: 106.6667 },
@@ -1203,7 +1204,7 @@
             });
         });
 
-        // 1. Thêm bộ lọc gọt sạch dấu tiếng Việt để máy tính không bao giờ so sánh trượt
+        // 1. Lọc dấu Tiếng Việt triệt để
         function removeVietnameseTones(str) {
             str = str.replace(/à|á|ạ|ả|ã|â|ă|ằ|ắ|ặ|ẳ|ẵ|â|ầ|ấ|ậ|ẩ|ẫ/g, "a");
             str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
@@ -1215,7 +1216,6 @@
             return str;
         }
 
-        // 2. Cập nhật lại hàm tìm vùng: Đưa tất cả về không dấu trước khi dò tìm
         function getRegionForProvince(provinceName) {
             const rawName = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
             const normalizedMap = removeVietnameseTones(rawName); 
@@ -1227,39 +1227,48 @@
         }
 
         // ==============================================================
-        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID)
-        // Neo điểm ảnh chính xác giữa diện tích đất thực tế thay vì hình vuông ảo.
+        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID) - BẢN FIX CUỐI
+        // Tự động vượt qua MultiPolygon (biển đảo) để neo thẳng vào đất liền
         // ==============================================================
         function getPolygonCentroid(feature) {
             try {
                 let coords = feature.geometry.coordinates;
                 let type = feature.geometry.type;
-                let bestRing = [];
-                
+                let biggestRing = [];
+                let maxArea = 0;
+
+                // Hàm tính diện tích tuyệt đối của 1 ring để bóc tách đảo/đất liền
+                function getRingArea(ring) {
+                    let area = 0;
+                    for (let i = 0, len = ring.length; i < len; i++) {
+                        let j = (i + 1) % len;
+                        area += ring[i][0] * ring[j][1] - ring[j][0] * ring[i][1];
+                    }
+                    return Math.abs(area / 2);
+                }
+
                 if (type === "Polygon") {
-                    bestRing = coords[0];
+                    for (let ring of coords) {
+                        let a = getRingArea(ring);
+                        if (a > maxArea) { maxArea = a; biggestRing = ring; }
+                    }
                 } else if (type === "MultiPolygon") {
-                    let maxArea = 0;
                     for (let poly of coords) {
-                        let ring = poly[0];
-                        let area = 0;
-                        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-                            area += ring[i][0] * ring[j][1] - ring[j][0] * ring[i][1];
-                        }
-                        if (Math.abs(area) > maxArea) {
-                            maxArea = Math.abs(area);
-                            bestRing = ring;
+                        for (let ring of poly) {
+                            let a = getRingArea(ring);
+                            if (a > maxArea) { maxArea = a; biggestRing = ring; }
                         }
                     }
                 }
-                
-                if (!bestRing || bestRing.length === 0) return null;
 
-                let twiceArea = 0, x = 0, y = 0, nPts = bestRing.length;
+                if (!biggestRing || biggestRing.length === 0) return null;
+
+                // Tính centroid của biggestRing
+                let twiceArea = 0, x = 0, y = 0, nPts = biggestRing.length;
                 let p1, p2, f;
                 for (let i = 0, j = nPts - 1; i < nPts; j = i++) {
-                    p1 = bestRing[i];
-                    p2 = bestRing[j];
+                    p1 = biggestRing[i]; // [lng, lat]
+                    p2 = biggestRing[j];
                     f = p1[0] * p2[1] - p2[0] * p1[1];
                     twiceArea += f;
                     x += (p1[0] + p2[0]) * f;
@@ -1269,8 +1278,8 @@
                 if (twiceArea === 0) return null;
                 f = twiceArea * 3;
                 return { lat: y / f, lng: x / f };
-            } catch (e) {
-                console.error("Lỗi thuật toán Centroid:", e);
+            } catch(e) {
+                console.error("Lỗi Center of Mass:", e);
                 return null;
             }
         }
@@ -1282,13 +1291,15 @@
             let finalLat = lat;
             let finalLng = lng;
             
-            let foundGeoCenter = false;
-            // 3. Tự động bám vào Trọng tâm thực tế khi tải xong GeoJSON
+            // Xử lý bằng GeoJSON nếu đã tải xong để lấy TRỌNG TÂM TUYỆT ĐỐI
             if (geoJsonBordersData) {
                 const normalizedTarget = removeVietnameseTones(regionKey.replace(/thành phố |tỉnh |tp\. /gi, '').trim());
+                
+                // Mẹo nhận diện Chuỗi Raw: Đảm bảo 100% bắt được tên Tỉnh dù File GeoJSON bị sai quy ước key
                 const feature = geoJsonBordersData.features.find(f => {
-                    const fName = removeVietnameseTones((f.properties.Name || f.properties.name || f.properties.ten_tinh || "").toLowerCase().replace(/thành phố |tỉnh |tp\. /gi, '').trim());
-                    return fName === normalizedTarget;
+                    if(!f.properties) return false;
+                    const rawProps = removeVietnameseTones(JSON.stringify(f.properties).toLowerCase());
+                    return rawProps.includes(normalizedTarget);
                 });
                 
                 if (feature) {
@@ -1296,20 +1307,10 @@
                     if (centroid) {
                         finalLat = centroid.lat;
                         finalLng = centroid.lng;
-                        foundGeoCenter = true;
-                    } else {
-                        // Dự phòng nếu lỗi thuật toán: Lấy tâm Bounding Box
-                        const tempLayer = L.geoJSON(feature);
-                        const center = tempLayer.getBounds().getCenter();
-                        finalLat = center.lat;
-                        finalLng = center.lng;
-                        foundGeoCenter = true;
                     }
                 }
-            }
-
-            // Fallback (Xảy ra nếu Google Sheets render quá nhanh trước khi có GeoJSON)
-            if (!foundGeoCenter) {
+            } else {
+                // Fallback cứu hộ khi mạng chưa kéo xong file GeoJSON
                 const standardProv = VN_PROVINCES.find(p => p.name.toLowerCase() === regionKey);
                 if (standardProv) {
                     finalLat = standardProv.lat;
@@ -1413,9 +1414,9 @@
                     renderProvinceBorders();
                     
                     // =========================================================
-                    // CHỐT CHẶN RACE CONDITION: 
-                    // Nếu Sheets tải nhanh hơn GeoJSON làm Marker bị vẽ ở tọa độ
-                    // dự phòng, lệnh này sẽ vẽ lại bản đồ ép Marker về đúng Tâm.
+                    // CHỐT CHẶN RACE CONDITION TỐI THƯỢNG: 
+                    // Ngay khi load xong file ranh giới (trễ hơn sheets), 
+                    // ép hệ thống xóa các điểm bị lệch và vẽ lại tâm chuẩn 100%
                     // =========================================================
                     const cachedDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
                     if (cachedDataStr) {
@@ -1470,14 +1471,13 @@
             if (!geoJsonBordersData) return;
             if (geoJsonLayer) map.removeLayer(geoJsonLayer);
 
-            // Mặc định tải lên dùng style theo độ zoom hiện tại
             geoJsonLayer = L.geoJSON(geoJsonBordersData, {
                 interactive: false,
                 style: map.getZoom() < 7.5 ? getRegionStyle : getProvinceStyle
             }).addTo(map);
 
             geoJsonLayer.bringToBack();
-            lastRenderedRegionId = map.getZoom() < 7.5 ? 'ZOOMED_OUT' : activeRegionId; // initialize
+            lastRenderedRegionId = map.getZoom() < 7.5 ? 'ZOOMED_OUT' : activeRegionId; 
         }
 
         function preloadStampsIntoCache(spots) {
@@ -1528,7 +1528,7 @@
                 updateLayerVisibility();
             }
 
-            lastRenderedRegionId = null; // force update style
+            lastRenderedRegionId = null; 
             renderProvinceBorders();
 
             return { regCount: uniqueRegionsCount, spotCount };
@@ -1929,7 +1929,6 @@
                     }
                 });
                 
-                // Cập nhật region đang active nếu khoảng cách đủ gần trung tâm (Ngưỡng 15)
                 if (closestRegion && minDist < 15) {
                     activeRegionId = closestRegion.id;
                 } else {
@@ -1956,7 +1955,6 @@
                     map.addLayer(regionLabelLayer); 
                 }
                 
-                // Khi thu nhỏ toàn cục, tải lại GeoJson để tạo các mảng màu vùng lớn
                 if (geoJsonLayer && lastRenderedRegionId !== 'ZOOMED_OUT') {
                     geoJsonLayer.setStyle(getRegionStyle); 
                     lastRenderedRegionId = 'ZOOMED_OUT';
@@ -1967,7 +1965,6 @@
                     map.removeLayer(regionLabelLayer); 
                 }
                 
-                // Cập nhật lại style chỉ khi chuyển đổi qua vùng khác để tối ưu hiệu năng
                 if (geoJsonLayer && lastRenderedRegionId !== activeRegionId) {
                     geoJsonLayer.setStyle(getProvinceStyle); 
                     lastRenderedRegionId = activeRegionId;
@@ -1975,7 +1972,6 @@
             }
         }
         
-        // Theo dõi thay đổi khi di chuyển & thu phóng bản đồ để Smart Detect
         map.on('zoomend moveend', updateLayerVisibility);
 
         // ==========================================
@@ -2263,18 +2259,12 @@
             autoRegionText.innerHTML = '<span style="color:var(--neon-primary);">⏳ Đang quét tọa độ...</span>'; 
             currentDetectedRegion = "Việt Nam";
             
-            // ==============================================================
-            // BẢN VÁ LỖI NOMINATIM: Lấy tỉnh (state/province) trước, tránh 
-            // lấy nhầm "Thành phố Long Xuyên" thay cho "Tỉnh An Giang".
-            // ==============================================================
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
                 headers: { 'Accept-Language': 'vi' }
             })
             .then(res => res.json())
             .then(data => {
                 if (data && data.address) {
-                    // Lấy tỉnh trước theo yêu cầu của user:
-                    // state (Tỉnh/Thành phố Trung Ương) -> province -> city (Thành phố trực thuộc tỉnh)
                     let p = data.address.state || data.address.province || data.address.city || null;
                     if (p) {
                         currentDetectedRegion = p.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();

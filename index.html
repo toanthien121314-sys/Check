@@ -2176,14 +2176,6 @@ function forceMapRender() {
         }
         
         window.addEventListener('load', () => { 
-            // KHẮC PHỤC LỖI LỆCH BẢN ĐỒ Ở ĐÂY:
-            // Đợi viewport điện thoại co lại đúng kích thước thật (250ms), 
-            // sau đó đánh thức lại sự kiện resize và ghim lại tâm bản đồ.
-            setTimeout(() => {
-                window.dispatchEvent(new Event('resize')); 
-                map.invalidateSize(true);                  
-                map.setView([16.047079, 108.206230], 6, { animate: false }); 
-            }, 250);
 
             // CÁC HÀM CŨ CỦA BẠN GIỮ NGUYÊN BÊN DƯỚI:
             setTimeout(() => {

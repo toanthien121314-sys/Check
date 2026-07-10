@@ -231,6 +231,7 @@
             height: 28px;
             display: flex;
             justify-content: center;
+            transition: opacity 0.4s ease, transform 0.3s ease;
         }
 
         .neon-dot {
@@ -271,6 +272,7 @@
             padding: 2px 6px;
             border-radius: 10px;
             border: 1px solid rgba(var(--neon-primary-rgb), 0.4);
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         @keyframes ripple {
@@ -786,6 +788,42 @@
         }
 
         /* =========================================
+           HIỆU ỨNG VÙNG ĐỊA LÝ KHI ZOOM XA
+        ========================================= */
+        .hide-neon-labels .neon-label {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .hide-neon-labels .neon-marker-container {
+            transform: scale(0.65);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s ease, opacity 0.4s ease;
+        }
+
+        .neon-marker-container {
+            transition: opacity 0.4s ease, transform 0.3s ease;
+        }
+
+        .neon-label {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .region-label {
+            font-weight: 900;
+            font-size: 1rem;
+            text-align: center;
+            text-shadow: 0 0 10px #000, 0 0 15px currentColor;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* =========================================
            TỐI ƯU HÓA HIỆU NĂNG RENDER
            Tắt bóng đổ và animation khi bản đồ đang zoom/di chuyển
         ========================================= */
@@ -982,11 +1020,13 @@
         ];
         let currentStampColor = vintageColors[0];
 
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('Lỗi khởi chạy SW:', err));
             });
         }
+      
 
         let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
@@ -1128,10 +1168,38 @@
             { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
+        // ==========================================
+        // DỮ LIỆU 7 VÙNG ĐỊA LÝ KÈM MÀU SẮC NEON
+        // ==========================================
+        const REGIONS_DATA = [
+            { id: 'tay_bac', name: 'Tây Bắc Bộ', center: [21.5, 103.5], color: '#00ff88', provinces: ['lai châu', 'điện biên', 'sơn la', 'hòa bình', 'yên bái', 'lào cai'] },
+            { id: 'dong_bac', name: 'Đông Bắc Bộ', center: [22.0, 106.0], color: '#ffaa00', provinces: ['hà giang', 'cao bằng', 'bắc kạn', 'lạng sơn', 'tuyên quang', 'thái nguyên', 'phú thọ', 'bắc giang', 'quảng ninh'] },
+            { id: 'dbs_hong', name: 'ĐB Sông Hồng', center: [20.8, 106.0], color: '#aaff00', provinces: ['bắc ninh', 'hà nam', 'hà nội', 'hải dương', 'hải phòng', 'hưng yên', 'nam định', 'ninh bình', 'thái bình', 'vĩnh phúc'] },
+            { id: 'bac_trung', name: 'Bắc Trung Bộ', center: [18.5, 105.5], color: '#ffea00', provinces: ['thanh hóa', 'nghệ an', 'hà tĩnh', 'quảng bình', 'quảng trị', 'thừa thiên huế', 'huế'] },
+            { id: 'nam_trung', name: 'Nam Trung Bộ & Tây Nguyên', center: [13.5, 108.0], color: '#ff00aa', provinces: ['đà nẵng', 'quảng nam', 'quảng ngãi', 'bình định', 'phú yên', 'khánh hòa', 'nha trang', 'ninh thuận', 'bình thuận', 'kon tum', 'gia lai', 'đắk lắk', 'đắk nông', 'lâm đồng', 'đà lạt', 'quy nhơn', 'hội an'] },
+            { id: 'dong_nam', name: 'Đông Nam Bộ', center: [11.3, 106.7], color: '#ff8855', provinces: ['tp. hồ chí minh', 'bình phước', 'bình dương', 'đồng nai', 'tây ninh', 'bà rịa - vũng tàu', 'vũng tàu'] },
+            { id: 'tay_nam', name: 'Tây Nam Bộ', center: [9.8, 105.5], color: '#aa55ff', provinces: ['long an', 'đồng tháp', 'tiền giang', 'an giang', 'bến tre', 'vĩnh long', 'trà vinh', 'hậu giang', 'kiên giang', 'sóc trăng', 'bạc liêu', 'cà mau', 'cần thơ', 'phú quốc'] }
+        ];
+
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
         const photoLayer = L.layerGroup();
         const activeRegionsTracker = new Set();
+        
+        const regionLabelLayer = L.layerGroup();
+        REGIONS_DATA.forEach(region => {
+            const icon = L.divIcon({
+                className: 'custom-region-icon',
+                html: `<div class="region-label" style="color: ${region.color};">${region.name}</div>`,
+                iconSize: [120, 30], iconAnchor: [60, 15]
+            });
+            L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
+        });
+
+        function getRegionForProvince(provinceName) {
+            const normalized = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
+            return REGIONS_DATA.find(r => r.provinces.some(p => normalized.includes(p))) || null;
+        }
 
         function addRegionalMarker(name, lat, lng, desc) {
             const regionKey = name.trim().toLowerCase();
@@ -1232,7 +1300,7 @@
         }
 
         // ==========================================
-        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH THÀNH ĐỔI MÀU
+        // VẼ ĐƯỜNG VIỀN RANH GIỚI TỈNH VÀ VÙNG
         // ==========================================
         function loadProvinceBorders() {
             fetch(GEOJSON_VN_BORDERS_URL)
@@ -1244,40 +1312,47 @@
                 .catch(err => console.log("Không tải được ranh giới tỉnh:", err));
         }
 
+        function getProvinceStyle(feature) {
+            let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "";
+            let normalized = propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
+            let isActive = activeRegionsTracker.has(normalized);
+
+            if (isActive) {
+                return {
+                    color: currentAppColors.secondary, weight: 2, opacity: 0.9,
+                    fillColor: currentAppColors.secondary, fillOpacity: 0.1, className: 'neon-province-active'
+                };
+            }
+            return {
+                color: currentAppColors.primary, weight: 1.5, opacity: 0.4,
+                fillColor: 'transparent', fillOpacity: 0, className: 'neon-province-border'
+            };
+        }
+
+        function getRegionStyle(feature) {
+            let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "";
+            let region = getRegionForProvince(propName);
+
+            if (region) {
+                return {
+                    color: region.color, weight: 1.2, opacity: 0.8,
+                    fillColor: region.color, fillOpacity: 0.25, className: 'region-border'
+                };
+            }
+            return { color: '#444', weight: 1, opacity: 0.5, fillColor: 'transparent', fillOpacity: 0 };
+        }
+
         function renderProvinceBorders() {
             if (!geoJsonBordersData) return;
             if (geoJsonLayer) map.removeLayer(geoJsonLayer);
 
+            // Mặc định tải lên dùng style theo độ zoom hiện tại
             geoJsonLayer = L.geoJSON(geoJsonBordersData, {
-                interactive: false, 
-                style: function (feature) {
-                    let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "";
-                    let normalized = propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
-                    let isActive = activeRegionsTracker.has(normalized);
-
-                    if (isActive) {
-                        return {
-                            color: currentAppColors.secondary,
-                            weight: 2,
-                            opacity: 0.9,
-                            fillColor: currentAppColors.secondary,
-                            fillOpacity: 0.1,
-                            className: 'neon-province-active'
-                        };
-                    } else {
-                        return {
-                            color: currentAppColors.primary,
-                            weight: 1.5,
-                            opacity: 0.4,
-                            fillColor: 'transparent',
-                            fillOpacity: 0,
-                            className: 'neon-province-border'
-                        };
-                    }
-                }
+                interactive: false,
+                style: map.getZoom() < 7.5 ? getRegionStyle : getProvinceStyle
             }).addTo(map);
 
-            geoJsonLayer.bringToBack(); 
+            geoJsonLayer.bringToBack();
         }
 
         function preloadStampsIntoCache(spots) {
@@ -1704,17 +1779,35 @@
                 });
         }
 
-        // TĂNG NGƯỠNG ZOOM CHO CỜ ĐỎ LÊN 11
+        // ==========================================
+        // CẬP NHẬT GIAO DIỆN KHI ZOOM: VÙNG <-> TỈNH CHI TIẾT
+        // ==========================================
         const ZOOM_THRESHOLD = 11;
         function updateLayerVisibility() {
             if (isPhotoView) return; 
             const currentZoom = map.getZoom();
+            
             if (currentZoom < ZOOM_THRESHOLD) {
                 if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer);
                 if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
             } else {
                 if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer);
                 if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer);
+            }
+
+            const mapContainer = document.getElementById('map');
+            if (currentZoom < 7.5) { 
+                mapContainer.classList.add('hide-neon-labels'); 
+                if (!map.hasLayer(regionLabelLayer)) {
+                    map.addLayer(regionLabelLayer); 
+                    if (geoJsonLayer) geoJsonLayer.setStyle(getRegionStyle); 
+                }
+            } else {
+                mapContainer.classList.remove('hide-neon-labels'); 
+                if (map.hasLayer(regionLabelLayer)) {
+                    map.removeLayer(regionLabelLayer); 
+                    if (geoJsonLayer) geoJsonLayer.setStyle(getProvinceStyle); 
+                }
             }
         }
         map.on('zoomend', updateLayerVisibility);
@@ -2170,14 +2263,12 @@
             }
         });
         
-function forceMapRender() { 
+        function forceMapRender() { 
             map.invalidateSize(); 
             if (!isPhotoView) updateLayerVisibility(); 
         }
         
         window.addEventListener('load', () => { 
-
-            // CÁC HÀM CŨ CỦA BẠN GIỮ NGUYÊN BÊN DƯỚI:
             setTimeout(() => {
                 const loader = document.getElementById('loadingOverlay');
                 if (loader && loader.style.opacity !== '0') {

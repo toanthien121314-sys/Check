@@ -214,12 +214,12 @@
         ========================================= */
         path.neon-province-border {
             filter: drop-shadow(0 0 3px rgba(var(--neon-primary-rgb), 0.5));
-            transition: fill-opacity 0.5s ease, filter 0.5s ease;
+            transition: fill-opacity 0.5s ease, filter 0.5s ease, opacity 0.3s ease;
         }
         
         path.neon-province-active {
             filter: drop-shadow(0 0 6px var(--neon-secondary)) drop-shadow(0 0 12px var(--neon-secondary));
-            transition: fill-opacity 0.5s ease, filter 0.5s ease;
+            transition: fill-opacity 0.5s ease, filter 0.5s ease, opacity 0.3s ease;
         }
 
         /* =========================================
@@ -816,11 +816,17 @@
             text-align: center;
             text-shadow: 0 0 10px #000, 0 0 15px currentColor;
             white-space: nowrap;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+            pointer-events: auto; /* Bật sự kiện click */
+            cursor: pointer;      /* Trỏ chuột dạng Click */
+            transition: opacity 0.4s ease, transform 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-family: 'Segoe UI', sans-serif;
+        }
+        
+        /* Hiệu ứng phóng to khi rê chuột vào tên vùng */
+        .region-label:hover {
+            transform: scale(1.15);
         }
 
         /* =========================================
@@ -1010,6 +1016,10 @@
         let pressTimer;
         let isPressing = false;
         let targetStampInfo = null;
+        
+        // --- CÁC BIẾN QUẢN LÝ VÙNG ĐANG ĐƯỢC CHỌN ---
+        let activeRegionId = null; 
+        let lastRenderedRegionId = null;
 
         const vintageColors = [
             { hex: '#1b3b6f', r: 27, g: 59, b: 111 },   
@@ -1177,7 +1187,7 @@
             { id: 'dbs_hong', name: 'ĐB Sông Hồng', center: [20.8, 106.0], color: '#aaff00', provinces: ['bắc ninh', 'hà nam', 'hà nội', 'hải dương', 'hải phòng', 'hưng yên', 'nam định', 'ninh bình', 'thái bình', 'vĩnh phúc'] },
             { id: 'bac_trung', name: 'Bắc Trung Bộ', center: [18.5, 105.5], color: '#ffea00', provinces: ['thanh hóa', 'nghệ an', 'hà tĩnh', 'quảng bình', 'quảng trị', 'thừa thiên huế', 'huế'] },
             { id: 'nam_trung', name: 'Nam Trung Bộ & Tây Nguyên', center: [13.5, 108.0], color: '#ff00aa', provinces: ['đà nẵng', 'quảng nam', 'quảng ngãi', 'bình định', 'phú yên', 'khánh hòa', 'nha trang', 'ninh thuận', 'bình thuận', 'kon tum', 'gia lai', 'đắk lắk', 'đắk nông', 'lâm đồng', 'đà lạt', 'quy nhơn', 'hội an'] },
-            { id: 'dong_nam', name: 'Đông Nam Bộ', center: [11.3, 106.7], color: '#ff8855', provinces: ['tp. hồ chí minh', 'bình phước', 'bình dương', 'đồng nai', 'tây ninh', 'bà rịa - vũng tàu', 'vũng tàu'] },
+            { id: 'dong_nam', name: 'Đông Nam Bộ', center: [11.3, 106.7], color: '#ff8855', provinces: ['hồ chí minh', 'bình phước', 'bình dương', 'đồng nai', 'tây ninh', 'bà rịa - vũng tàu', 'vũng tàu'] },
             { id: 'tay_nam', name: 'Tây Nam Bộ', center: [9.8, 105.5], color: '#aa55ff', provinces: ['long an', 'đồng tháp', 'tiền giang', 'an giang', 'bến tre', 'vĩnh long', 'trà vinh', 'hậu giang', 'kiên giang', 'sóc trăng', 'bạc liêu', 'cà mau', 'cần thơ', 'phú quốc'] }
         ];
 
@@ -1193,7 +1203,13 @@
                 html: `<div class="region-label" style="color: ${region.color};">${region.name}</div>`,
                 iconSize: [120, 30], iconAnchor: [60, 15]
             });
-            L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
+            const marker = L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
+            
+            // --- CẬP NHẬT: Thêm sự kiện Click để zoom và focus thẳng vào vùng ---
+            marker.on('click', () => {
+                activeRegionId = region.id;
+                map.flyTo(region.center, 8.5, { duration: 1.2 });
+            });
         });
 
 // 1. Thêm bộ lọc gọt sạch dấu tiếng Việt để máy tính không bao giờ so sánh trượt
@@ -1330,20 +1346,35 @@
                 .catch(err => console.log("Không tải được ranh giới tỉnh:", err));
         }
 
+        // --- CẬP NHẬT: THUẬT TOÁN ĐỂ CHỈ KẺ LINE TỈNH THUỘC VÙNG ĐANG CHỌN ---
         function getProvinceStyle(feature) {
             let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "";
             let normalized = propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
-            let isActive = activeRegionsTracker.has(normalized);
+            let isActiveTracker = activeRegionsTracker.has(normalized);
 
-            if (isActive) {
-                return {
-                    color: currentAppColors.secondary, weight: 2, opacity: 0.9,
-                    fillColor: currentAppColors.secondary, fillOpacity: 0.1, className: 'neon-province-active'
-                };
+            let region = getRegionForProvince(propName);
+
+            // Nếu tỉnh này thuộc vùng đang được focus (activeRegionId)
+            if (activeRegionId && region && region.id === activeRegionId) {
+                if (isActiveTracker) {
+                    // Nếu tỉnh này ĐÃ ĐƯỢC CHECK-IN (neon sáng rực)
+                    return {
+                        color: currentAppColors.secondary, weight: 2.5, opacity: 0.9,
+                        fillColor: currentAppColors.secondary, fillOpacity: 0.15, className: 'neon-province-active'
+                    };
+                } else {
+                    // Nằm trong vùng nhưng CHƯA ĐƯỢC CHECK-IN (neon viền nhẹ nhàng)
+                    return {
+                        color: currentAppColors.primary, weight: 1.5, opacity: 0.6,
+                        fillColor: 'transparent', fillOpacity: 0, className: 'neon-province-border'
+                    };
+                }
             }
+
+            // Nếu KHÔNG nằm trong vùng đang focus -> KHÔNG KẺ LINE GÌ CẢ (Trong suốt)
             return {
-                color: currentAppColors.primary, weight: 1.5, opacity: 0.4,
-                fillColor: 'transparent', fillOpacity: 0, className: 'neon-province-border'
+                color: 'transparent', weight: 0, opacity: 0,
+                fillColor: 'transparent', fillOpacity: 0
             };
         }
 
@@ -1371,6 +1402,7 @@
             }).addTo(map);
 
             geoJsonLayer.bringToBack();
+            lastRenderedRegionId = map.getZoom() < 7.5 ? 'ZOOMED_OUT' : activeRegionId; // initialize
         }
 
         function preloadStampsIntoCache(spots) {
@@ -1421,6 +1453,7 @@
                 updateLayerVisibility();
             }
 
+            lastRenderedRegionId = null; // force update style
             renderProvinceBorders();
 
             return { regCount: uniqueRegionsCount, spotCount };
@@ -1799,12 +1832,39 @@
 
         // ==========================================
         // CẬP NHẬT GIAO DIỆN KHI ZOOM: VÙNG <-> TỈNH CHI TIẾT
+        // --- SMART DETECT ACTIVE REGION ---
         // ==========================================
         const ZOOM_THRESHOLD = 11;
+        
         function updateLayerVisibility() {
             if (isPhotoView) return; 
             const currentZoom = map.getZoom();
             
+            // 1. Nhận diện khu vực đang hiển thị trên bản đồ khi zoom lại gần
+            if (currentZoom >= 7.5) {
+                const center = map.getCenter();
+                let closestRegion = null;
+                let minDist = Infinity;
+                
+                REGIONS_DATA.forEach(r => {
+                    let dist = Math.pow(center.lat - r.center[0], 2) + Math.pow(center.lng - r.center[1], 2);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestRegion = r;
+                    }
+                });
+                
+                // Cập nhật region đang active nếu khoảng cách đủ gần trung tâm (Ngưỡng 15)
+                if (closestRegion && minDist < 15) {
+                    activeRegionId = closestRegion.id;
+                } else {
+                    activeRegionId = null;
+                }
+            } else {
+                activeRegionId = null;
+            }
+
+            // 2. Ẩn / Hiện các spot nhỏ
             if (currentZoom < ZOOM_THRESHOLD) {
                 if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer);
                 if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
@@ -1813,22 +1873,35 @@
                 if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer);
             }
 
+            // 3. Quản lý việc hiển thị Line Neon tuỳ theo vùng đang chiếu đến
             const mapContainer = document.getElementById('map');
-            if (currentZoom < 7.5) { 
+            if (currentZoom < 7.5) {
                 mapContainer.classList.add('hide-neon-labels'); 
                 if (!map.hasLayer(regionLabelLayer)) {
                     map.addLayer(regionLabelLayer); 
-                    if (geoJsonLayer) geoJsonLayer.setStyle(getRegionStyle); 
+                }
+                
+                // Khi thu nhỏ toàn cục, tải lại GeoJson để tạo các mảng màu vùng lớn
+                if (geoJsonLayer && lastRenderedRegionId !== 'ZOOMED_OUT') {
+                    geoJsonLayer.setStyle(getRegionStyle); 
+                    lastRenderedRegionId = 'ZOOMED_OUT';
                 }
             } else {
                 mapContainer.classList.remove('hide-neon-labels'); 
                 if (map.hasLayer(regionLabelLayer)) {
                     map.removeLayer(regionLabelLayer); 
-                    if (geoJsonLayer) geoJsonLayer.setStyle(getProvinceStyle); 
+                }
+                
+                // Cập nhật lại style chỉ khi chuyển đổi qua vùng khác để tối ưu hiệu năng
+                if (geoJsonLayer && lastRenderedRegionId !== activeRegionId) {
+                    geoJsonLayer.setStyle(getProvinceStyle); 
+                    lastRenderedRegionId = activeRegionId;
                 }
             }
         }
-        map.on('zoomend', updateLayerVisibility);
+        
+        // Theo dõi thay đổi khi di chuyển & thu phóng bản đồ để Smart Detect
+        map.on('zoomend moveend', updateLayerVisibility);
 
         // ==========================================
         // 6. ĐỊNH VỊ GPS VÀ CHECK-IN

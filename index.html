@@ -1597,22 +1597,34 @@ function renderDistrictLabels() {
                 }
                 
                 if (belongToActiveProv) {
-                    // Quét toàn bộ properties, không quan tâm viết hoa hay thường
-                    let possibleNames = [];
+                    // 1. MÁY QUÉT CỰC ĐOAN: Bới tung toàn bộ data để tìm chữ có dấu
+                    let bestVietnameseName = "";
+                    let backupName = "";
+                    
                     for (let key in feature.properties) {
-                        let k = key.toLowerCase();
-                        if (k.includes('huyen') || k === 'name_2' || k === 'name' || k.includes('district')) {
-                            possibleNames.push(String(feature.properties[key]));
+                        let val = String(feature.properties[key]).trim();
+                        
+                        // Bỏ qua các cột rác chứa mã số, ID, diện tích
+                        if (!val || val.length < 2 || /id|code|area|type/i.test(key)) continue;
+                        
+                        // Nếu phát hiện chuỗi CÓ CHỨA DẤU TIẾNG VIỆT
+                        if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(val)) {
+                            // Lấy chuỗi ngắn nhất có dấu (để tránh lấy nhầm cột ghi chú dài thò lò)
+                            if (!bestVietnameseName || val.length < bestVietnameseName.length) {
+                                bestVietnameseName = val;
+                            }
+                        } else {
+                            // Lưu lại tên không dấu để làm dự phòng
+                            if (!backupName && /name|huyen/i.test(key)) {
+                                backupName = val;
+                            }
                         }
                     }
+
+                    // 2. CHỐT TÊN: Ưu tiên tuyệt đối tên có dấu
+                    let rawName = bestVietnameseName || backupName || feature.properties.NAME_2 || "";
                     
-                    // ƯU TIÊN SỐ 1 TÚM CỔ TÊN TIẾNG VIỆT: Tìm chuỗi nào CÓ CHỨA DẤU
-                    let rawName = possibleNames.find(v => /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(v));
-                    
-                    // Nếu xui quá data không có dấu thật thì mới lấy đại cái đầu tiên
-                    if (!rawName) rawName = possibleNames[0] || "";
-                    
-                    // Dọn dẹp từ thừa
+                    // 3. Dọn dẹp sạch sẽ các từ dư thừa
                     let name = rawName.replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
                     
                     let isVisited = isDistrictVisited(feature);
@@ -1631,7 +1643,6 @@ function renderDistrictLabels() {
                 }
             });
         }
-
         function preloadStampsIntoCache(spots) {
             if (!window.caches) return;
             caches.open('neon-stamps-cache-v1').then(cache => {

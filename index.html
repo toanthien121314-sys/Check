@@ -1239,9 +1239,10 @@
             });
         }
         
+        // Gọi lần đầu để vẽ trạng thái chưa đi (mờ) lúc mới load map
         renderMacroRegionsLabel();
 
-        // Lọc dấu Tiếng Việt triệt để
+        // 1. Lọc dấu Tiếng Việt triệt để
         function removeVietnameseTones(str) {
             str = str.replace(/à|á|ạ|ả|ã|â|ă|ằ|ắ|ặ|ẳ|ẵ|â|ầ|ấ|ậ|ẩ|ẫ/g, "a");
             str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
@@ -1264,7 +1265,8 @@
         }
 
         // ==============================================================
-        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID)
+        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID) - BẢN FIX CUỐI
+        // Tự động vượt qua MultiPolygon (biển đảo) để neo thẳng vào đất liền
         // ==============================================================
         function getPolygonCentroid(feature) {
             try {
@@ -1301,7 +1303,7 @@
                 let twiceArea = 0, x = 0, y = 0, nPts = biggestRing.length;
                 let p1, p2, f;
                 for (let i = 0, j = nPts - 1; i < nPts; j = i++) {
-                    p1 = biggestRing[i];
+                    p1 = biggestRing[i]; // [lng, lat]
                     p2 = biggestRing[j];
                     f = p1[0] * p2[1] - p2[0] * p1[1];
                     twiceArea += f;
@@ -1313,12 +1315,13 @@
                 f = twiceArea * 3;
                 return { lat: y / f, lng: x / f };
             } catch(e) {
+                console.error("Lỗi Center of Mass:", e);
                 return null;
             }
         }
 
         // ==============================================================
-        // THUẬT TOÁN MẮT THẦN: ĐIỂM NẰM TRONG ĐA GIÁC 
+        // THUẬT TOÁN ĐIỂM NẰM TRONG ĐA GIÁC (MẮT THẦN DÒ TỈNH)
         // ==============================================================
         function isPointInPolygon(point, vs) {
             var x = point[0], y = point[1];
@@ -1473,17 +1476,18 @@
             if (currentZoom >= 10.5) {
                 let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName.toLowerCase()) : "";
                 
-                // 1. Tỉnh Tâm màn hình: Ẩn đường viền Tỉnh, nhường chỗ cho đường viền Huyện
+                // 1. Tỉnh Tâm màn hình: GIỮ LẠI ĐƯỜNG VIỀN TỈNH để biết ranh giới tổng quát
+                // Ngăn chặn lỗi so sánh Rỗng
                 if (normalizedActiveProv && normalized && (normalized.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalized))) {
-                    return { color: 'transparent', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, stroke: false, fill: false, className: '' }; 
+                    if (isActiveTracker) {
+                        return { stroke: true, color: currentAppColors.secondary, weight: 2.5, opacity: 0.9, fill: false, className: 'neon-province-active' };
+                    } else {
+                        return { stroke: true, color: currentAppColors.primary, weight: 2, opacity: 0.8, fill: false, className: 'neon-province-border' };
+                    }
                 }
                 
-                // 2. Các tỉnh xung quanh: Nếu đã đi thì viền sáng mạnh, chưa đi thì viền cực mờ
-                if (isActiveTracker) {
-                    return { stroke: true, color: currentAppColors.secondary, weight: 1.5, opacity: 0.6, fill: false, className: 'neon-province-border' };
-                } else {
-                    return { stroke: true, color: currentAppColors.primary, weight: 1, opacity: 0.15, fill: false, className: '' };
-                }
+                // 2. Các tỉnh khác: ẨN HOÀN TOÀN (TÀNG HÌNH ĐỂ KHÔNG BỊ RỐI MẮT MÀN HÌNH)
+                return { color: 'transparent', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, stroke: false, fill: false, className: '' };
             } 
             
             // KHI ZOOM XA: Style cấp Vùng
@@ -1546,7 +1550,7 @@
                         if (isPointInPolygon(pt, coords[k][0])) { inside = true; break; }
                     }
                 }
-                if (inside) return true;
+                if (inside) return true; // Có check-in thì báo Đã đi
             }
             return false;
         }
@@ -1565,8 +1569,10 @@
             if (normalizedPropProv.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalizedPropProv)) {
                 let isVisited = isDistrictVisited(feature);
                 if (isVisited) {
+                    // Huyện đã đi: Phát sáng
                     return { stroke: true, color: currentAppColors.secondary, weight: 2, opacity: 0.9, fill: true, fillColor: currentAppColors.secondary, fillOpacity: 0.25, className: 'neon-province-active' };
                 } else {
+                    // Huyện chưa đi: Viền neon mỏng
                     return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
                 }
             }
@@ -1670,6 +1676,7 @@
 
             lastRenderedRegionId = null; 
             renderProvinceBorders();
+
             renderMacroRegionsLabel();
 
             return { regCount: uniqueRegionsCount, spotCount };

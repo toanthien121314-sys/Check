@@ -1597,38 +1597,11 @@ function renderDistrictLabels() {
                 }
                 
                 if (belongToActiveProv) {
-                    let bestVietnameseName = "";
-                    let backupName = "";
+                    // Trở về sự nguyên thủy: Lấy đúng cột tên cấp huyện (chấp nhận không dấu)
+                    let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
                     
-                    for (let key in feature.properties) {
-                        let lowerKey = key.toLowerCase();
-                        let val = String(feature.properties[key]).trim();
-                        let lowerVal = val.toLowerCase();
-                        
-                        // 1. KHÓA CHẶT PHẠM VI: CHỈ lấy các cột có khả năng là Tên Huyện
-                        if (!lowerKey.includes('huyen') && !lowerKey.includes('name_2') && lowerKey !== 'name' && lowerKey !== 'varname_2' && lowerKey !== 'nl_name_2') continue;
-                        
-                        // 2. NGĂN RÁC: Bỏ qua giá trị quá ngắn hoặc chỉ chứa từ khóa hành chính chung chung
-                        if (!val || val.length < 2) continue;
-                        if (lowerVal === 'huyện' || lowerVal === 'thị xã' || lowerVal === 'thành phố' || lowerVal === 'quận') continue;
-                        
-                        // 3. TÌM CHỮ CÓ DẤU
-                        if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(val)) {
-                            if (!bestVietnameseName || val.length < bestVietnameseName.length) {
-                                bestVietnameseName = val;
-                            }
-                        } else {
-                            if (!backupName) {
-                                backupName = val;
-                            }
-                        }
-                    }
-
-                    // 4. CHỐT TÊN (Ưu tiên có dấu)
-                    let rawName = bestVietnameseName || backupName || feature.properties.NAME_2 || "";
-                    
-                    // 5. GỌT SẠCH TIỀN TỐ/HẬU TỐ
-                    let name = rawName.replace(/(?:Huyện|Thị xã|Thành phố|Quận|District|City|Town)\s*/ig, '').trim(); 
+                    // Gọt sạch các từ khóa hành chính bị dính kèm
+                    let name = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
                     
                     let isVisited = isDistrictVisited(feature);
                     let centroid = getPolygonCentroid(feature);
@@ -1636,9 +1609,11 @@ function renderDistrictLabels() {
                     if (centroid && name !== "") {
                         let htmlContent = '';
                         if (isVisited) {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.9rem; font-weight: bold;">${name}</div>`;
+                            // Chữ in hoa, màu rực rỡ cho huyện đã check-in
+                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.9rem; font-weight: bold; text-transform: uppercase;">${name}</div>`;
                         } else {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.75rem;">${name}</div>`;
+                            // Màu mờ cho huyện chưa check-in
+                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.75rem; text-transform: uppercase;">${name}</div>`;
                         }
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [120, 20], iconAnchor: [60, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);

@@ -1209,29 +1209,20 @@ function renderMacroRegionsLabel() {
             REGIONS_DATA.forEach(region => {
                 let isVisited = isMacroRegionVisited(region);
                 let htmlContent = '';
-                let iconSize = [120, 30];
-                let iconAnchor = [60, 15];
 
                 if (isVisited) {
-                    // Đã đi: Dùng thẻ div cơ bản để không dính hiệu ứng ẩn "hide-neon-labels" khi zoom xa
-                    htmlContent = `
-                        <div style="position: relative; width: 28px; height: 28px; display: flex; justify-content: center;">
-                            <div class="region-label" style="color: ${region.color}; position: absolute; top: -25px; opacity: 1;">${region.name}</div>
-                            <div class="neon-pulse" style="background: ${region.color}80; animation: ripple 1.8s infinite ease-out;"></div>
-                            <div class="neon-dot" style="background: ${region.color}; border-color: #fff; box-shadow: 0 0 15px ${region.color}, 0 0 25px ${region.color};"></div>
-                        </div>`;
-                    iconSize = [28, 28];
-                    iconAnchor = [14, 14];
+                    // Đã đi: Chữ phát sáng mạnh, TUYỆT ĐỐI KHÔNG thêm chấm tròn
+                    htmlContent = `<div class="region-label" style="color: ${region.color}; text-shadow: 0 0 10px #000, 0 0 15px ${region.color}, 0 0 25px ${region.color}; opacity: 1;">${region.name}</div>`;
                 } else {
-                    // Chưa đi: Chỉ hiện chữ mờ
-                    htmlContent = `<div class="region-label" style="color: ${region.color}; opacity: 0.4; text-shadow: 0 0 5px ${region.color};">${region.name}</div>`;
+                    // Chưa đi: Chữ mờ đi, không phát sáng rực rỡ
+                    htmlContent = `<div class="region-label" style="color: ${region.color}; text-shadow: 0 0 5px #000; opacity: 0.35;">${region.name}</div>`;
                 }
 
                 const icon = L.divIcon({
                     className: 'custom-region-icon',
                     html: htmlContent,
-                    iconSize: iconSize, 
-                    iconAnchor: iconAnchor
+                    iconSize: [120, 30], 
+                    iconAnchor: [60, 15]
                 });
                 const marker = L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
                 

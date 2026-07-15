@@ -1560,12 +1560,21 @@ function getRegionStyle(feature) {
                 return { stroke: false, fill: false, className: '' };
             }
 
-            let isVisited = isDistrictVisited(feature);
-            if (isVisited) {
-                return { stroke: true, color: currentAppColors.secondary, weight: 2, opacity: 0.9, fill: true, fillColor: currentAppColors.secondary, fillOpacity: 0.25, className: 'neon-province-active' };
-            } else {
-                return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
-            }
+let isVisited = isDistrictVisited(feature);
+if (isVisited) {
+    // Đổi màu viền ở 'color', tăng độ dày 'weight', và giữ 'fill: false'
+    return { 
+        stroke: true, 
+        color: '#ffea00', // Đổi mã màu viền tại đây (VD: #ffea00 là màu vàng)
+        weight: 2.5,      // Độ dày của viền
+        opacity: 1,       // Độ đậm nhạt của viền (1 là rõ nhất)
+        fill: false,      // Không tô nền
+        className: 'neon-province-active' 
+    };
+} else {
+    // Huyện chưa đi (giữ nguyên gốc)
+    return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
+}
         }
 
         function initDistrictLayer() {
@@ -1667,10 +1676,13 @@ function renderDistrictLabels() {
                     if (centroid && finalName !== "") {
                         let htmlContent = '';
                         if (isVisited) {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.85rem; font-weight: bold;">${finalName}</div>`;
-                        } else {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.7rem;">${finalName}</div>`;
-                        }
+    // Thay đổi màu chữ ở 'color' và màu sáng hắt ra ở 'text-shadow'
+    // Lưu ý: nên đổi màu text-shadow khớp với màu chữ để hiệu ứng neon đẹp nhất
+    htmlContent = `<div class="region-label" style="color: #ffea00; text-shadow: 0 0 10px #000, 0 0 15px #ffea00, 0 0 25px #ffea00; opacity: 1; font-size: 0.85rem; font-weight: bold;">${finalName}</div>`;
+} else {
+    // Huyện chưa đi (giữ nguyên gốc)
+    htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.7rem;">${finalName}</div>`;
+}
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
                     }

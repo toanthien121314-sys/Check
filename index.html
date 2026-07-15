@@ -1597,16 +1597,17 @@ function renderDistrictLabels() {
                 }
                 
                 if (belongToActiveProv) {
-                    // Bổ sung các key phổ biến để chắc chắn đọc được tên Huyện từ JSON
-                    let rawName = feature.properties.Name || feature.properties.name || feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.ten_huyen || "";
-                    let name = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận /i, '').trim(); 
+                    // ƯU TIÊN SỐ 1: Lấy các cột thuần Tiếng Việt trước, Tiếng Anh để sau cùng
+                    let rawName = feature.properties.Ten_Huyen || feature.properties.ten_huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
+                    
+                    // QUÉT SẠCH: Xóa cả tiền tố Tiếng Việt lẫn hậu tố Tiếng Anh
+                    let name = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
                     
                     let isVisited = isDistrictVisited(feature);
                     let centroid = getPolygonCentroid(feature);
                     
                     if (centroid && name !== "") {
                         let htmlContent = '';
-                        // Phân biệt màu và độ rõ nét cho Huyện đã đi và chưa đi
                         if (isVisited) {
                             htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.9rem; font-weight: bold;">${name}</div>`;
                         } else {

@@ -1453,6 +1453,7 @@
         }
 
         // TUYỆT ĐỐI TUÂN THỦ: TẤT CẢ CÁC TỈNH CHUNG 1 MÀU (XANH LÁ), KHÔNG TÔ NỀN
+// TUYỆT ĐỐI TUÂN THỦ: TẤT CẢ CÁC TỈNH CHUNG 1 MÀU (XANH LÁ), KHÔNG TÔ NỀN
         function getProvinceStyle(feature) {
             let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
             let normalized = removeVietnameseTones(propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim());
@@ -1467,8 +1468,8 @@
                     return { stroke: false, fill: false, className: '' }; 
                 }
                 
-                // 2. TẤT CẢ CÁC TỈNH KHÁC -> CÙNG 1 KIỂU DUY NHẤT (Màu Primary)
-                return { stroke: true, color: currentAppColors.primary, weight: 1.5, opacity: 0.4, fill: false, className: 'neon-province-border' };
+                // 2. TẤT CẢ CÁC TỈNH KHÁC -> KHÔNG SÁNG (Đã sửa theo yêu cầu)
+                return { stroke: false, fill: false, className: '' };
             } 
             
             // KHI ZOOM VỪA (Xem cấp Vùng)

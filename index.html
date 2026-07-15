@@ -1588,17 +1588,17 @@ function getRegionStyle(feature) {
                 vnProvincesData = data;
             }).catch(e => console.log("Lỗi API từ điển"));
 
-        function renderDistrictLabels() {
+function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
             let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase();
             if (!normalizedActiveProv) return;
 
-            // Tìm data tỉnh hiện tại từ API mở
+            // Lấy danh sách Huyện của Tỉnh hiện tại từ API Chính phủ
             let activeProvApiData = vnProvincesData.find(p => {
                 let pName = removeVietnameseTones(p.name).toLowerCase();
-                return pName.includes(normalizedActiveProv) || normalizedActiveProv.includes(pName.replace(/tinh |thanh pho /g, ''));
+                return pName.includes(normalizedActiveProv) || normalizedActiveProv.includes(pName.replace(/\b(tinh|thanh pho)\b/g, '').trim());
             });
 
             geoJsonDistrictsData.features.forEach(feature => {
@@ -1613,57 +1613,50 @@ function getRegionStyle(feature) {
                 }
                 
                 if (belongToActiveProv) {
-                    // 1. Lấy thông tin thô từ GeoJSON
                     let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
                     let rawType = feature.properties.TYPE_2 || feature.properties.type || "";
                     
-                    // Tạo chuỗi tìm kiếm (VD: "cai lay town", "district 1 district")
-                    let searchStr = removeVietnameseTones(rawName + " " + rawType).toLowerCase();
-                    // Quy chuẩn tiếng Anh sang tiếng Việt để dễ đối chiếu
-                    searchStr = searchStr.replace(/district/g, 'quan huyen').replace(/city/g, 'thanh pho').replace(/town/g, 'thi xa');
-
+                    // BÓC TÁCH LÕI TÊN (Bỏ tiền tố/hậu tố, đổi y->i, xóa khoảng trắng/ký tự lạ)
+                    let geoCore = removeVietnameseTones(rawName).toLowerCase();
+                    geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|district|city|town)\b/g, '');
+                    geoCore = geoCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, ''); 
+                    
                     let finalName = "";
 
-                    // 2. CHẤM ĐIỂM ĐỐI CHIẾU VỚI API
+                    // ĐỐI CHIẾU ÉP BUỘC VỚI API CHÍNH PHỦ
                     if (activeProvApiData && activeProvApiData.districts) {
-                        let bestScore = -1;
-                        activeProvApiData.districts.forEach(d => {
-                            let officialSearch = removeVietnameseTones(d.name).toLowerCase(); // "thi xa cai lay"
-                            let coreName = officialSearch.replace(/huyen |thi xa |thanh pho |quan /g, '').trim(); // "cai lay"
+                        for (let d of activeProvApiData.districts) {
+                            let apiCore = removeVietnameseTones(d.name).toLowerCase();
+                            apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '');
+                            apiCore = apiCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, '');
                             
-                            // Tránh lỗi Quận 1 nhận nhầm Quận 10
-                            let isNumberWard = /^[0-9]+$/.test(coreName);
-                            let isCoreMatch = isNumberWard ? searchStr.match(new RegExp("\\b" + coreName + "\\b")) : searchStr.includes(coreName);
-
-                            if (isCoreMatch) {
-                                let score = 1;
-                                // Trùng cả loại hình hành chính thì cộng điểm tuyệt đối để tách biệt Huyện/Thị xã
-                                if (officialSearch.includes("thi xa") && searchStr.includes("thi xa")) score += 5;
-                                if (officialSearch.includes("huyen") && searchStr.includes("huyen")) score += 5;
-                                if (officialSearch.includes("quan") && searchStr.includes("quan")) score += 5;
-                                if (officialSearch.includes("thanh pho") && searchStr.includes("thanh pho")) score += 5;
+                            // Nếu lõi tên trùng khớp 100% (VD: quinhon == quinhon)
+                            if (geoCore === apiCore) {
+                                // Phân biệt Huyện và Thị xã nếu bị trùng lõi (Như Huyện Cai Lậy vs Thị xã Cai Lậy)
+                                let geoIsTown = /\b(thi xa|town)\b/i.test(rawName + " " + rawType);
+                                let apiIsTown = /\bthị xã\b/i.test(d.name);
                                 
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    // Lấy đúng tên gốc chuẩn: "Huyện Cai Lậy", "Thị xã Cai Lậy", "Quận 1"
-                                    finalName = d.name; 
+                                let geoIsCity = /\b(thanh pho|city)\b/i.test(rawName + " " + rawType);
+                                let apiIsCity = /\bthành phố\b/i.test(d.name);
+                                
+                                if (geoIsTown === apiIsTown && geoIsCity === apiIsCity) {
+                                    finalName = d.name; // Chính xác tuyệt đối -> Lấy tên của Chính phủ
+                                    break;
+                                } else if (!finalName) {
+                                    finalName = d.name; // Ghi nhận tạm phòng hờ rớt Type
                                 }
                             }
-                        });
+                        }
                     }
 
-                    // 3. Dự phòng nếu API rớt mạng
+                    // Backup an toàn (Chỉ dùng khi API chết hoặc data quá nát không thể cứu)
                     if (!finalName && rawName !== "") {
-                        let cleanedName = rawName.replace(/ District| City| Town/ig, '').trim();
+                        let cleanedName = rawName.replace(/\b(District|City|Town)\b/ig, '').trim();
                         let prefix = "";
-                        if (!/Huyện|Thị xã|Thành phố|Quận/i.test(cleanedName)) {
-                            if (/district/i.test(rawType)) {
-                                prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
-                            } else if (/city/i.test(rawType)) {
-                                prefix = "Thành phố ";
-                            } else if (/town/i.test(rawType)) {
-                                prefix = "Thị xã ";
-                            }
+                        if (!/\b(Huyện|Thị xã|Thành phố|Quận)\b/i.test(cleanedName)) {
+                            if (/district/i.test(rawType)) prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
+                            else if (/city/i.test(rawType)) prefix = "Thành phố ";
+                            else if (/town/i.test(rawType)) prefix = "Thị xã ";
                         }
                         finalName = prefix + cleanedName;
                     }
@@ -1674,13 +1667,10 @@ function getRegionStyle(feature) {
                     if (centroid && finalName !== "") {
                         let htmlContent = '';
                         if (isVisited) {
-                            // Đã đi: Màu neon sáng, bỏ viết hoa toàn bộ để giữ lại độ tự nhiên (Capitalize chuẩn)
                             htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.85rem; font-weight: bold;">${finalName}</div>`;
                         } else {
-                            // Chưa đi: Màu neon mờ
                             htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.7rem;">${finalName}</div>`;
                         }
-                        // Mở rộng khung chứa để chữ "Huyện/Thị Xã" không bị rớt dòng
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
                     }

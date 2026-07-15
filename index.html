@@ -1204,7 +1204,7 @@
 
         const regionLabelLayer = L.layerGroup();
 
-        function renderMacroRegionsLabel() {
+function renderMacroRegionsLabel() {
             regionLabelLayer.clearLayers();
             REGIONS_DATA.forEach(region => {
                 let isVisited = isMacroRegionVisited(region);
@@ -1213,17 +1213,17 @@
                 let iconAnchor = [60, 15];
 
                 if (isVisited) {
-                    // Đã đi: Hiện chấm tròn Neon + Chữ nổi bật
+                    // Đã đi: Dùng thẻ div cơ bản để không dính hiệu ứng ẩn "hide-neon-labels" khi zoom xa
                     htmlContent = `
-                        <div class="neon-marker-container">
-                            <div class="region-label" style="color: ${region.color}; position: absolute; top: -25px;">${region.name}</div>
+                        <div style="position: relative; width: 28px; height: 28px; display: flex; justify-content: center;">
+                            <div class="region-label" style="color: ${region.color}; position: absolute; top: -25px; opacity: 1;">${region.name}</div>
                             <div class="neon-pulse" style="background: ${region.color}80; animation: ripple 1.8s infinite ease-out;"></div>
                             <div class="neon-dot" style="background: ${region.color}; border-color: #fff; box-shadow: 0 0 15px ${region.color}, 0 0 25px ${region.color};"></div>
                         </div>`;
                     iconSize = [28, 28];
                     iconAnchor = [14, 14];
                 } else {
-                    // Chưa đi: Chỉ hiện chữ mờ, không có chấm
+                    // Chưa đi: Chỉ hiện chữ mờ
                     htmlContent = `<div class="region-label" style="color: ${region.color}; opacity: 0.4; text-shadow: 0 0 5px ${region.color};">${region.name}</div>`;
                 }
 

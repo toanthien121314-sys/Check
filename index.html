@@ -1597,35 +1597,38 @@ function renderDistrictLabels() {
                 }
                 
                 if (belongToActiveProv) {
-                    // 1. MÁY QUÉT CỰC ĐOAN: Bới tung toàn bộ data để tìm chữ có dấu
                     let bestVietnameseName = "";
                     let backupName = "";
                     
                     for (let key in feature.properties) {
+                        let lowerKey = key.toLowerCase();
                         let val = String(feature.properties[key]).trim();
+                        let lowerVal = val.toLowerCase();
                         
-                        // Bỏ qua các cột rác chứa mã số, ID, diện tích
-                        if (!val || val.length < 2 || /id|code|area|type/i.test(key)) continue;
+                        // 1. NGĂN CHẶN CỘT RÁC: Bỏ qua các cột ID, TYPE (chứa chữ Huyện/Thị xã)
+                        if (!val || val.length < 2 || /id|code|area|type/i.test(lowerKey)) continue;
                         
-                        // Nếu phát hiện chuỗi CÓ CHỨA DẤU TIẾNG VIỆT
+                        // 2. NGĂN CHẶN GIÁ TRỊ RÁC: Nếu ô đó CHỈ chứa mỗi từ khóa hành chính thì bỏ qua luôn
+                        if (lowerVal === 'huyện' || lowerVal === 'thị xã' || lowerVal === 'thành phố' || lowerVal === 'quận' || lowerVal === 'tỉnh') continue;
+                        
+                        // 3. TÌM CHỮ CÓ DẤU
                         if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(val)) {
-                            // Lấy chuỗi ngắn nhất có dấu (để tránh lấy nhầm cột ghi chú dài thò lò)
-                            if (!bestVietnameseName || val.length < bestVietnameseName.length) {
+                            // Cập nhật tên có dấu. Lấy chuỗi ngắn nhất nhưng phải > 3 ký tự để tránh lấy nhầm ký tự rác
+                            if (!bestVietnameseName || (val.length < bestVietnameseName.length && val.length > 3)) {
                                 bestVietnameseName = val;
                             }
                         } else {
-                            // Lưu lại tên không dấu để làm dự phòng
-                            if (!backupName && /name|huyen/i.test(key)) {
+                            if (!backupName && /name|huyen/i.test(lowerKey)) {
                                 backupName = val;
                             }
                         }
                     }
 
-                    // 2. CHỐT TÊN: Ưu tiên tuyệt đối tên có dấu
+                    // 4. CHỐT TÊN
                     let rawName = bestVietnameseName || backupName || feature.properties.NAME_2 || "";
                     
-                    // 3. Dọn dẹp sạch sẽ các từ dư thừa
-                    let name = rawName.replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
+                    // 5. LỌC TIỀN TỐ/HẬU TỐ: Quét sạch chữ Huyện/Thị xã dính kèm trong chuỗi
+                    let name = rawName.replace(/(?:Huyện|Thị xã|Thành phố|Quận|District|City|Town)\s*/ig, '').trim(); 
                     
                     let isVisited = isDistrictVisited(feature);
                     let centroid = getPolygonCentroid(feature);

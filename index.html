@@ -1578,7 +1578,25 @@ function getRegionStyle(feature) {
             }
         }
 
-function renderDistrictLabels() {
+// ==========================================
+        // API TỰ ĐỘNG NẠP TÊN 700+ QUẬN HUYỆN CÓ DẤU CHUẨN 100%
+        // ==========================================
+        let dynamicDistrictMap = {};
+        fetch('https://provinces.open-api.vn/api/?depth=2')
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(prov => {
+                    if (prov.districts) {
+                        prov.districts.forEach(dist => {
+                            let cleanName = dist.name.replace(/Huyện |Thị xã |Thành phố |Quận /ig, '').trim();
+                            let normKey = removeVietnameseTones(cleanName).toLowerCase();
+                            dynamicDistrictMap[normKey] = cleanName;
+                        });
+                    }
+                });
+            }).catch(e => console.log("Lỗi API từ điển"));
+
+        function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
@@ -1597,11 +1615,13 @@ function renderDistrictLabels() {
                 }
                 
                 if (belongToActiveProv) {
-                    // Trở về sự nguyên thủy: Lấy đúng cột tên cấp huyện (chấp nhận không dấu)
+                    // 1. Lấy cái tên rỗng tuếch không dấu từ file dữ liệu gốc
                     let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
+                    let baseName = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
                     
-                    // Gọt sạch các từ khóa hành chính bị dính kèm
-                    let name = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
+                    // 2. PHÉP MÀU: Đem cái tên không dấu đó đi tra API, trả về tên Full Dấu
+                    let searchKey = removeVietnameseTones(baseName).toLowerCase();
+                    let name = dynamicDistrictMap[searchKey] ? dynamicDistrictMap[searchKey] : baseName;
                     
                     let isVisited = isDistrictVisited(feature);
                     let centroid = getPolygonCentroid(feature);
@@ -1609,10 +1629,8 @@ function renderDistrictLabels() {
                     if (centroid && name !== "") {
                         let htmlContent = '';
                         if (isVisited) {
-                            // Chữ in hoa, màu rực rỡ cho huyện đã check-in
                             htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.9rem; font-weight: bold; text-transform: uppercase;">${name}</div>`;
                         } else {
-                            // Màu mờ cho huyện chưa check-in
                             htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.75rem; text-transform: uppercase;">${name}</div>`;
                         }
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [120, 20], iconAnchor: [60, 10] });

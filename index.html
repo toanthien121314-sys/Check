@@ -1482,19 +1482,24 @@
             return { stroke: false, fill: false, className: '' };
         }
 
-        function getRegionStyle(feature) {
-            let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "");
+function getRegionStyle(feature) {
+            // Bổ sung đọc feature.properties.NAME_1 để không bị sót các tỉnh miền Nam
+            let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
             let region = getRegionForProvince(propName);
 
             if (region) {
                 let isVisited = isMacroRegionVisited(region);
                 if (isVisited) {
-                    return { color: region.color, weight: 2, opacity: 0.9, fillColor: region.color, fillOpacity: 0.35, className: 'region-border' };
+                    // ĐÃ ĐI: Hiển thị sáng rực đường kẻ và nền nhẹ theo màu của Vùng
+                    return { stroke: true, color: region.color, weight: 2, opacity: 0.9, fill: true, fillColor: region.color, fillOpacity: 0.15, className: 'region-border' };
                 } else {
-                    return { color: region.color, weight: 1, opacity: 0.3, fillColor: region.color, fillOpacity: 0.05, className: 'region-border' };
+                    // CHƯA ĐI: Không hiển thị đường kẻ sáng (ẩn hoàn toàn)
+                    return { stroke: false, fill: false, className: '' };
                 }
             }
-            return { color: '#444', weight: 1, opacity: 0.3, fillColor: 'transparent', fillOpacity: 0 };
+            
+            // Lỗi không tìm thấy vùng -> Ẩn
+            return { stroke: false, fill: false, className: '' };
         }
 
         function renderProvinceBorders() {

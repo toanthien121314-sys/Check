@@ -1597,11 +1597,23 @@ function renderDistrictLabels() {
                 }
                 
                 if (belongToActiveProv) {
-                    // ƯU TIÊN SỐ 1: Lấy các cột thuần Tiếng Việt trước, Tiếng Anh để sau cùng
-                    let rawName = feature.properties.Ten_Huyen || feature.properties.ten_huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
+                    // Quét toàn bộ properties, không quan tâm viết hoa hay thường
+                    let possibleNames = [];
+                    for (let key in feature.properties) {
+                        let k = key.toLowerCase();
+                        if (k.includes('huyen') || k === 'name_2' || k === 'name' || k.includes('district')) {
+                            possibleNames.push(String(feature.properties[key]));
+                        }
+                    }
                     
-                    // QUÉT SẠCH: Xóa cả tiền tố Tiếng Việt lẫn hậu tố Tiếng Anh
-                    let name = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
+                    // ƯU TIÊN SỐ 1 TÚM CỔ TÊN TIẾNG VIỆT: Tìm chuỗi nào CÓ CHỨA DẤU
+                    let rawName = possibleNames.find(v => /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(v));
+                    
+                    // Nếu xui quá data không có dấu thật thì mới lấy đại cái đầu tiên
+                    if (!rawName) rawName = possibleNames[0] || "";
+                    
+                    // Dọn dẹp từ thừa
+                    let name = rawName.replace(/Huyện |Thị xã |Thành phố |Quận | District| City| Town/ig, '').trim(); 
                     
                     let isVisited = isDistrictVisited(feature);
                     let centroid = getPolygonCentroid(feature);

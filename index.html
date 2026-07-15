@@ -1026,7 +1026,7 @@
             { hex: '#8b1c1c', r: 139, g: 28, b: 28 },   
             { hex: '#1c5236', r: 28, g: 82, b: 54 },    
             { hex: '#4a2c5e', r: 74, g: 44, b: 94 },    
-            { hex: '#5c4033', r: 92, g: 64, b: 51 }     
+            { hex: '#5c4033', r: 92, g: 64, b: 51 }      
         ];
         let currentStampColor = vintageColors[0];
 
@@ -1035,7 +1035,7 @@
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('Lỗi khởi chạy SW:', err));
             });
         }
-      
+       
         let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
 
@@ -1189,20 +1189,61 @@
         const photoLayer = L.layerGroup();
         const activeRegionsTracker = new Set();
         
+        function isMacroRegionVisited(region) {
+            if (!region || !activeRegionsTracker) return false;
+            return region.provinces.some(p => {
+                let normalizedP = removeVietnameseTones(p.toLowerCase());
+                for (let visited of activeRegionsTracker) {
+                    if (removeVietnameseTones(visited).includes(normalizedP) || normalizedP.includes(removeVietnameseTones(visited))) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
         const regionLabelLayer = L.layerGroup();
-        REGIONS_DATA.forEach(region => {
-            const icon = L.divIcon({
-                className: 'custom-region-icon',
-                html: `<div class="region-label" style="color: ${region.color};">${region.name}</div>`,
-                iconSize: [120, 30], iconAnchor: [60, 15]
+
+        function renderMacroRegionsLabel() {
+            regionLabelLayer.clearLayers();
+            REGIONS_DATA.forEach(region => {
+                let isVisited = isMacroRegionVisited(region);
+                let htmlContent = '';
+                let iconSize = [120, 30];
+                let iconAnchor = [60, 15];
+
+                if (isVisited) {
+                    // Đã đi: Hiện chấm tròn Neon + Chữ nổi bật
+                    htmlContent = `
+                        <div class="neon-marker-container">
+                            <div class="region-label" style="color: ${region.color}; position: absolute; top: -25px;">${region.name}</div>
+                            <div class="neon-pulse" style="background: ${region.color}80; animation: ripple 1.8s infinite ease-out;"></div>
+                            <div class="neon-dot" style="background: ${region.color}; border-color: #fff; box-shadow: 0 0 15px ${region.color}, 0 0 25px ${region.color};"></div>
+                        </div>`;
+                    iconSize = [28, 28];
+                    iconAnchor = [14, 14];
+                } else {
+                    // Chưa đi: Chỉ hiện chữ mờ, không có chấm
+                    htmlContent = `<div class="region-label" style="color: ${region.color}; opacity: 0.4; text-shadow: 0 0 5px ${region.color};">${region.name}</div>`;
+                }
+
+                const icon = L.divIcon({
+                    className: 'custom-region-icon',
+                    html: htmlContent,
+                    iconSize: iconSize, 
+                    iconAnchor: iconAnchor
+                });
+                const marker = L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
+                
+                marker.on('click', () => {
+                    activeRegionId = region.id;
+                    map.flyTo(region.center, 8.5, { duration: 1.2 });
+                });
             });
-            const marker = L.marker(region.center, { icon: icon }).addTo(regionLabelLayer);
-            
-            marker.on('click', () => {
-                activeRegionId = region.id;
-                map.flyTo(region.center, 8.5, { duration: 1.2 });
-            });
-        });
+        }
+        
+        // Gọi lần đầu để vẽ trạng thái chưa đi (mờ) lúc mới load map
+        renderMacroRegionsLabel();
 
         // 1. Lọc dấu Tiếng Việt triệt để
         function removeVietnameseTones(str) {
@@ -1459,12 +1500,22 @@
             let region = getRegionForProvince(propName);
 
             if (region) {
-                return {
-                    color: region.color, weight: 1.2, opacity: 0.8,
-                    fillColor: region.color, fillOpacity: 0.25, className: 'region-border'
-                };
+                let isVisited = isMacroRegionVisited(region);
+                if (isVisited) {
+                    // Vùng đã đi: Đường viền sáng rõ, nền đậm hơn
+                    return {
+                        color: region.color, weight: 2, opacity: 0.9,
+                        fillColor: region.color, fillOpacity: 0.35, className: 'region-border'
+                    };
+                } else {
+                    // Vùng chưa đi: Đường viền mờ, nền gần như trong suốt
+                    return {
+                        color: region.color, weight: 1, opacity: 0.3,
+                        fillColor: region.color, fillOpacity: 0.05, className: 'region-border'
+                    };
+                }
             }
-            return { color: '#444', weight: 1, opacity: 0.5, fillColor: 'transparent', fillOpacity: 0 };
+            return { color: '#444', weight: 1, opacity: 0.3, fillColor: 'transparent', fillOpacity: 0 };
         }
 
         function renderProvinceBorders() {
@@ -1530,6 +1581,9 @@
 
             lastRenderedRegionId = null; 
             renderProvinceBorders();
+
+            // Cập nhật lại chấm tròn và độ sáng sau khi đã có dữ liệu check-in
+            renderMacroRegionsLabel();
 
             return { regCount: uniqueRegionsCount, spotCount };
         }

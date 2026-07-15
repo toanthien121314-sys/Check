@@ -999,9 +999,8 @@
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7vxQeX0br9PqlWsjE8FcVvdg6zohwHejlEJbxlrKIEDldoHymGNd8gvXe5ZqQmI3q/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
         const GEOJSON_VN_BORDERS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-provinces.json"; 
-        
-        // THÊM MỚI: Khai báo nguồn dữ liệu Huyện
         const GEOJSON_VN_DISTRICTS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-districts.json";
+
         let geoJsonDistrictsData = null;
         let geoJsonDistrictsLayer = null;
         const districtLabelLayer = L.layerGroup();
@@ -1026,8 +1025,8 @@
         // --- CÁC BIẾN QUẢN LÝ VÙNG ĐANG ĐƯỢC CHỌN ---
         let activeRegionId = null; 
         let lastRenderedRegionId = null;
-        let activeProvinceName = null;      // THÊM: Theo dõi Tỉnh ở tâm màn hình
-        let lastActiveProvinceName = null;  // THÊM: Tránh render lại liên tục gây lag
+        let activeProvinceName = null;      
+        let lastActiveProvinceName = null;  
 
         const vintageColors = [
             { hex: '#1b3b6f', r: 27, g: 59, b: 111 },   
@@ -1086,11 +1085,10 @@
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
             maxZoom: 20,
-            // --- TỐI ƯU HÓA TRẢI NGHIỆM NHƯ GOOGLE MAPS ---
-            keepBuffer: 16,            // Giữ lại 16 lớp ngói trong RAM để vuốt qua lại không tốn mạng
-            updateWhenZooming: false,  // Nhường 100% CPU khi đang phóng to/thu nhỏ
-            updateWhenIdle: false,     // TẢI LIÊN TỤC ngay trong lúc tay đang vuốt/kéo (Không chờ dừng tay!)
-            updateInterval: 50         // Tần suất tải siêu nhạy 50ms (Mặc định 200ms)
+            keepBuffer: 16,            
+            updateWhenZooming: false,  
+            updateWhenIdle: false,     
+            updateInterval: 50         
         }).addTo(map);
 
         const mapContainer = document.getElementById('map');
@@ -1127,19 +1125,18 @@
             popupAnchor: [0, -14] 
         });
 
-        // BẢN VÁ TỌA ĐỘ VĨNH LONG - AN GIANG CHUẨN XÁC NẾU RỚT MẠNG GEOJSON
         const VN_PROVINCES = [
             { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
             { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
             { name: "Đà Nẵng", lat: 16.0608, lng: 108.2230 },
-            { name: "Vĩnh Long", lat: 10.1500, lng: 106.0000 }, // Đã kéo về Tâm Hình Học (Trà Ôn/Tam Bình)
+            { name: "Vĩnh Long", lat: 10.1500, lng: 106.0000 }, 
             { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
             { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
             { name: "Huế", lat: 16.4637, lng: 107.5909 },
             { name: "Bà Rịa - Vũng Tàu", lat: 10.3460, lng: 107.0843 },
             { name: "Quảng Ninh", lat: 20.9599, lng: 107.0432 },
             { name: "Bình Thuận", lat: 11.0912, lng: 108.0834 },
-            { name: "An Giang", lat: 10.5000, lng: 105.1500 }, // Đã kéo về Tâm Hình Học (Châu Phú)
+            { name: "An Giang", lat: 10.5000, lng: 105.1500 }, 
             { name: "Kiên Giang", lat: 9.9574, lng: 105.1259 },
             { name: "Đồng Nai", lat: 10.9574, lng: 107.0681 },
             { name: "Bình Dương", lat: 11.1667, lng: 106.6667 },
@@ -1179,9 +1176,6 @@
             { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
-        // ==========================================
-        // DỮ LIỆU 7 VÙNG ĐỊA LÝ KÈM MÀU SẮC NEON
-        // ==========================================
         const REGIONS_DATA = [
             { id: 'tay_bac', name: 'Tây Bắc Bộ', center: [21.5, 103.5], color: '#00ff88', provinces: ['lai châu', 'điện biên', 'sơn la', 'hòa bình', 'yên bái', 'lào cai'] },
             { id: 'dong_bac', name: 'Đông Bắc Bộ', center: [22.0, 106.0], color: '#ffaa00', provinces: ['hà giang', 'cao bằng', 'bắc kạn', 'lạng sơn', 'tuyên quang', 'thái nguyên', 'phú thọ', 'bắc giang', 'quảng ninh'] },
@@ -1197,17 +1191,44 @@
         const photoLayer = L.layerGroup();
         const activeRegionsTracker = new Set();
         
+        // Hàm lọc dấu tiếng Việt CỰC MẠNH (Ép chữ thường từ trứng nước)
+        function removeVietnameseTones(str) {
+            if (!str) return "";
+            str = str.toLowerCase();
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            return str;
+        }
+
         function isMacroRegionVisited(region) {
             if (!region || !activeRegionsTracker) return false;
             return region.provinces.some(p => {
-                let normalizedP = removeVietnameseTones(p.toLowerCase());
+                let normalizedP = removeVietnameseTones(p);
                 for (let visited of activeRegionsTracker) {
-                    if (removeVietnameseTones(visited).includes(normalizedP) || normalizedP.includes(removeVietnameseTones(visited))) {
+                    let normVisited = removeVietnameseTones(visited);
+                    if (normVisited.includes(normalizedP) || normalizedP.includes(normVisited)) {
                         return true;
                     }
                 }
                 return false;
             });
+        }
+
+        // KIỂM TRA TỈNH ĐÃ ĐI CHƯA (Sửa lỗi dính dấu)
+        function isProvVisited(normalizedProvName) {
+            if (!normalizedProvName) return false;
+            for (let visited of activeRegionsTracker) {
+                let normVisited = removeVietnameseTones(visited);
+                if (normVisited === normalizedProvName || normVisited.includes(normalizedProvName) || normalizedProvName.includes(normVisited)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         const regionLabelLayer = L.layerGroup();
@@ -1239,34 +1260,20 @@
             });
         }
         
-        // Gọi lần đầu để vẽ trạng thái chưa đi (mờ) lúc mới load map
         renderMacroRegionsLabel();
 
-        // 1. Lọc dấu Tiếng Việt triệt để
-        function removeVietnameseTones(str) {
-            str = str.replace(/à|á|ạ|ả|ã|â|ă|ằ|ắ|ặ|ẳ|ẵ|â|ầ|ấ|ậ|ẩ|ẫ/g, "a");
-            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-            str = str.replace(/đ/g, "d");
-            return str;
-        }
-
         function getRegionForProvince(provinceName) {
-            const rawName = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase();
+            const rawName = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
             const normalizedMap = removeVietnameseTones(rawName); 
             
             return REGIONS_DATA.find(r => r.provinces.some(p => {
-                const normalizedArray = removeVietnameseTones(p.toLowerCase()); 
+                const normalizedArray = removeVietnameseTones(p); 
                 return normalizedMap.includes(normalizedArray);
             })) || null;
         }
 
         // ==============================================================
-        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID) - BẢN FIX CUỐI
-        // Tự động vượt qua MultiPolygon (biển đảo) để neo thẳng vào đất liền
+        // THUẬT TOÁN TÍNH TRỌNG TÂM ĐA GIÁC (POLYGON CENTROID)
         // ==============================================================
         function getPolygonCentroid(feature) {
             try {
@@ -1303,7 +1310,7 @@
                 let twiceArea = 0, x = 0, y = 0, nPts = biggestRing.length;
                 let p1, p2, f;
                 for (let i = 0, j = nPts - 1; i < nPts; j = i++) {
-                    p1 = biggestRing[i]; // [lng, lat]
+                    p1 = biggestRing[i];
                     p2 = biggestRing[j];
                     f = p1[0] * p2[1] - p2[0] * p1[1];
                     twiceArea += f;
@@ -1315,13 +1322,12 @@
                 f = twiceArea * 3;
                 return { lat: y / f, lng: x / f };
             } catch(e) {
-                console.error("Lỗi Center of Mass:", e);
                 return null;
             }
         }
 
         // ==============================================================
-        // THUẬT TOÁN ĐIỂM NẰM TRONG ĐA GIÁC (MẮT THẦN DÒ TỈNH)
+        // THUẬT TOÁN MẮT THẦN: ĐIỂM NẰM TRONG ĐA GIÁC 
         // ==============================================================
         function isPointInPolygon(point, vs) {
             var x = point[0], y = point[1];
@@ -1346,7 +1352,7 @@
                 const normalizedTarget = removeVietnameseTones(regionKey.replace(/thành phố |tỉnh |tp\. /gi, '').trim());
                 const feature = geoJsonBordersData.features.find(f => {
                     if(!f.properties) return false;
-                    const rawProps = removeVietnameseTones(JSON.stringify(f.properties).toLowerCase());
+                    const rawProps = removeVietnameseTones(JSON.stringify(f.properties));
                     return rawProps.includes(normalizedTarget);
                 });
                 
@@ -1467,27 +1473,27 @@
 
         // --- STYLE TỈNH ---
         function getProvinceStyle(feature) {
-            let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "";
-            let normalized = removeVietnameseTones(propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase());
-            let isActiveTracker = activeRegionsTracker.has(normalized);
+            let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
+            let normalized = removeVietnameseTones(propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim());
+            let isActiveTracker = isProvVisited(normalized);
             const currentZoom = map.getZoom();
 
             // KHI ZOOM GẦN: Focus Tỉnh ở tâm màn hình
             if (currentZoom >= 10.5) {
-                let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName.toLowerCase()) : "";
+                let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
                 
-                // 1. Tỉnh Tâm màn hình: GIỮ LẠI ĐƯỜNG VIỀN TỈNH để biết ranh giới tổng quát
-                // Ngăn chặn lỗi so sánh Rỗng
-                if (normalizedActiveProv && normalized && (normalized.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalized))) {
-                    if (isActiveTracker) {
-                        return { stroke: true, color: currentAppColors.secondary, weight: 2.5, opacity: 0.9, fill: false, className: 'neon-province-active' };
-                    } else {
-                        return { stroke: true, color: currentAppColors.primary, weight: 2, opacity: 0.8, fill: false, className: 'neon-province-border' };
-                    }
+                // Khóa an toàn: Nếu chuỗi rỗng thì coi như không Focus
+                if (normalizedActiveProv && normalized && (normalized === normalizedActiveProv || normalized.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalized))) {
+                    // TỈNH FOCUS: Tàng hình biên giới tỉnh, nhường chỗ cho Huyện
+                    return { color: 'transparent', weight: 0, opacity: 0, stroke: false, fill: false, className: '' }; 
                 }
                 
-                // 2. Các tỉnh khác: ẨN HOÀN TOÀN (TÀNG HÌNH ĐỂ KHÔNG BỊ RỐI MẮT MÀN HÌNH)
-                return { color: 'transparent', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, stroke: false, fill: false, className: '' };
+                // CÁC TỈNH KHÁC: Chỉ hiện 1 đường kẻ mờ nhạt
+                if (isActiveTracker) {
+                    return { stroke: true, color: currentAppColors.secondary, weight: 1.5, opacity: 0.6, fill: false, className: 'neon-province-border' };
+                } else {
+                    return { stroke: true, color: currentAppColors.primary, weight: 1, opacity: 0.15, fill: false, className: '' };
+                }
             } 
             
             // KHI ZOOM XA: Style cấp Vùng
@@ -1500,11 +1506,11 @@
                 }
             }
 
-            return { color: 'transparent', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, stroke: false, fill: false, className: '' };
+            return { color: 'transparent', weight: 0, opacity: 0, stroke: false, fill: false, className: '' };
         }
 
         function getRegionStyle(feature) {
-            let propName = feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "";
+            let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || "");
             let region = getRegionForProvince(propName);
 
             if (region) {
@@ -1550,35 +1556,42 @@
                         if (isPointInPolygon(pt, coords[k][0])) { inside = true; break; }
                     }
                 }
-                if (inside) return true; // Có check-in thì báo Đã đi
+                if (inside) return true;
             }
             return false;
         }
 
         function getDistrictStyle(feature) {
-            let propProvince = feature.properties.Ten_Tinh || feature.properties.NAME_1 || feature.properties.province || "";
-            let normalizedPropProv = removeVietnameseTones(propProvince.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase());
-            let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName.toLowerCase()) : "";
+            let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
 
-            // CHỐT CHẶN: Nếu Tỉnh đang Focus trống, hoặc data Huyện bị khuyết tên tỉnh -> Ẩn vĩnh viễn
-            if (!normalizedActiveProv || !normalizedPropProv) {
-                return { color: 'transparent', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, stroke: false, fill: false, className: '' };
+            // Nếu không có tỉnh nào đang Focus -> Ẩn vĩnh viễn
+            if (!normalizedActiveProv || normalizedActiveProv === "") {
+                return { color: 'transparent', weight: 0, opacity: 0, fillOpacity: 0, stroke: false, fill: false, className: '' };
             }
 
-            // Nếu Huyện này đúng là thuộc Tỉnh đang được Focus
-            if (normalizedPropProv.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalizedPropProv)) {
-                let isVisited = isDistrictVisited(feature);
-                if (isVisited) {
-                    // Huyện đã đi: Phát sáng
-                    return { stroke: true, color: currentAppColors.secondary, weight: 2, opacity: 0.9, fill: true, fillColor: currentAppColors.secondary, fillOpacity: 0.25, className: 'neon-province-active' };
-                } else {
-                    // Huyện chưa đi: Viền neon mỏng
-                    return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
+            // MÓC MỌI PROPERTY TRONG FILE HUYỆN ĐỂ TÌM TÊN TỈNH (QUÉT CẠN)
+            let belongToActiveProv = false;
+            for (let key in feature.properties) {
+                let val = String(feature.properties[key]);
+                let normVal = removeVietnameseTones(val);
+                if (normVal && (normVal === normalizedActiveProv || normVal.includes(normalizedActiveProv))) {
+                    belongToActiveProv = true;
+                    break;
                 }
             }
 
-            // ẨN HOÀN TOÀN các huyện của những tỉnh không được Focus
-            return { color: 'transparent', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, stroke: false, fill: false, className: '' };
+            // Nếu Huyện KHÔNG thuộc Tỉnh đang được Focus -> TÀNG HÌNH
+            if (!belongToActiveProv) {
+                return { color: 'transparent', weight: 0, opacity: 0, fillOpacity: 0, stroke: false, fill: false, className: '' };
+            }
+
+            // NẾU LÀ HUYỆN CỦA TỈNH FOCUS: Vẽ lên
+            let isVisited = isDistrictVisited(feature);
+            if (isVisited) {
+                return { stroke: true, color: currentAppColors.secondary, weight: 2, opacity: 0.9, fill: true, fillColor: currentAppColors.secondary, fillOpacity: 0.25, className: 'neon-province-active' };
+            } else {
+                return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
+            }
         }
 
         function initDistrictLayer() {
@@ -1595,18 +1608,22 @@
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
-            let normalizedActiveProv = removeVietnameseTones((activeProvinceName || "").toLowerCase());
+            let normalizedActiveProv = removeVietnameseTones(activeProvinceName);
+            if (!normalizedActiveProv) return;
 
             geoJsonDistrictsData.features.forEach(feature => {
-                let propProvince = feature.properties.Ten_Tinh || feature.properties.NAME_1 || feature.properties.province || "";
-                let normalizedPropProv = removeVietnameseTones(propProvince.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim().toLowerCase());
+                let belongToActiveProv = false;
+                for (let key in feature.properties) {
+                    let val = String(feature.properties[key]);
+                    let normVal = removeVietnameseTones(val);
+                    if (normVal && (normVal === normalizedActiveProv || normVal.includes(normalizedActiveProv))) {
+                        belongToActiveProv = true;
+                        break;
+                    }
+                }
                 
-                // Khóa lỗi rỗng
-                if (!normalizedActiveProv || !normalizedPropProv) return;
-
-                // CHỈ RENDER LABEL HUYỆN CỦA TỈNH ĐANG FOCUS (TÂM MÀN HÌNH)
-                if (normalizedPropProv.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalizedPropProv)) {
-                    let name = feature.properties.Ten_Huyen || feature.properties.NAME_2 || "";
+                if (belongToActiveProv) {
+                    let name = String(feature.properties.Ten_Huyen || feature.properties.NAME_2 || "");
                     name = name.replace(/Huyện |Thị xã |Thành phố |Quận /i, ''); 
                     
                     let isVisited = isDistrictVisited(feature);
@@ -1676,7 +1693,6 @@
 
             lastRenderedRegionId = null; 
             renderProvinceBorders();
-
             renderMacroRegionsLabel();
 
             return { regCount: uniqueRegionsCount, spotCount };
@@ -2063,7 +2079,6 @@
             if (isPhotoView) return; 
             const currentZoom = map.getZoom();
             
-            // 1. Nhận diện Vùng lớn (Region) khi Zoom vừa phải
             if (currentZoom >= 7.5 && currentZoom < 10.5) {
                 const center = map.getCenter();
                 let closestRegion = null;
@@ -2078,7 +2093,7 @@
                 activeRegionId = null;
             }
 
-            // 2. NHẬN DIỆN TỈNH ĐANG TRỞ THÀNH TRUNG TÂM (Khi Zoom >= 10.5) - THUẬT TOÁN QUÉT KHÔNG GIAN
+            // MẮT THẦN DÒ TỈNH FOCUS: Đâm 1 tia xuống bản đồ để xác định
             if (currentZoom >= 10.5) {
                 let centerPt = [map.getCenter().lng, map.getCenter().lat];
                 let foundProv = null;
@@ -2101,23 +2116,20 @@
                     }
                 }
                 
-                // Fallback: Nếu tâm màn hình rơi đúng vào Sông ranh giới hoặc Biển, lấy Tỉnh gần nhất
+                // Cứu hộ khi đâm tia xuống sông hoặc biển
                 if (!foundProv) {
                     let minProvDist = Infinity;
                     VN_PROVINCES.forEach(p => {
                         let dist = Math.pow(map.getCenter().lat - p.lat, 2) + Math.pow(map.getCenter().lng - p.lng, 2);
                         if (dist < minProvDist) { minProvDist = dist; foundProv = p.name; }
                     });
-                    if (foundProv) {
-                        foundProv = foundProv.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
-                    }
+                    if (foundProv) foundProv = foundProv.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
                 }
                 activeProvinceName = foundProv;
             } else {
                 activeProvinceName = null;
             }
 
-            // 3. Ẩn / Hiện Marker
             if (currentZoom < ZOOM_THRESHOLD) {
                 if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer);
                 if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
@@ -2126,7 +2138,6 @@
                 if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer);
             }
 
-            // 4. Quản lý Render Tỉnh & Huyện
             const mapContainer = document.getElementById('map');
             if (currentZoom < 7.5) {
                 mapContainer.classList.add('hide-neon-labels'); 
@@ -2143,24 +2154,25 @@
             } else {
                 mapContainer.classList.remove('hide-neon-labels'); 
                 if (map.hasLayer(regionLabelLayer)) map.removeLayer(regionLabelLayer); 
-                
-                // RENDERING THÔNG MINH: Chỉ vẽ lại khi Tâm màn hình lọt sang Vùng/Tỉnh khác
-                if (lastRenderedRegionId !== activeRegionId || lastActiveProvinceName !== activeProvinceName) {
-                    if (geoJsonLayer) geoJsonLayer.setStyle(getProvinceStyle); 
-                    if (geoJsonDistrictsLayer) geoJsonDistrictsLayer.setStyle(getDistrictStyle); 
-                    renderDistrictLabels(); 
-                    
-                    lastRenderedRegionId = activeRegionId;
-                    lastActiveProvinceName = activeProvinceName;
-                }
 
-                // Hiển thị Huyện nếu Zoom >= 10.5
+                // ÉP VẼ LẠI 100% CẢ TỈNH LẪN HUYỆN KHI ZOOM > 10.5
                 if (currentZoom >= 10.5) {
-                    if (geoJsonDistrictsLayer && !map.hasLayer(geoJsonDistrictsLayer)) map.addLayer(geoJsonDistrictsLayer);
+                    if (geoJsonLayer) geoJsonLayer.setStyle(getProvinceStyle); 
+                    if (geoJsonDistrictsLayer) {
+                        if (!map.hasLayer(geoJsonDistrictsLayer)) map.addLayer(geoJsonDistrictsLayer);
+                        geoJsonDistrictsLayer.setStyle(getDistrictStyle); 
+                    }
                     if (!map.hasLayer(districtLabelLayer)) map.addLayer(districtLabelLayer);
+                    renderDistrictLabels(); 
                 } else {
                     if (geoJsonDistrictsLayer && map.hasLayer(geoJsonDistrictsLayer)) map.removeLayer(geoJsonDistrictsLayer);
                     if (map.hasLayer(districtLabelLayer)) map.removeLayer(districtLabelLayer);
+                    
+                    if (lastRenderedRegionId !== activeRegionId || lastActiveProvinceName !== activeProvinceName) {
+                        if (geoJsonLayer) geoJsonLayer.setStyle(getProvinceStyle); 
+                        lastRenderedRegionId = activeRegionId;
+                        lastActiveProvinceName = activeProvinceName;
+                    }
                 }
             }
         }

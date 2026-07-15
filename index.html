@@ -1573,7 +1573,7 @@
             }
         }
 
-        function renderDistrictLabels() {
+function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
@@ -1592,20 +1592,22 @@
                 }
                 
                 if (belongToActiveProv) {
-                    let name = String(feature.properties.Ten_Huyen || feature.properties.NAME_2 || "");
-                    name = name.replace(/Huyện |Thị xã |Thành phố |Quận /i, ''); 
+                    // Bổ sung các key phổ biến để chắc chắn đọc được tên Huyện từ JSON
+                    let rawName = feature.properties.Name || feature.properties.name || feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.ten_huyen || "";
+                    let name = String(rawName).replace(/Huyện |Thị xã |Thành phố |Quận /i, '').trim(); 
                     
                     let isVisited = isDistrictVisited(feature);
                     let centroid = getPolygonCentroid(feature);
                     
                     if (centroid && name !== "") {
                         let htmlContent = '';
+                        // Phân biệt màu và độ rõ nét cho Huyện đã đi và chưa đi
                         if (isVisited) {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}; opacity: 1; font-size: 0.75rem;">${name}</div>`;
+                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.9rem; font-weight: bold;">${name}</div>`;
                         } else {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.4; font-size: 0.65rem;">${name}</div>`;
+                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.75rem;">${name}</div>`;
                         }
-                        const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [100, 20], iconAnchor: [50, 10] });
+                        const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [120, 20], iconAnchor: [60, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
                     }
                 }

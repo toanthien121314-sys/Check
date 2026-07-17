@@ -4,8 +4,8 @@
   "description": "Bản đồ check-in phong cách Neon Cyberpunk Việt Nam",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#03050a",
-  "theme_color": "#03050a",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait-primary",
   "icons": [
     {

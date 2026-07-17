@@ -63,7 +63,7 @@
         }
 
         /* =========================================
-          NÚT ĐIỀU KHIỂN (BUTTONS) - SẼ BỊ GHI ĐÈ BỞI BUBBLE UI Ở CUỐI
+          NÚT ĐIỀU KHIỂN (BUTTONS CƠ BẢN) - Sẽ được ghi đè 3D ở cuối
         ========================================= */
         .location-btn {
             position: absolute;
@@ -849,62 +849,83 @@
         }
 
         /* =========================================
-           GIAO DIỆN BONG BÓNG (BUBBLE UI) CHUYÊN NGHIỆP TỔNG THỂ
+           GIAO DIỆN 3D CLAYMORPHISM (BONG BÓNG NỔI KHỐI 3D)
         ========================================= */
-        /* 1. Nút bấm nổi (Buttons) dạng bong bóng */
+        /* 1. Nút bấm nổi (Buttons) dạng 3D */
         .location-btn, .photo-btn, .install-btn {
-            background: rgba(255, 255, 255, 0.95) !important;
-            color: #1e293b !important;
-            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            background: linear-gradient(145deg, #ffffff, #e6e9ef) !important; /* Đổ dốc nhẹ tạo độ cong */
+            color: #475569 !important; /* Chữ xanh xám hiện đại */
+            border: none !important; /* Xóa viền 2D phẳng */
             padding: 12px 24px !important;
-            border-radius: 50px !important; /* Bo tròn tuyệt đối thành bong bóng */
-            box-shadow: 0 8px 25px rgba(15, 23, 42, 0.1), 0 3px 6px rgba(15, 23, 42, 0.05) !important;
-            backdrop-filter: blur(12px) !important;
-            font-weight: 800 !important;
+            border-radius: 50px !important;
+            /* Kỹ thuật xếp lớp bóng 3D */
+            box-shadow: 
+                6px 8px 16px rgba(15, 23, 42, 0.12), /* Bóng đổ viền ngoài (nâng khối) */
+                -4px -4px 12px rgba(255, 255, 255, 0.8), /* Phản quang hắt sáng viền ngoài */
+                inset 4px 4px 8px rgba(255, 255, 255, 1), /* Khối nổi mặt trên (độ bóng của nhựa) */
+                inset -4px -4px 10px rgba(164, 175, 195, 0.4) !important; /* Khối chìm mặt dưới (tạo chiều sâu) */
+            font-weight: 900 !important;
             font-size: 0.95rem !important;
             letter-spacing: 0.3px !important;
             text-shadow: none !important;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            backdrop-filter: none !important;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
         }
 
+        /* Hiệu ứng khi bấm/đưa chuột vào Nút 3D */
         .location-btn:hover, .photo-btn:hover, .install-btn:hover, .photo-btn.active {
-            transform: translateY(-4px) scale(1.02) !important;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15) !important;
-            background: #ffffff !important;
+            transform: translateY(-2px) scale(1.02) !important;
             color: #0f172a !important;
-            border-color: #e2e8f0 !important;
+            box-shadow: 
+                8px 12px 20px rgba(15, 23, 42, 0.15),
+                -4px -4px 12px rgba(255, 255, 255, 0.9),
+                inset 4px 4px 8px rgba(255, 255, 255, 1),
+                inset -4px -4px 10px rgba(164, 175, 195, 0.5) !important;
         }
 
-        /* 2. Nhãn Vùng/Tỉnh/Huyện dạng bong bóng kính */
+        /* 2. Nhãn Vùng/Tỉnh/Huyện dạng Bong Bóng 3D */
         .region-label, .neon-label {
-            background: rgba(255, 255, 255, 0.95) !important;
-            color: #0f172a !important; 
-            border: 1px solid rgba(255, 255, 255, 0.9) !important; 
+            background: linear-gradient(145deg, #ffffff, #e6e9ef) !important;
+            color: #475569 !important; 
+            border: none !important; 
             padding: 8px 20px !important;
-            border-radius: 50px !important; /* Bo tròn tuyệt đối */
-            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.03) !important; 
+            border-radius: 50px !important; 
+            /* Tạo khối 3D cho Nhãn */
+            box-shadow: 
+                4px 6px 14px rgba(15, 23, 42, 0.1), /* Bóng ngoài */
+                -2px -2px 8px rgba(255, 255, 255, 0.8),
+                inset 3px 3px 6px rgba(255, 255, 255, 1), /* Ánh sáng mặt trên */
+                inset -3px -3px 8px rgba(164, 175, 195, 0.4) !important; /* Đổ bóng mặt dưới */
             text-shadow: none !important; 
             font-size: 0.85rem !important;
-            font-weight: 800 !important;
+            font-weight: 900 !important;
             letter-spacing: 0.3px !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            backdrop-filter: blur(10px) !important; /* Kính mờ */
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            backdrop-filter: none !important; 
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
         }
 
-        /* Nhãn Quận/Huyện nhỏ gọn hơn */
+        /* Nhãn Quận/Huyện nhỏ gọn hơn nhưng vẫn giữ khối 3D */
         .custom-district-icon .region-label, .custom-div-icon .neon-label {
             padding: 5px 14px !important;
             font-size: 0.75rem !important;
-            border-color: #f1f5f9 !important;
+            box-shadow: 
+                3px 4px 10px rgba(15, 23, 42, 0.1),
+                -1px -1px 6px rgba(255, 255, 255, 0.8),
+                inset 2px 2px 4px rgba(255, 255, 255, 1),
+                inset -2px -2px 6px rgba(164, 175, 195, 0.4) !important;
         }
 
-        /* Hiệu ứng nảy lên khi hover */
+        /* Hiệu ứng nảy 3D khi hover vào Nhãn */
         .region-label:hover, .neon-label:hover {
-            transform: scale(1.1) translateY(-3px) !important;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12) !important;
+            transform: scale(1.15) translateY(-3px) !important;
+            color: #0f172a !important;
+            box-shadow: 
+                6px 10px 18px rgba(15, 23, 42, 0.15),
+                inset 3px 3px 6px rgba(255, 255, 255, 1),
+                inset -3px -3px 8px rgba(164, 175, 195, 0.5) !important;
             cursor: pointer;
             z-index: 1000 !important;
         }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#03050a">
+    <meta name="theme-color" content="#f8f9fa">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
@@ -183,7 +183,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
         }
 
         .loading-text {
@@ -193,20 +193,6 @@
             text-shadow: 0 0 15px var(--neon-primary);
             margin-top: 15px;
             letter-spacing: 1px;
-        }
-
-        .spinner {
-            width: 45px;
-            height: 45px;
-            border: 4px solid rgba(var(--neon-primary-rgb), 0.2);
-            border-top: 4px solid var(--neon-secondary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px var(--neon-secondary);
-        }
-
-        @keyframes spin { 
-            100% { transform: rotate(360deg); } 
         }
 
         /* =========================================
@@ -847,16 +833,76 @@
             animation: none !important;
             transition: none !important;
         }
+
+        /* =========================================
+           HIỆU ỨNG CHUYỂN MÀN HÌNH (SPLASH -> LOAD -> MAP)
+        ========================================= */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f8f9fa; /* Trùng màu nền Light mode */
+            z-index: 20000; /* Nằm trên cùng */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
+        }
+
+        .fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none;
+        }
+
+        /* =========================================
+           ÉP CHUYỂN ĐỔI GIAO DIỆN SANG LIGHT MODE (NỀN TRẮNG)
+        ========================================= */
+        /* Đổi nền màn hình chính và màn hình Logo/Loading */
+        html, body, #map, #splashScreen, #loadingOverlay, .gallery-container {
+            background-color: #f8f9fa !important;
+            color: #111827 !important;
+        }
+
+        /* Đổi nền các Popup và Bảng thông báo Modal sang trắng */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip, .modal-box {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #111827 !important;
+            border-color: #e5e7eb !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Chỉnh lại chữ màu xám/trắng cũ thành đen */
+        .popup-info, .popup-info p, .form-group label, .empty-gallery {
+            color: #374151 !important;
+        }
+
+        /* Chỉnh ô nhập liệu (Input) sang nền trắng */
+        .form-control {
+            background: #ffffff !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+        }
+
+        /* Chỉnh chữ của bé mèo Loading thành đen cho dễ nhìn */
+        .loading-text {
+            color: #111827 !important;
+            text-shadow: none !important; /* Tắt phát sáng neon trên nền trắng */
+        }
     </style>
 </head>
 <body>
 
-<div id="loadingOverlay">
-    <!-- Thẻ img mới để hiển thị con mèo -->
-    <img src="black-rainbow-cat.svg" alt="Loading" style="width: 150px; height: auto; object-fit: contain;">
-    
-    <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
-</div>
+    <!-- MÀN HÌNH LOGO -->
+    <div id="splashScreen">
+        <!-- Chèn ảnh Logo của bạn vào đây -->
+        <img src="icon-512.png" alt="Logo" style="width: 150px;">
+    </div>
+
+    <div id="loadingOverlay">
+        <!-- Đã thay thế spinner bằng ảnh động SVG con mèo đen -->
+        <img src="black-rainbow-cat.svg" alt="Loading Cat" style="width: 120px; height: auto; object-fit: contain;">
+        <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
+    </div>
 
     <div id="syncToast">🔄 Đang đồng bộ dữ liệu ngầm...</div>
 
@@ -1085,7 +1131,10 @@
             wheelPxPerZoomLevel: 80
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { 
+        // ==========================================
+        // CHẾ ĐỘ NỀN TRẮNG (LIGHT MODE MAP)
+        // ==========================================
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', { 
             maxZoom: 20,
             keepBuffer: 16,            
             updateWhenZooming: false,  
@@ -1454,53 +1503,42 @@
                 .catch(err => console.log("Lỗi tải ranh giới huyện:", err));
         }
 
-        // TUYỆT ĐỐI TUÂN THỦ: TẤT CẢ CÁC TỈNH CHUNG 1 MÀU (XANH LÁ), KHÔNG TÔ NỀN
-// TUYỆT ĐỐI TUÂN THỦ: TẤT CẢ CÁC TỈNH CHUNG 1 MÀU (XANH LÁ), KHÔNG TÔ NỀN
         function getProvinceStyle(feature) {
             let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
             let normalized = removeVietnameseTones(propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim());
             const currentZoom = map.getZoom();
 
-            // KHI ZOOM GẦN: Focus Tỉnh ở tâm màn hình
             if (currentZoom >= 10.5) {
                 let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
                 
-                // 1. Tỉnh Focus -> ẨN hoàn toàn để nhường chỗ cho Huyện
                 if (normalizedActiveProv !== "" && normalized !== "" && (normalized === normalizedActiveProv || normalized.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalized))) {
                     return { stroke: false, fill: false, className: '' }; 
                 }
                 
-                // 2. TẤT CẢ CÁC TỈNH KHÁC -> KHÔNG SÁNG (Đã sửa theo yêu cầu)
                 return { stroke: false, fill: false, className: '' };
             } 
             
-            // KHI ZOOM VỪA (Xem cấp Vùng)
             let region = getRegionForProvince(propName);
             if (activeRegionId && region && region.id === activeRegionId) {
-                // TẤT CẢ CÁC TỈNH TRONG VÙNG ĐANG XEM -> CÙNG 1 KIỂU DUY NHẤT (Màu Primary)
                 return { stroke: true, color: currentAppColors.primary, weight: 1.5, opacity: 0.6, fill: false, className: 'neon-province-border' };
             }
 
             return { stroke: false, fill: false, className: '' };
         }
 
-function getRegionStyle(feature) {
-            // Đọc tên để đối chiếu vùng (Bao gồm cả NAME_1 cho miền Nam)
+        function getRegionStyle(feature) {
             let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
             let region = getRegionForProvince(propName);
 
             if (region) {
                 let isVisited = isMacroRegionVisited(region);
                 if (isVisited) {
-                    // ĐÃ ĐI: Sáng rực rỡ, viền dày, có màu nền nhẹ
                     return { stroke: true, color: region.color, weight: 2, opacity: 0.9, fill: true, fillColor: region.color, fillOpacity: 0.15, className: 'region-border' };
                 } else {
-                    // CHƯA ĐI: Đường kẻ mờ, viền mỏng, gần như không có nền
                     return { stroke: true, color: region.color, weight: 1, opacity: 0.25, fill: true, fillColor: region.color, fillOpacity: 0.02, className: 'region-border' };
                 }
             }
             
-            // Nếu lỗi không xác định được vùng thì mới ẩn
             return { stroke: false, fill: false, className: '' };
         }
 
@@ -1562,19 +1600,19 @@ function getRegionStyle(feature) {
                 return { stroke: false, fill: false, className: '' };
             }
 
-let isVisited = isDistrictVisited(feature);
-if (isVisited) {
-    return { 
-        stroke: true, 
-        color: currentAppColors.secondary, // Trả lại biến đổi màu tự động
-        weight: 2.5,      
-        opacity: 1,       
-        fill: false,      // Vẫn giữ lệnh tắt nền
-        className: 'neon-province-active' 
-    };
-} else {
-    return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
-}
+            let isVisited = isDistrictVisited(feature);
+            if (isVisited) {
+                return { 
+                    stroke: true, 
+                    color: currentAppColors.secondary,
+                    weight: 2.5,      
+                    opacity: 1,       
+                    fill: false,      
+                    className: 'neon-province-active' 
+                };
+            } else {
+                return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
+            }
         }
 
         function initDistrictLayer() {
@@ -1587,7 +1625,7 @@ if (isVisited) {
             }
         }
 
-// ==========================================
+        // ==========================================
         // API TỰ ĐỘNG NẠP TÊN 700+ QUẬN HUYỆN CÓ DẤU CHUẨN 100%
         // ==========================================
         let vnProvincesData = [];
@@ -1597,14 +1635,13 @@ if (isVisited) {
                 vnProvincesData = data;
             }).catch(e => console.log("Lỗi API từ điển"));
 
-function renderDistrictLabels() {
+        function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
             let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase();
             if (!normalizedActiveProv) return;
 
-            // Lấy danh sách Huyện của Tỉnh hiện tại từ API Chính phủ
             let activeProvApiData = vnProvincesData.find(p => {
                 let pName = removeVietnameseTones(p.name).toLowerCase();
                 return pName.includes(normalizedActiveProv) || normalizedActiveProv.includes(pName.replace(/\b(tinh|thanh pho)\b/g, '').trim());
@@ -1625,23 +1662,19 @@ function renderDistrictLabels() {
                     let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
                     let rawType = feature.properties.TYPE_2 || feature.properties.type || "";
                     
-                    // BÓC TÁCH LÕI TÊN (Bỏ tiền tố/hậu tố, đổi y->i, xóa khoảng trắng/ký tự lạ)
                     let geoCore = removeVietnameseTones(rawName).toLowerCase();
                     geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|district|city|town)\b/g, '');
                     geoCore = geoCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, ''); 
                     
                     let finalName = "";
 
-                    // ĐỐI CHIẾU ÉP BUỘC VỚI API CHÍNH PHỦ
                     if (activeProvApiData && activeProvApiData.districts) {
                         for (let d of activeProvApiData.districts) {
                             let apiCore = removeVietnameseTones(d.name).toLowerCase();
                             apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '');
                             apiCore = apiCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, '');
                             
-                            // Nếu lõi tên trùng khớp 100% (VD: quinhon == quinhon)
                             if (geoCore === apiCore) {
-                                // Phân biệt Huyện và Thị xã nếu bị trùng lõi (Như Huyện Cai Lậy vs Thị xã Cai Lậy)
                                 let geoIsTown = /\b(thi xa|town)\b/i.test(rawName + " " + rawType);
                                 let apiIsTown = /\bthị xã\b/i.test(d.name);
                                 
@@ -1649,16 +1682,15 @@ function renderDistrictLabels() {
                                 let apiIsCity = /\bthành phố\b/i.test(d.name);
                                 
                                 if (geoIsTown === apiIsTown && geoIsCity === apiIsCity) {
-                                    finalName = d.name; // Chính xác tuyệt đối -> Lấy tên của Chính phủ
+                                    finalName = d.name; 
                                     break;
                                 } else if (!finalName) {
-                                    finalName = d.name; // Ghi nhận tạm phòng hờ rớt Type
+                                    finalName = d.name; 
                                 }
                             }
                         }
                     }
 
-                    // Backup an toàn (Chỉ dùng khi API chết hoặc data quá nát không thể cứu)
                     if (!finalName && rawName !== "") {
                         let cleanedName = rawName.replace(/\b(District|City|Town)\b/ig, '').trim();
                         let prefix = "";
@@ -1676,17 +1708,17 @@ function renderDistrictLabels() {
                     if (centroid && finalName !== "") {
                         let htmlContent = '';
                         if (isVisited) {
-    // Dùng biến ${currentAppColors.secondary} thay cho mã màu cố định
-    htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.85rem; font-weight: bold;">${finalName}</div>`;
-} else {
-    htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.7rem;">${finalName}</div>`;
-}
+                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.85rem; font-weight: bold;">${finalName}</div>`;
+                        } else {
+                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.7rem;">${finalName}</div>`;
+                        }
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
                     }
                 }
             });
         }
+
         function preloadStampsIntoCache(spots) {
             if (!window.caches) return;
             caches.open('neon-stamps-cache-v1').then(cache => {
@@ -2052,14 +2084,6 @@ function renderDistrictLabels() {
         // ==========================================
         // 5. CÁC HÀM HỆ THỐNG VÀ ĐỒNG BỘ CÓ FAILSAFE
         // ==========================================
-        function hideLoadingScreen() {
-            const loader = document.getElementById('loadingOverlay');
-            if (loader && loader.style.display !== 'none') {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 400);
-            }
-        }
-
         function showToast(msg, duration = 3000) {
             const toast = document.getElementById('syncToast');
             toast.innerHTML = msg;
@@ -2067,6 +2091,35 @@ function renderDistrictLabels() {
             if (duration > 0) {
                 setTimeout(() => { toast.style.opacity = '0'; }, duration);
             }
+        }
+
+        // ==========================================
+        // TIMELINE CHUYỂN MÀN HÌNH CHUYÊN NGHIỆP
+        // ==========================================
+        const appStartTime = Date.now();
+        const SPLASH_DURATION = 1200; // Thời gian ép hiển thị Logo (1.2s)
+        const MIN_LOADING_DURATION = 1500; // Thời gian ép xem mèo chạy (1.5s)
+
+        // 1. Tự động chuyển từ Màn hình Logo -> Màn hình Loading mèo
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if (splash) splash.classList.add('fade-out');
+            }, SPLASH_DURATION);
+        });
+
+        // 2. Chuyển từ Loading mèo -> Bản đồ (Có xử lý hãm tốc khi có Cache)
+        function hideLoadingScreen() {
+            const timePassed = Date.now() - appStartTime;
+            const targetTime = SPLASH_DURATION + MIN_LOADING_DURATION; 
+            const delay = Math.max(0, targetTime - timePassed);
+
+            setTimeout(() => {
+                const loader = document.getElementById('loadingOverlay');
+                if (loader) {
+                    loader.classList.add('fade-out');
+                }
+            }, delay);
         }
 
         function loadDataFromGoogleSheets() {

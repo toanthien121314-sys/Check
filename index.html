@@ -63,7 +63,7 @@
         }
 
         /* =========================================
-          NÚT ĐIỀU KHIỂN (BUTTONS)
+          NÚT ĐIỀU KHIỂN (BUTTONS) - SẼ BỊ GHI ĐÈ BỞI BUBBLE UI Ở CUỐI
         ========================================= */
         .location-btn {
             position: absolute;
@@ -84,13 +84,6 @@
             display: flex;
             align-items: center;
             gap: 6px;
-        }
-
-        .location-btn:hover {
-            background: var(--neon-primary);
-            color: #000;
-            box-shadow: 0 0 25px var(--neon-primary);
-            transform: scale(1.05);
         }
 
         .photo-btn {
@@ -114,13 +107,6 @@
             gap: 6px;
         }
 
-        .photo-btn:hover, .photo-btn.active {
-            background: #bd00ff;
-            color: #fff;
-            box-shadow: 0 0 25px #bd00ff;
-            transform: scale(1.05);
-        }
-
         .install-btn {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -140,13 +126,6 @@
             display: none; 
             align-items: center;
             gap: 6px;
-        }
-
-        .install-btn:hover {
-            background: var(--neon-secondary);
-            color: #fff;
-            box-shadow: 0 0 25px var(--neon-secondary);
-            transform: scale(1.05);
         }
 
         /* =========================================
@@ -792,6 +771,10 @@
             transition: opacity 0.4s ease, transform 0.3s ease;
         }
 
+        .region-label {
+            transition: opacity 0.4s ease, transform 0.2s ease;
+        }
+
         /* =========================================
            TỐI ƯU HÓA HIỆU NĂNG RENDER
         ========================================= */
@@ -866,35 +849,64 @@
         }
 
         /* =========================================
-           BIẾN NHÃN VÙNG THÀNH PILL TAG TRÊN NỀN SÁNG (CẬP NHẬT MỚI)
+           GIAO DIỆN BONG BÓNG (BUBBLE UI) CHUYÊN NGHIỆP TỔNG THỂ
         ========================================= */
-        .region-label, .neon-label {
-            background-color: #ffffff !important;
-            color: #0f172a !important; /* Chữ xám đen đậm cực kỳ sắc nét */
-            border: 1px solid #e2e8f0 !important; /* Viền mảnh thanh lịch */
-            padding: 6px 14px !important;
-            border-radius: 30px !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important; /* Bóng đổ nhẹ tạo độ nổi */
-            text-shadow: none !important; /* Tắt hoàn toàn bóng nhòe neon */
-            font-size: 0.8rem !important;
+        /* 1. Nút bấm nổi (Buttons) dạng bong bóng */
+        .location-btn, .photo-btn, .install-btn {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #1e293b !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            padding: 12px 24px !important;
+            border-radius: 50px !important; /* Bo tròn tuyệt đối thành bong bóng */
+            box-shadow: 0 8px 25px rgba(15, 23, 42, 0.1), 0 3px 6px rgba(15, 23, 42, 0.05) !important;
+            backdrop-filter: blur(12px) !important;
             font-weight: 800 !important;
-            letter-spacing: 0.5px !important;
+            font-size: 0.95rem !important;
+            letter-spacing: 0.3px !important;
+            text-shadow: none !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        }
+
+        .location-btn:hover, .photo-btn:hover, .install-btn:hover, .photo-btn.active {
+            transform: translateY(-4px) scale(1.02) !important;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15) !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        /* 2. Nhãn Vùng/Tỉnh/Huyện dạng bong bóng kính */
+        .region-label, .neon-label {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #0f172a !important; 
+            border: 1px solid rgba(255, 255, 255, 0.9) !important; 
+            padding: 8px 20px !important;
+            border-radius: 50px !important; /* Bo tròn tuyệt đối */
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.03) !important; 
+            text-shadow: none !important; 
+            font-size: 0.85rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.3px !important;
             display: inline-flex !important;
             align-items: center !important;
-            transition: opacity 0.4s ease, transform 0.2s ease;
+            justify-content: center !important;
+            backdrop-filter: blur(10px) !important; /* Kính mờ */
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
         }
 
-        /* Hiệu ứng phóng to khi rê chuột vào tên vùng */
-        .region-label:hover {
-            transform: scale(1.15);
+        /* Nhãn Quận/Huyện nhỏ gọn hơn */
+        .custom-district-icon .region-label, .custom-div-icon .neon-label {
+            padding: 5px 14px !important;
+            font-size: 0.75rem !important;
+            border-color: #f1f5f9 !important;
+        }
+
+        /* Hiệu ứng nảy lên khi hover */
+        .region-label:hover, .neon-label:hover {
+            transform: scale(1.1) translateY(-3px) !important;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12) !important;
             cursor: pointer;
-        }
-
-        /* Áp dụng tương tự cho nhãn Quận/Huyện khi zoom gần */
-        .custom-district-icon .region-label {
-            padding: 4px 10px !important;
-            font-size: 0.72rem !important;
-            border-color: #cbd5e1 !important;
+            z-index: 1000 !important;
         }
     </style>
 </head>

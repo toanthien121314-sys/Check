@@ -792,32 +792,8 @@
             transition: opacity 0.4s ease, transform 0.3s ease;
         }
 
-        .neon-label {
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .region-label {
-            font-weight: 900;
-            font-size: 1rem;
-            text-align: center;
-            text-shadow: 0 0 10px #000, 0 0 15px currentColor;
-            white-space: nowrap;
-            pointer-events: auto; /* Bật sự kiện click */
-            cursor: pointer;      /* Trỏ chuột dạng Click */
-            transition: opacity 0.4s ease, transform 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        
-        /* Hiệu ứng phóng to khi rê chuột vào tên vùng */
-        .region-label:hover {
-            transform: scale(1.15);
-        }
-
         /* =========================================
            TỐI ƯU HÓA HIỆU NĂNG RENDER
-           Tắt bóng đổ và animation khi bản đồ đang zoom/di chuyển
         ========================================= */
         .map-zooming path,
         .map-zooming .neon-dot,
@@ -887,6 +863,38 @@
         .loading-text {
             color: #111827 !important;
             text-shadow: none !important; /* Tắt phát sáng neon trên nền trắng */
+        }
+
+        /* =========================================
+           BIẾN NHÃN VÙNG THÀNH PILL TAG TRÊN NỀN SÁNG (CẬP NHẬT MỚI)
+        ========================================= */
+        .region-label, .neon-label {
+            background-color: #ffffff !important;
+            color: #0f172a !important; /* Chữ xám đen đậm cực kỳ sắc nét */
+            border: 1px solid #e2e8f0 !important; /* Viền mảnh thanh lịch */
+            padding: 6px 14px !important;
+            border-radius: 30px !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important; /* Bóng đổ nhẹ tạo độ nổi */
+            text-shadow: none !important; /* Tắt hoàn toàn bóng nhòe neon */
+            font-size: 0.8rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.5px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            transition: opacity 0.4s ease, transform 0.2s ease;
+        }
+
+        /* Hiệu ứng phóng to khi rê chuột vào tên vùng */
+        .region-label:hover {
+            transform: scale(1.15);
+            cursor: pointer;
+        }
+
+        /* Áp dụng tương tự cho nhãn Quận/Huyện khi zoom gần */
+        .custom-district-icon .region-label {
+            padding: 4px 10px !important;
+            font-size: 0.72rem !important;
+            border-color: #cbd5e1 !important;
         }
     </style>
 </head>
@@ -1278,9 +1286,9 @@
                 let htmlContent = '';
 
                 if (isVisited) {
-                    htmlContent = `<div class="region-label" style="color: ${region.color}; text-shadow: 0 0 10px #000, 0 0 15px ${region.color}, 0 0 25px ${region.color}; opacity: 1;">${region.name}</div>`;
+                    htmlContent = `<div class="region-label">${region.name}</div>`;
                 } else {
-                    htmlContent = `<div class="region-label" style="color: ${region.color}; text-shadow: 0 0 5px #000; opacity: 0.35;">${region.name}</div>`;
+                    htmlContent = `<div class="region-label" style="opacity: 0.5;">${region.name}</div>`;
                 }
 
                 const icon = L.divIcon({
@@ -1708,9 +1716,9 @@
                     if (centroid && finalName !== "") {
                         let htmlContent = '';
                         if (isVisited) {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.secondary}; text-shadow: 0 0 10px #000, 0 0 15px ${currentAppColors.secondary}, 0 0 25px ${currentAppColors.secondary}; opacity: 1; font-size: 0.85rem; font-weight: bold;">${finalName}</div>`;
+                            htmlContent = `<div class="region-label">${finalName}</div>`;
                         } else {
-                            htmlContent = `<div class="region-label" style="color: ${currentAppColors.primary}; text-shadow: 0 0 5px #000; opacity: 0.6; font-size: 0.7rem;">${finalName}</div>`;
+                            htmlContent = `<div class="region-label" style="opacity: 0.5;">${finalName}</div>`;
                         }
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);

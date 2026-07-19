@@ -1399,14 +1399,13 @@
                 `;
             }
 
-            marker.bindPopup(`
+marker.bindPopup(`
                 <div class="popup-title">🚩 ${name}</div>
                 <div class="popup-info">
                     <p><b>⏰ Thời gian:</b> ${date}</p>
                     <p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p>
                     ${stampHtml}
                 </div>
-                <button class="btn-gps-checkin" onclick="document.getElementById('updateStampFileInput').click(); targetStampInfo = {name: '${safeNameStr}', lat: ${lat}, lng: ${lng}}; ">📸 Đổi Ảnh Mộc Bản</button>
             `);
             return marker;
         }

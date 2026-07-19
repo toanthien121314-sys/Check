@@ -1554,16 +1554,22 @@
             }
         }
 // ==========================================
-        // API TỰ ĐỘNG NẠP TÊN QUẬN HUYỆN CÓ DẤU CHUẨN 100% TỪ GITHUB
+        // API TỰ ĐỘNG NẠP TÊN 700+ QUẬN HUYỆN CÓ DẤU CHUẨN 100%
         // ==========================================
         let vnProvincesData = [];
-        // Dùng API Github vì nó là file tĩnh, không bao giờ bị sập như open-api.vn
+        
+        // [CẬP NHẬT 1]: Thay đường link sập bằng kho dữ liệu Github (Vĩnh viễn không chết)
         fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json')
             .then(res => res.json())
             .then(data => {
-                vnProvincesData = data;
-                if (map.getZoom() >= 10.5) renderDistrictLabels(); // Tự vẽ lại ngay nếu đang zoom gần
-            }).catch(e => console.log("Lỗi tải API từ điển"));
+                // Ép dữ liệu Github về đúng cấu trúc để mã cũ của bạn hiểu được
+                vnProvincesData = data.map(p => ({
+                    name: p.Name,
+                    districts: p.Districts ? p.Districts.map(d => ({ name: d.Name })) : []
+                }));
+                // Yêu cầu bản đồ in lại chữ nếu đang mở
+                if (map.getZoom() >= 10.5) renderDistrictLabels();
+            }).catch(e => console.log("Lỗi API từ điển"));
 
         function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
@@ -1572,14 +1578,12 @@
             let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase();
             if (!normalizedActiveProv) return;
 
-            // Tìm tỉnh trong kho dữ liệu Github (Chú ý: API Github dùng .Name và .Districts viết hoa)
             let activeProvApiData = vnProvincesData.find(p => {
-                let pName = removeVietnameseTones(p.Name).toLowerCase();
-                let normActive = normalizedActiveProv.replace(/tp\.\s*/g, 'thanh pho ');
-                return pName.includes(normActive) || normActive.includes(pName.replace(/\b(tinh|thanh pho)\b/g, '').trim());
+                let pName = removeVietnameseTones(p.name).toLowerCase();
+                return pName.includes(normalizedActiveProv) || normalizedActiveProv.includes(pName.replace(/\b(tinh|thanh pho)\b/g, '').trim());
             });
 
-            // BỘ LỌC THÔNG MINH: Cấm in 2 nhãn giống hệt nhau lên bản đồ
+            // [CẬP NHẬT 2]: Thêm bộ lọc chặn việc in 2 nhãn giống hệt nhau lên bản đồ
             let renderedLabels = new Set();
 
             geoJsonDistrictsData.features.forEach(feature => {
@@ -1595,69 +1599,65 @@
                 
                 if (belongToActiveProv) {
                     let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
-                    let rawType = feature.properties.TYPE_2 || feature.properties.type || feature.properties.Type || feature.properties.ENGTYPE_2 || "";
+                    let rawType = feature.properties.TYPE_2 || feature.properties.type || "";
                     
                     let geoCore = removeVietnameseTones(rawName).toLowerCase();
-                    geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|district|city|town)\b/g, '').trim();
+                    geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|district|city|town)\b/g, '');
                     geoCore = geoCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, ''); 
                     
                     let finalName = "";
 
-                    // Thuật toán ráp dấu tiếng Việt & Phân biệt Huyện/Thành Phố
-                    if (activeProvApiData && activeProvApiData.Districts) {
-                        for (let d of activeProvApiData.Districts) {
-                            let apiCore = removeVietnameseTones(d.Name).toLowerCase();
-                            apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '').trim();
+                    if (activeProvApiData && activeProvApiData.districts) {
+                        for (let d of activeProvApiData.districts) {
+                            let apiCore = removeVietnameseTones(d.name).toLowerCase();
+                            apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '');
                             apiCore = apiCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, '');
                             
                             if (geoCore === apiCore) {
-                                // Phân biệt City / Town / District để tránh nhầm "Thành Phố Cao Lãnh" với "Huyện Cao Lãnh"
-                                let geoIsCity = /\b(thanh pho|city|tp)\b/i.test(rawName + " " + rawType);
-                                let geoIsTown = /\b(thi xa|town|tx)\b/i.test(rawName + " " + rawType);
+                                let geoIsTown = /\b(thi xa|town)\b/i.test(rawName + " " + rawType);
+                                let apiIsTown = /\bthị xã\b/i.test(d.name);
                                 
-                                let apiIsCity = /\bthành phố\b/i.test(d.Name);
-                                let apiIsTown = /\bthị xã\b/i.test(d.Name);
+                                let geoIsCity = /\b(thanh pho|city)\b/i.test(rawName + " " + rawType);
+                                let apiIsCity = /\bthành phố\b/i.test(d.name);
                                 
-                                if ((geoIsCity && apiIsCity) || (geoIsTown && apiIsTown) || (!geoIsCity && !geoIsTown && !apiIsCity && !apiIsTown)) {
-                                    finalName = d.Name; 
-                                    break; // Khớp chuẩn 100% cả tên và loại hình
+                                if (geoIsTown === apiIsTown && geoIsCity === apiIsCity) {
+                                    finalName = d.name; 
+                                    break;
                                 } else if (!finalName) {
-                                    finalName = d.Name; // Dự phòng nếu file GeoJSON phân loại sai
+                                    finalName = d.name; 
                                 }
                             }
                         }
                     }
 
-                    // Fallback tự động đoán nếu không có API
                     if (!finalName && rawName !== "") {
                         let cleanedName = rawName.replace(/\b(District|City|Town)\b/ig, '').trim();
                         let prefix = "";
                         if (!/\b(Huyện|Thị xã|Thành phố|Quận)\b/i.test(cleanedName)) {
-                            if (/district/i.test(rawType) || /huyen/i.test(rawType) || rawType === "") prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
-                            else if (/city/i.test(rawType) || /thanh pho/i.test(rawType)) prefix = "Thành phố ";
-                            else if (/town/i.test(rawType) || /thi xa/i.test(rawType)) prefix = "Thị xã ";
+                            if (/district/i.test(rawType)) prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
+                            else if (/city/i.test(rawType)) prefix = "Thành phố ";
+                            else if (/town/i.test(rawType)) prefix = "Thị xã ";
                         }
                         finalName = prefix + cleanedName;
                     }
                     
-                    if (finalName !== "") {
-                        // NẾU TÊN ĐÃ XUẤT HIỆN TRÊN BẢN ĐỒ RỒI -> BỎ QUA KHÔNG IN NỮA
-                        if (renderedLabels.has(finalName)) return; 
+                    let isVisited = isDistrictVisited(feature);
+                    let centroid = getPolygonCentroid(feature);
+                    
+                    if (centroid && finalName !== "") {
+                        
+                        // [CẬP NHẬT 2]: Nếu tên đã được vẽ trước đó rồi thì bỏ qua luôn (trị dứt điểm 2 Huyện Cao Lãnh)
+                        if (renderedLabels.has(finalName)) return;
                         renderedLabels.add(finalName);
 
-                        let isVisited = isDistrictVisited(feature);
-                        let centroid = getPolygonCentroid(feature);
-                        
-                        if (centroid) {
-                            let htmlContent = '';
-                            if (isVisited) {
-                                htmlContent = `<div class="region-label">${finalName}</div>`;
-                            } else {
-                                htmlContent = `<div class="region-label" style="opacity: 0.5;">${finalName}</div>`;
-                            }
-                            const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
-                            L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
+                        let htmlContent = '';
+                        if (isVisited) {
+                            htmlContent = `<div class="region-label">${finalName}</div>`;
+                        } else {
+                            htmlContent = `<div class="region-label" style="opacity: 0.5;">${finalName}</div>`;
                         }
+                        const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
+                        L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
                     }
                 }
             });

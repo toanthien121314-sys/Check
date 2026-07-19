@@ -1588,32 +1588,48 @@ function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
-            // ====================================================
-            // 1. TỪ ĐIỂN SÁP NHẬP ĐƠN VỊ HÀNH CHÍNH (XỬ LÝ TẬN GỐC)
-            // ====================================================
-            const DISTRICT_MERGE_MAP = {
-                "quận 2": "Thành phố Thủ Đức",
-                "quận 9": "Thành phố Thủ Đức",
-                "quận thủ đức": "Thành phố Thủ Đức"
-                // Bạn có thể thêm các huyện sáp nhập khác vào đây trong tương lai
-            };
+            let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase().replace(/^(tinh|thanh pho|tp)\s+/g, '').trim();
+            if (!normalizedActiveProv) return;
 
-            // Chuẩn hóa tên tỉnh đang active (Xóa chữ Tỉnh/TP một cách an toàn)
-            let searchProv = removeVietnameseTones(activeProvinceName).toLowerCase().replace(/^(tinh|thanh pho|tp)\s+/g, '').trim();
-            
-            // 2. TÌM TỈNH TRONG API (Đã sửa lỗi Regex giúp Đồng Tháp không bị trượt)
             let activeProvApiData = vnProvincesData.find(p => {
-                let pName = removeVietnameseTones(p.name).toLowerCase().replace(/^(tinh|thanh pho|tp)\s+/g, '').trim();
-                return pName === searchProv || pName.includes(searchProv) || searchProv.includes(pName);
+                let pName = removeVietnameseTones(p.name).toLowerCase().replace(/[^a-z0-9]/g, '');
+                let searchName = normalizedActiveProv.replace(/[^a-z0-9]/g, '');
+                return pName === searchName || pName.includes(searchName) || searchName.includes(pName);
             });
 
             let renderedLabels = new Set();
             let consumedApiNames = new Set();
 
+            // ====================================================
+            // TỪ ĐIỂN QUY HOẠCH TOÀN QUỐC (XỬ LÝ ĐỘ VÊNH DỮ LIỆU 2018 vs 2024)
+            // Cập nhật tất cả các vụ sáp nhập/lên Thành phố lớn của cả nước
+            // ====================================================
+            const NATIONWIDE_MERGE_MAP = {
+                // --- MIỀN NAM ---
+                "quan2": "Thành phố Thủ Đức", "quan9": "Thành phố Thủ Đức", "quanthuduc": "Thành phố Thủ Đức", "thuduc": "Thành phố Thủ Đức", // TP.HCM
+                "huyentanthanh": "Thị xã Phú Mỹ", "tanthanh": "Thị xã Phú Mỹ", // Bà Rịa - Vũng Tàu
+                "huyenphuquoc": "Thành phố Phú Quốc", "phuquoc": "Thành phố Phú Quốc", // Kiên Giang
+                "huyentinhbien": "Thị xã Tịnh Biên", "tinhbien": "Thị xã Tịnh Biên", // An Giang
+                "huyentanuyen": "Thành phố Tân Uyên", "tanuyen": "Thành phố Tân Uyên", "thixatanuyen": "Thành phố Tân Uyên", // Bình Dương
+                "huyenbencat": "Thành phố Bến Cát", "bencat": "Thành phố Bến Cát", "thixabencat": "Thành phố Bến Cát", // Bình Dương
+
+                // --- MIỀN BẮC ---
+                "huyenhoanhbo": "Thành phố Hạ Long", "hoanhbo": "Thành phố Hạ Long", // Quảng Ninh (Sáp nhập vào Hạ Long)
+                "huyenkyson": "Thành phố Hòa Bình", "kyson": "Thành phố Hòa Bình", // Hòa Bình (Sáp nhập vào TP Hòa Bình)
+                "huyentuson": "Thành phố Từ Sơn", "tuson": "Thành phố Từ Sơn", "thixatuson": "Thành phố Từ Sơn", // Bắc Ninh
+                "huyenthuanthanh": "Thị xã Thuận Thành", "thuanthanh": "Thị xã Thuận Thành", // Bắc Ninh
+                "huyenquevo": "Thị xã Quế Võ", "quevo": "Thị xã Quế Võ", // Bắc Ninh
+                "huyenkinhmon": "Thị xã Kinh Môn", "kinhmon": "Thị xã Kinh Môn", // Hải Dương
+                "huyenphoyen": "Thành phố Phổ Yên", "phoyen": "Thành phố Phổ Yên", "thixaphoyen": "Thành phố Phổ Yên", // Thái Nguyên
+                
+                // --- MIỀN TRUNG ---
+                "huyentinhgia": "Thị xã Nghi Sơn", "tinhgia": "Thị xã Nghi Sơn", // Thanh Hóa
+                "huyendonghoa": "Thị xã Đông Hòa", "donghoa": "Thị xã Đông Hòa", // Phú Yên
+                "huyenhoai Nhon": "Thị xã Hoài Nhơn", "hoainhon": "Thị xã Hoài Nhơn" // Bình Định
+            };
+
             geoJsonDistrictsData.features.forEach(feature => {
-                // Kiểm tra feature có thuộc tỉnh hiện tại không
                 let belongToActiveProv = false;
-                let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase();
                 for (let key in feature.properties) {
                     let val = String(feature.properties[key]);
                     let normVal = removeVietnameseTones(val).toLowerCase();
@@ -1627,26 +1643,24 @@ function renderDistrictLabels() {
                     let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
                     let rawType = feature.properties.TYPE_2 || feature.properties.type || "";
                     
-                    // ====================================================
-                    // THỰC THI SÁP NHẬP: Ghi đè tên cũ thành tên mới ngay từ đầu
-                    // ====================================================
-                    let lowerRawName = rawName.toLowerCase().trim();
-                    let lowerRawNameWithType = (removeVietnameseTones(rawType).toLowerCase() + " " + lowerRawName).trim();
-                    
-                    // Tra từ điển xem khu vực này có bị sáp nhập không
-                    let mappedName = DISTRICT_MERGE_MAP[lowerRawName] || DISTRICT_MERGE_MAP[removeVietnameseTones(lowerRawNameWithType)];
-                    if (mappedName) {
-                        rawName = mappedName; // Ép Q2, Q9 thành "Thành phố Thủ Đức"
-                    }
+                    let lowerRawName = removeVietnameseTones(rawName).toLowerCase().replace(/[^a-z0-9]/g, '');
+                    let lowerRawNameWithType = removeVietnameseTones(rawType + " " + rawName).toLowerCase().replace(/[^a-z0-9]/g, '');
 
-                    // Lõi tìm kiếm
-                    let geoCore = removeVietnameseTones(rawName).toLowerCase();
-                    geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|tx|tp|district|city|town)\b/g, '').replace(/[^a-z0-9]/g, '');
-                    
                     let finalName = "";
 
-                    // 3. MATCHING TÊN VỚI API
-                    if (activeProvApiData && activeProvApiData.districts) {
+                    // ƯU TIÊN 1: CHẠY QUA BỘ LỌC QUY HOẠCH TOÀN QUỐC
+                    // Tự động gộp các huyện đã mất, hoặc nâng cấp danh xưng (Huyện -> Thị Xã -> Thành phố)
+                    if (NATIONWIDE_MERGE_MAP[lowerRawNameWithType]) {
+                        finalName = NATIONWIDE_MERGE_MAP[lowerRawNameWithType];
+                    } else if (NATIONWIDE_MERGE_MAP[lowerRawName]) {
+                        finalName = NATIONWIDE_MERGE_MAP[lowerRawName];
+                    }
+
+                    let geoCore = removeVietnameseTones(rawName).toLowerCase();
+                    geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|tx|tp|district|city|town)\b/g, '').replace(/[^a-z0-9]/g, '');
+
+                    // ƯU TIÊN 2: MATCHING LẤY TÊN CÓ DẤU TỪ API CHUẨN
+                    if (!finalName && activeProvApiData && activeProvApiData.districts) {
                         let matchedDistricts = activeProvApiData.districts.filter(d => {
                             let apiCore = removeVietnameseTones(d.name).toLowerCase();
                             apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '').replace(/[^a-z0-9]/g, '');
@@ -1656,11 +1670,10 @@ function renderDistrictLabels() {
                         if (matchedDistricts.length === 1) {
                             finalName = matchedDistricts[0].name; 
                         } else if (matchedDistricts.length > 1) {
-                            // Giải quyết trùng lặp (Cai Lậy)
+                            // Xử lý thông minh nếu có tên trùng trong 1 tỉnh (Ví dụ: Tiền Giang có cả Huyện Cai Lậy & Thị xã Cai Lậy)
                             let normGeoType = removeVietnameseTones(rawType).toLowerCase();
-                            let normGeoName = removeVietnameseTones(rawName).toLowerCase();
-                            let isGeoTown = normGeoType.includes("thi xa") || normGeoType.includes("town") || normGeoName.includes("thi xa");
-                            let isGeoCity = normGeoType.includes("thanh pho") || normGeoType.includes("city") || normGeoName.includes("thanh pho");
+                            let isGeoTown = normGeoType.includes("thi xa") || normGeoType.includes("town");
+                            let isGeoCity = normGeoType.includes("thanh pho") || normGeoType.includes("city");
                             
                             let bestMatch = matchedDistricts.find(d => {
                                 let normApiName = removeVietnameseTones(d.name).toLowerCase();
@@ -1680,21 +1693,23 @@ function renderDistrictLabels() {
                     
                     if (finalName) consumedApiNames.add(finalName);
 
-                    // 4. FALLBACK CƠ BẢN (Chỉ dùng khi API thực sự không có)
+                    // ƯU TIÊN 3: CHẾ ĐỘ FALLBACK CHO DỮ LIỆU RÁC (ĐẢM BẢO KHÔNG THIẾU TIỀN TỐ)
                     if (!finalName && rawName !== "") {
-                        // Nếu tên đã chứa sẵn tiền tố (do DISTRICT_MERGE_MAP cấp), thì giữ nguyên
-                        if (/\b(Huyện|Thị xã|Thành phố|Quận)\b/i.test(rawName)) {
-                            finalName = rawName;
+                        let cleanedName = rawName.replace(/\b(District|City|Town|Quận|Huyện|Thị xã|Thành phố)\b/ig, '').trim();
+                        let normType = removeVietnameseTones(rawType).toLowerCase();
+                        let prefix = "";
+                        
+                        if (normType.includes("quan") || normType.includes("district")) prefix = "Quận ";
+                        else if (normType.includes("thanh pho") || normType.includes("city")) prefix = "Thành phố ";
+                        else if (normType.includes("thi xa") || normType.includes("town")) prefix = "Thị xã ";
+                        else if (normType.includes("huyen") || normType.includes("county")) prefix = "Huyện ";
+                        else {
+                            prefix = /^[0-9]+$/.test(cleanedName) ? "Quận " : "Huyện "; // Tự động nhận diện Quận 1, 2, 3...
+                        }
+                        
+                        if (removeVietnameseTones(cleanedName).toLowerCase().includes(removeVietnameseTones(prefix).toLowerCase().trim())) {
+                            finalName = cleanedName;
                         } else {
-                            let cleanedName = rawName.replace(/\b(District|City|Town)\b/ig, '').trim();
-                            let normType = removeVietnameseTones(rawType).toLowerCase();
-                            let prefix = "";
-                            
-                            if (normType.includes("quan") || normType.includes("district")) prefix = "Quận ";
-                            else if (normType.includes("thanh pho") || normType.includes("city")) prefix = "Thành phố ";
-                            else if (normType.includes("thi xa") || normType.includes("town")) prefix = "Thị xã ";
-                            else prefix = "Huyện ";
-                            
                             finalName = prefix + cleanedName;
                         }
                     }
@@ -1702,7 +1717,8 @@ function renderDistrictLabels() {
                     let centroid = getPolygonCentroid(feature);
                     
                     if (centroid && finalName !== "") {
-                        // Tránh in 1 tên nhiều lần (Giải quyết gộp Q2, Q9, Thủ Đức thành 1 nhãn duy nhất)
+                        // Nhờ set renderedLabels, các đa giác bị sáp nhập (Q2, Q9, TĐ) sẽ chỉ in ra đúng 1 chữ "Thành phố Thủ Đức"
+                        // Các huyện/xã bị đứt gãy thành nhiều polygon nhỏ (như Phú Quốc, Côn Đảo) cũng không bị in lặp tên.
                         if (renderedLabels.has(finalName)) return; 
                         renderedLabels.add(finalName);
 

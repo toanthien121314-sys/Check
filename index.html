@@ -1554,19 +1554,14 @@
             }
         }
 
-        // ==========================================
-        // API TỰ ĐỘNG NẠP TÊN QUẬN HUYỆN CÓ DẤU CHUẨN 100% TỪ GITHUB RAW
+      // ==========================================
+        // API TỰ ĐỘNG NẠP TÊN 700+ QUẬN HUYỆN CÓ DẤU CHUẨN 100%
         // ==========================================
         let vnProvincesData = [];
-        // Thay thế open-api.vn hay bị lỗi bằng kho từ điển Github ổn định
-        fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json')
+        fetch('https://provinces.open-api.vn/api/?depth=2')
             .then(res => res.json())
             .then(data => {
                 vnProvincesData = data;
-                // Nếu bản đồ đang ở chế độ zoom gần, cập nhật lại nhãn ngay lập tức
-                if (map.getZoom() >= 10.5) {
-                    renderDistrictLabels();
-                }
             }).catch(e => console.log("Lỗi API từ điển"));
 
         function renderDistrictLabels() {
@@ -1577,7 +1572,7 @@
             if (!normalizedActiveProv) return;
 
             let activeProvApiData = vnProvincesData.find(p => {
-                let pName = removeVietnameseTones(p.Name).toLowerCase();
+                let pName = removeVietnameseTones(p.name).toLowerCase();
                 return pName.includes(normalizedActiveProv) || normalizedActiveProv.includes(pName.replace(/\b(tinh|thanh pho)\b/g, '').trim());
             });
 
@@ -1594,7 +1589,7 @@
                 
                 if (belongToActiveProv) {
                     let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
-                    let rawType = feature.properties.TYPE_2 || feature.properties.type || feature.properties.Type || "";
+                    let rawType = feature.properties.TYPE_2 || feature.properties.type || "";
                     
                     let geoCore = removeVietnameseTones(rawName).toLowerCase();
                     geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|district|city|town)\b/g, '');
@@ -1602,37 +1597,36 @@
                     
                     let finalName = "";
 
-                    if (activeProvApiData && activeProvApiData.Districts) {
-                        for (let d of activeProvApiData.Districts) {
-                            let apiCore = removeVietnameseTones(d.Name).toLowerCase();
+                    if (activeProvApiData && activeProvApiData.districts) {
+                        for (let d of activeProvApiData.districts) {
+                            let apiCore = removeVietnameseTones(d.name).toLowerCase();
                             apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '');
                             apiCore = apiCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, '');
                             
                             if (geoCore === apiCore) {
-                                let geoIsTown = /\b(thi xa|town|thị xã)\b/i.test(rawName + " " + rawType);
-                                let apiIsTown = /\bthị xã\b/i.test(d.Name);
+                                let geoIsTown = /\b(thi xa|town)\b/i.test(rawName + " " + rawType);
+                                let apiIsTown = /\bthị xã\b/i.test(d.name);
                                 
-                                let geoIsCity = /\b(thanh pho|city|thành phố)\b/i.test(rawName + " " + rawType);
-                                let apiIsCity = /\bthành phố\b/i.test(d.Name);
+                                let geoIsCity = /\b(thanh pho|city)\b/i.test(rawName + " " + rawType);
+                                let apiIsCity = /\bthành phố\b/i.test(d.name);
                                 
                                 if (geoIsTown === apiIsTown && geoIsCity === apiIsCity) {
-                                    finalName = d.Name; 
+                                    finalName = d.name; 
                                     break;
                                 } else if (!finalName) {
-                                    finalName = d.Name; 
+                                    finalName = d.name; 
                                 }
                             }
                         }
                     }
 
-                    // Tối ưu fallback thông minh cho các khu vực vùng sâu/tỉnh lẻ chưa có API hoặc API đứt
                     if (!finalName && rawName !== "") {
                         let cleanedName = rawName.replace(/\b(District|City|Town)\b/ig, '').trim();
                         let prefix = "";
                         if (!/\b(Huyện|Thị xã|Thành phố|Quận)\b/i.test(cleanedName)) {
-                            if (/district/i.test(rawType) || /huyen/i.test(rawType) || rawType === "") prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
-                            else if (/city/i.test(rawType) || /thanh pho/i.test(rawType)) prefix = "Thành phố ";
-                            else if (/town/i.test(rawType) || /thi xa/i.test(rawType)) prefix = "Thị xã ";
+                            if (/district/i.test(rawType)) prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
+                            else if (/city/i.test(rawType)) prefix = "Thành phố ";
+                            else if (/town/i.test(rawType)) prefix = "Thị xã ";
                         }
                         finalName = prefix + cleanedName;
                     }
@@ -1653,7 +1647,6 @@
                 }
             });
         }
-
         function preloadStampsIntoCache(spots) {
             if (!window.caches) return;
             caches.open('neon-stamps-cache-v1').then(cache => {

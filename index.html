@@ -947,15 +947,15 @@
             );
         };
 
-        // ==========================================
-        // 0. HỆ THỐNG MÀU NEON THEO NGÀY
+// ==========================================
+        // 0. HỆ THỐNG MÀU NEON THEO NGÀY (LOẠI BỎ XANH LÁ/XANH BIỂN)
         // ==========================================
         const appNeonPalettes = [
-            { primary: '#00f3ff', pRgb: '0, 243, 255', secondary: '#ff007f', sRgb: '255, 0, 127' }, 
-            { primary: '#00ffaa', pRgb: '0, 255, 170', secondary: '#bd00ff', sRgb: '189, 0, 255' }, 
-            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' },  
-            { primary: '#00e5ff', pRgb: '0, 229, 255', secondary: '#ffaa00', sRgb: '255, 170, 0' }, 
-            { primary: '#ccff00', pRgb: '204, 255, 0', secondary: '#ff00ff', sRgb: '255, 0, 255' }  
+            { primary: '#ff00ff', pRgb: '255, 0, 255', secondary: '#ffea00', sRgb: '255, 234, 0' },  // Hồng Magenta & Vàng Chanh
+            { primary: '#ff5500', pRgb: '255, 85, 0', secondary: '#bd00ff', sRgb: '189, 0, 255' },   // Cam Cháy & Tím
+            { primary: '#ff0055', pRgb: '255, 0, 85', secondary: '#ffaa00', sRgb: '255, 170, 0' },   // Đỏ Hồng & Cam
+            { primary: '#b200ff', pRgb: '178, 0, 255', secondary: '#ff007f', sRgb: '255, 0, 127' },  // Tím Đậm & Hồng Phấn
+            { primary: '#ffea00', pRgb: '255, 234, 0', secondary: '#ff0055', sRgb: '255, 0, 85' }    // Vàng Chanh & Đỏ Hồng
         ];
         
         function setAppNeonColorByDate() {
@@ -1159,10 +1159,10 @@
             { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
-        const REGIONS_DATA = [
-            { id: 'tay_bac', name: 'Tây Bắc Bộ', center: [21.5, 103.5], color: '#00ff88', provinces: ['lai châu', 'điện biên', 'sơn la', 'hòa bình', 'yên bái', 'lào cai'] },
+const REGIONS_DATA = [
+            { id: 'tay_bac', name: 'Tây Bắc Bộ', center: [21.5, 103.5], color: '#ff3366', provinces: ['lai châu', 'điện biên', 'sơn la', 'hòa bình', 'yên bái', 'lào cai'] },
             { id: 'dong_bac', name: 'Đông Bắc Bộ', center: [22.0, 106.0], color: '#ffaa00', provinces: ['hà giang', 'cao bằng', 'bắc kạn', 'lạng sơn', 'tuyên quang', 'thái nguyên', 'phú thọ', 'bắc giang', 'quảng ninh'] },
-            { id: 'dbs_hong', name: 'ĐB Sông Hồng', center: [20.8, 106.0], color: '#aaff00', provinces: ['bắc ninh', 'hà nam', 'hà nội', 'hải dương', 'hải phòng', 'hưng yên', 'nam định', 'ninh bình', 'thái bình', 'vĩnh phúc'] },
+            { id: 'dbs_hong', name: 'ĐB Sông Hồng', center: [20.8, 106.0], color: '#ff00ff', provinces: ['bắc ninh', 'hà nam', 'hà nội', 'hải dương', 'hải phòng', 'hưng yên', 'nam định', 'ninh bình', 'thái bình', 'vĩnh phúc'] },
             { id: 'bac_trung', name: 'Bắc Trung Bộ', center: [18.5, 105.5], color: '#ffea00', provinces: ['thanh hóa', 'nghệ an', 'hà tĩnh', 'quảng bình', 'quảng trị', 'thừa thiên huế', 'huế'] },
             { id: 'nam_trung', name: 'Nam Trung Bộ & Tây Nguyên', center: [13.5, 108.0], color: '#ff00aa', provinces: ['đà nẵng', 'quảng nam', 'quảng ngãi', 'bình định', 'phú yên', 'khánh hòa', 'nha trang', 'ninh thuận', 'bình thuận', 'kon tum', 'gia lai', 'đắk lắk', 'đắk nông', 'lâm đồng', 'đà lạt', 'quy nhơn', 'hội an'] },
             { id: 'dong_nam', name: 'Đông Nam Bộ', center: [11.3, 106.7], color: '#ff8855', provinces: ['hồ chí minh', 'bình phước', 'bình dương', 'đồng nai', 'tây ninh', 'bà rịa - vũng tàu', 'vũng tàu'] },
@@ -1530,6 +1530,23 @@ function getDistrictStyle(feature) {
                 }
             }
 
+function getDistrictStyle(feature) {
+            let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
+            
+            if (!normalizedActiveProv || normalizedActiveProv === "") {
+                return { stroke: false, fill: false, className: '' };
+            }
+
+            let belongToActiveProv = false;
+            for (let key in feature.properties) {
+                let val = String(feature.properties[key]);
+                let normVal = removeVietnameseTones(val);
+                if (normVal !== "" && (normVal === normalizedActiveProv || normVal.includes(normalizedActiveProv))) {
+                    belongToActiveProv = true;
+                    break;
+                }
+            }
+
             if (!belongToActiveProv) {
                 return { stroke: false, fill: false, className: '' };
             }
@@ -1539,22 +1556,18 @@ function getDistrictStyle(feature) {
                 return { 
                     stroke: true, 
                     color: currentAppColors.secondary,
-                    weight: 4,          // Làm viền rất đậm (từ 2.5 lên 4)
+                    weight: 4,          
                     opacity: 1,       
-                    fill: true,         // Bật phủ nền
-                    fillColor: currentAppColors.secondary,
-                    fillOpacity: 0.15,  // Phủ màu neon mờ để phân biệt rõ khu vực đã check-in
+                    fill: false,        // Tắt phủ nền
                     className: 'neon-province-active' 
                 };
             } else {
                 return { 
                     stroke: true, 
                     color: currentAppColors.primary, 
-                    weight: 2.5,        // Viền rõ nét hơn (từ 1.2 lên 2.5)
+                    weight: 2.5,        
                     opacity: 0.9,       
-                    fill: true,         
-                    fillColor: '#ffffff',
-                    fillOpacity: 0.35,  // Phủ lớp trắng mờ 35% để làm chìm các chi tiết rối rắm của Google Maps
+                    fill: false,        // Tắt phủ nền
                     className: 'neon-province-border' 
                 };
             }
@@ -1666,12 +1679,8 @@ function getDistrictStyle(feature) {
                         if (renderedLabels.has(finalName)) return;
                         renderedLabels.add(finalName);
 
-                        let htmlContent = '';
-                        if (isVisited) {
-                            htmlContent = `<div class="region-label">${finalName}</div>`;
-                        } else {
-                            htmlContent = `<div class="region-label" style="opacity: 0.5;">${finalName}</div>`;
-                        }
+                        // Không phân biệt đã đi hay chưa, luôn hiện rõ 100%
+                        let htmlContent = `<div class="region-label">${finalName}</div>`;
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
                     }

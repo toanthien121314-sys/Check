@@ -1513,22 +1513,6 @@ function getProvinceStyle(feature) {
             return false;
         }
 
-function getDistrictStyle(feature) {
-            let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
-            
-            if (!normalizedActiveProv || normalizedActiveProv === "") {
-                return { stroke: false, fill: false, className: '' };
-            }
-
-            let belongToActiveProv = false;
-            for (let key in feature.properties) {
-                let val = String(feature.properties[key]);
-                let normVal = removeVietnameseTones(val);
-                if (normVal !== "" && (normVal === normalizedActiveProv || normVal.includes(normalizedActiveProv))) {
-                    belongToActiveProv = true;
-                    break;
-                }
-            }
 
 function getDistrictStyle(feature) {
             let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";

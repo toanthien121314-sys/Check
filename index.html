@@ -39,8 +39,8 @@
             height: 100%;
             min-height: 100vh;
             min-height: 100dvh; 
-            background-color: #03050a;
-            color: #fff;
+            background-color: #f8f9fa;
+            color: #111827;
             overflow: hidden;
             user-select: none;
         }
@@ -53,7 +53,7 @@
             top: 0;
             left: 0;
             z-index: 1;
-            background: #03050a;
+            background: #f8f9fa;
         }
 
         .leaflet-control-attribution {
@@ -63,69 +63,152 @@
         }
 
         /* =========================================
-          NÚT ĐIỀU KHIỂN (BUTTONS CƠ BẢN) - Đã ghi đè 3D ở cuối
+           GIAO DIỆN KAWAII CARTOON VECTOR (MỀM MẠI, BO TRÒN NHƯ STICKER)
         ========================================= */
-        .location-btn {
+        /* 1. Nút bấm (Buttons) dạng Sticker Hoạt Hình */
+        .location-btn, .photo-btn, .install-btn {
             position: absolute;
-            bottom: max(30px, env(safe-area-inset-bottom)); 
-            right: 20px;
             z-index: 1000;
-            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(var(--neon-primary-rgb), 0.2));
-            color: var(--neon-primary);
-            border: 1.5px solid var(--neon-primary);
-            padding: 12px 18px; 
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(var(--neon-primary-rgb), 0.4), inset 0 0 8px rgba(var(--neon-primary-rgb), 0.2);
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            background: #ffffff !important;
+            color: #2d3436 !important; /* Đen xám than chì mềm mại */
+            border: 3px solid #2d3436 !important;
+            border-bottom: 6px solid #2d3436 !important; /* Viền đáy cực dày tạo độ dày của phím bấm */
+            padding: 10px 24px !important;
+            border-radius: 30px !important; /* Bo cực tròn (Pill-shape) */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08) !important; /* Bóng đổ mờ nhạt bềnh bồng bên dưới */
+            font-weight: 800 !important;
+            font-size: 0.95rem !important;
+            letter-spacing: 0.5px !important;
+            text-shadow: none !important;
+            backdrop-filter: none !important;
+            transition: transform 0.15s ease-out, border-width 0.15s ease-out, background 0.15s ease-out !important;
             display: flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
+        }
+
+        .location-btn {
+            bottom: max(30px, env(safe-area-inset-bottom)); 
+            right: 20px;
         }
 
         .photo-btn {
-            position: absolute;
             bottom: max(30px, env(safe-area-inset-bottom)); 
             left: 20px;
-            z-index: 1000;
-            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(189, 0, 255, 0.2));
-            color: #bd00ff; 
-            border: 1.5px solid #bd00ff;
-            padding: 12px 18px; 
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(189, 0, 255, 0.4), inset 0 0 8px rgba(189, 0, 255, 0.2);
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .install-btn {
-            position: absolute;
             top: max(20px, env(safe-area-inset-top));
             right: 20px;
-            z-index: 1000;
-            background: linear-gradient(135deg, rgba(6, 10, 25, 0.9), rgba(var(--neon-secondary-rgb), 0.2));
-            color: var(--neon-secondary);
-            border: 1.5px solid var(--neon-secondary);
-            padding: 10px 16px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(var(--neon-secondary-rgb), 0.4), inset 0 0 8px rgba(var(--neon-secondary-rgb), 0.2);
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
             display: none; 
-            align-items: center;
-            gap: 6px;
+        }
+
+        /* Hiệu ứng lún phím mượt mà khi bấm */
+        .location-btn:hover, .photo-btn:hover, .install-btn:hover, .photo-btn.active {
+            transform: translateY(3px) !important; /* Đẩy nút xuống 3px */
+            border-bottom-width: 3px !important; /* Rút viền đáy lại để tạo cảm giác lún */
+            background: var(--neon-primary) !important; /* Đổi màu kẹo ngọt */
+            color: #2d3436 !important;
+        }
+
+        /* 2. Nhãn Vùng/Tỉnh/Huyện dạng Sticker */
+        .region-label, .neon-label {
+            position: absolute;
+            top: -22px;
+            background: #ffffff !important;
+            color: #2d3436 !important; 
+            border: 2px solid #2d3436 !important; 
+            border-bottom: 4px solid #2d3436 !important; /* Cảm giác như sticker dán nổi */
+            padding: 6px 20px !important;
+            border-radius: 25px !important; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+            text-shadow: none !important; 
+            font-size: 0.85rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.3px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            backdrop-filter: none !important; 
+            transition: all 0.15s ease-out !important;
+            white-space: nowrap !important;
+            min-width: max-content !important;
+            pointer-events: auto;
+        }
+
+        /* Nhãn Quận/Huyện cỡ nhỏ */
+        .custom-district-icon .region-label, .custom-div-icon .neon-label {
+            padding: 4px 14px !important;
+            font-size: 0.75rem !important;
+            border-bottom: 3px solid #2d3436 !important;
+        }
+
+        /* Hiệu ứng lún nhẹ khi di chuột vào Nhãn */
+        .region-label:hover, .neon-label:hover {
+            transform: translateY(2px) !important;
+            border-bottom-width: 2px !important;
+            background: var(--neon-secondary) !important;
+            color: #ffffff !important;
+            cursor: pointer;
+            z-index: 1000 !important;
+        }
+
+        /* 3. Đổi Popup Map thành màn hình máy tính bo tròn */
+        .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            color: #2d3436 !important;
+            border: 3px solid #2d3436 !important;
+            border-bottom: 6px solid #2d3436 !important; /* Khối màn hình dày */
+            border-radius: 24px !important; /* Khung viền bo mạnh */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+            backdrop-filter: none !important;
+            padding: 8px !important;
+        }
+        
+        .leaflet-popup-tip {
+            display: none !important; /* Ẩn tam giác trỏ xuống để giữ form bong bóng / màn hình */
+        }
+
+        .popup-title {
+            color: #2d3436 !important;
+            text-shadow: none !important;
+            border-bottom: 2px dashed #b2bec3 !important;
+            font-weight: 800 !important;
+            padding-bottom: 8px !important;
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+        }
+
+        .popup-info {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #374151 !important;
+        }
+
+        .popup-info b {
+            color: var(--neon-secondary);
+        }
+
+        /* Nút Checkin bên trong Popup */
+        .btn-gps-checkin {
+            width: 100%;
+            padding: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #ffffff !important;
+            color: #2d3436 !important;
+            border: 2px solid #2d3436 !important;
+            border-bottom: 4px solid #2d3436 !important;
+            border-radius: 16px !important;
+            transition: all 0.15s ease-out !important;
+            margin-top: 12px !important;
+        }
+
+        .btn-gps-checkin:hover {
+            transform: translateY(2px) !important;
+            border-bottom-width: 2px !important;
+            background: var(--neon-primary) !important;
         }
 
         /* =========================================
@@ -136,15 +219,14 @@
             top: max(20px, env(safe-area-inset-top));
             left: 20px;
             z-index: 1000;
-            background: rgba(8, 12, 28, 0.9);
-            border: 1px solid var(--neon-primary);
-            color: var(--neon-primary);
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #2d3436;
+            color: #2d3436;
             padding: 8px 15px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: bold;
-            box-shadow: 0 0 15px rgba(var(--neon-primary-rgb), 0.4);
-            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
             transition: opacity 0.5s ease;
             opacity: 0; 
             pointer-events: none;
@@ -156,7 +238,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #03050a;
+            background: #f8f9fa;
             z-index: 10000;
             display: flex;
             flex-direction: column;
@@ -166,10 +248,10 @@
         }
 
         .loading-text {
-            color: var(--neon-primary);
+            color: #111827 !important;
             font-size: 1.2rem;
             font-weight: bold;
-            text-shadow: 0 0 15px var(--neon-primary);
+            text-shadow: none !important;
             margin-top: 15px;
             letter-spacing: 1px;
         }
@@ -221,23 +303,6 @@
             top: 0;
             animation: ripple 1.8s infinite ease-out;
             z-index: 1;
-        }
-
-        .neon-label {
-            position: absolute;
-            top: -22px;
-            color: var(--neon-primary);
-            font-weight: 800;
-            font-size: 0.8rem;
-            text-shadow: 0 0 5px var(--neon-primary), 0 0 10px #000;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-            pointer-events: none;
-            background: rgba(5, 8, 20, 0.7);
-            padding: 2px 6px;
-            border-radius: 10px;
-            border: 1px solid rgba(var(--neon-primary-rgb), 0.4);
-            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         @keyframes ripple {
@@ -314,64 +379,6 @@
         }
 
         /* =========================================
-           POPUP TRÊN BẢN ĐỒ
-        ========================================= */
-        .leaflet-popup-content-wrapper {
-            background: rgba(8, 12, 28, 0.95) !important;
-            color: #fff !important;
-            border: 1px solid var(--neon-primary);
-            box-shadow: 0 0 20px rgba(var(--neon-primary-rgb), 0.5);
-            border-radius: 12px !important;
-            backdrop-filter: blur(8px);
-            padding: 5px;
-        }
-
-        .leaflet-popup-tip {
-            background: rgba(8, 12, 28, 0.95) !important;
-            border-bottom: 1px solid var(--neon-primary);
-            border-right: 1px solid var(--neon-primary);
-        }
-
-        .popup-title {
-            color: var(--neon-primary);
-            font-weight: 700;
-            font-size: 1.15rem;
-            margin-bottom: 8px;
-            text-shadow: 0 0 8px rgba(var(--neon-primary-rgb), 0.6);
-            border-bottom: 1px dashed rgba(var(--neon-primary-rgb), 0.3);
-            padding-bottom: 5px;
-        }
-
-        .popup-info {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: #d1d5db;
-        }
-
-        .popup-info b {
-            color: var(--neon-secondary);
-        }
-
-        .btn-gps-checkin {
-            margin-top: 8px;
-            width: 100%;
-            padding: 8px;
-            background: linear-gradient(90deg, var(--neon-secondary), #ff00ff);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(var(--neon-secondary-rgb), 0.5);
-            transition: all 0.2s;
-        }
-
-        .btn-gps-checkin:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 15px rgba(var(--neon-secondary-rgb), 0.8);
-        }
-
-        /* =========================================
            THƯ VIỆN ẢNH IN-APP MASONRY GIAO DIỆN
         ========================================= */
         .gallery-container {
@@ -381,7 +388,8 @@
             width: 100%;
             height: 100%;
             height: 100dvh;
-            background-color: #03050a;
+            background-color: #f8f9fa !important;
+            color: #111827 !important;
             z-index: 20000;
             display: flex;
             flex-direction: column;
@@ -395,28 +403,35 @@
         
         .gallery-header {
             padding: max(20px, env(safe-area-inset-top)) 20px 15px 20px;
-            background: linear-gradient(180deg, rgba(3,5,10,1) 0%, rgba(3,5,10,0.8) 100%);
+            background: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(var(--neon-primary-rgb), 0.2);
+            border-bottom: 2px solid #e5e7eb;
         }
 
         .gallery-title {
-            color: var(--neon-primary);
+            color: #2d3436;
             font-size: 1.2rem;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(var(--neon-primary-rgb), 0.6);
         }
 
         .close-gallery-btn {
-            background: rgba(var(--neon-secondary-rgb), 0.2);
-            color: var(--neon-secondary);
-            border: 1px solid var(--neon-secondary);
+            background: #ffffff;
+            color: #2d3436;
+            border: 2px solid #2d3436;
+            border-bottom: 4px solid #2d3436;
             padding: 6px 12px;
-            border-radius: 20px;
+            border-radius: 16px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .close-gallery-btn:hover {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+            background: #f1f5f9;
         }
         
         .gallery-grid {
@@ -446,7 +461,7 @@
             border-radius: 8px;
             background: #111;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: opacity 0.2s, transform 0.2s;
             break-inside: avoid;
             display: block;
@@ -466,7 +481,7 @@
         
         .empty-gallery {
             text-align: center;
-            color: #64748b;
+            color: #374151 !important;
             margin-top: 50px;
             width: 100%;
             column-span: all;
@@ -495,23 +510,27 @@
             pointer-events: auto;
         }
 
-        .lightbox-close {
-            position: absolute;
-            top: max(20px, env(safe-area-inset-top));
-            right: 20px;
+        .lightbox-close, .lightbox-nav {
             background: rgba(255,255,255,0.2);
             color: #fff;
-            width: 35px;
-            height: 35px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
             border: none;
             cursor: pointer;
             backdrop-filter: blur(5px);
+            transition: background 0.3s;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: max(20px, env(safe-area-inset-top));
+            right: 20px;
+            width: 35px;
+            height: 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
             z-index: 25002;
         }
 
@@ -519,23 +538,13 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: none;
             width: 45px;
             height: 45px;
-            border-radius: 50%;
             font-size: 1.5rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
             z-index: 25001;
-            transition: background 0.3s;
         }
 
-        .lightbox-nav:hover {
+        .lightbox-nav:hover, .lightbox-close:hover {
             background: rgba(255,255,255,0.3);
         }
 
@@ -590,13 +599,15 @@
         }
 
         .modal-box {
-            background: linear-gradient(135deg, rgba(10, 16, 38, 0.95), rgba(5, 8, 20, 0.98));
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #111827 !important;
             width: 90%;
             max-width: 420px;
             padding: 22px;
-            border-radius: 16px;
-            border: 2px solid var(--neon-primary);
-            box-shadow: 0 0 25px rgba(var(--neon-primary-rgb), 0.4), inset 0 0 15px rgba(var(--neon-primary-rgb), 0.2);
+            border-radius: 24px;
+            border: 3px solid #2d3436 !important;
+            border-bottom: 6px solid #2d3436 !important;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
             transform: translateY(-20px);
             transition: transform 0.3s ease;
             max-height: 92vh;
@@ -611,23 +622,22 @@
 
         .modal-title {
             font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--neon-primary);
+            font-weight: 800;
+            color: #2d3436;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 15px;
             text-align: center;
-            text-shadow: 0 0 10px rgba(var(--neon-primary-rgb), 0.6);
             flex-shrink: 0;
         }
 
         .auto-region-badge {
-            background: rgba(var(--neon-primary-rgb), 0.08);
-            border: 1px dashed rgba(var(--neon-primary-rgb), 0.5);
+            background: #f1f5f9;
+            border: 2px dashed #b2bec3;
             padding: 10px 12px;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 0.85rem;
-            color: #a5b4fc;
+            color: #475569;
             margin-bottom: 14px;
             display: flex;
             align-items: center;
@@ -636,9 +646,8 @@
         }
 
         .auto-region-badge span {
-            color: var(--neon-primary);
+            color: #2d3436;
             font-weight: bold;
-            text-shadow: 0 0 5px rgba(var(--neon-primary-rgb), 0.5);
         }
 
         .step-container {
@@ -657,26 +666,26 @@
         .form-group label {
             display: block;
             font-size: 0.85rem;
-            color: #a5b4fc;
+            color: #475569 !important;
             margin-bottom: 6px;
             font-weight: 600;
         }
 
         .form-control {
             width: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #3b82f6;
-            border-radius: 8px;
+            background: #ffffff !important;
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 12px;
             padding: 10px 12px;
-            color: #fff;
+            color: #111827 !important;
             font-size: 0.95rem;
             outline: none;
             transition: all 0.3s;
         }
 
         .form-control:focus {
-            border-color: var(--neon-secondary);
-            box-shadow: 0 0 10px rgba(var(--neon-secondary-rgb), 0.5);
+            border-color: #2d3436 !important;
+            box-shadow: 0 0 0 3px rgba(45, 52, 54, 0.1);
         }
 
         .modal-actions {
@@ -689,37 +698,26 @@
         .btn {
             flex: 1;
             padding: 10px;
-            border: none;
-            border-radius: 8px;
+            border: 2px solid #2d3436;
+            border-bottom: 4px solid #2d3436;
+            border-radius: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.15s ease-out;
             text-transform: uppercase;
             font-size: 0.85rem;
             letter-spacing: 0.5px;
+            background: #ffffff;
+            color: #2d3436;
         }
 
-        .btn-cancel {
-            background: transparent;
-            color: #94a3b8;
-            border: 1px solid #475569;
-        }
-
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+        .btn:hover {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
         }
 
         .btn-submit {
-            background: linear-gradient(90deg, var(--neon-primary), #0077ff);
-            color: #000;
-            box-shadow: 0 0 15px rgba(var(--neon-primary-rgb), 0.5);
-        }
-
-        .btn-submit:hover {
-            background: linear-gradient(90deg, var(--neon-secondary), #ff00ff);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(var(--neon-secondary-rgb), 0.8);
+            background: var(--neon-primary);
         }
 
         .stamp-preview-container {
@@ -727,28 +725,26 @@
             flex-direction: column;
             align-items: center;
             margin: 5px 0;
-            background: rgba(0, 0, 0, 0.55);
+            background: #f8f9fa;
             padding: 12px;
             border-radius: 12px;
-            border: 1px dashed rgba(var(--neon-secondary-rgb), 0.5);
-            box-shadow: inset 0 0 10px rgba(var(--neon-secondary-rgb), 0.1);
+            border: 2px dashed #cbd5e1;
         }
         
         .stamp-preview-title {
-            font-size: 0.78rem;
-            color: var(--neon-secondary);
+            font-size: 0.85rem;
+            color: #2d3436;
             margin-bottom: 8px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            text-shadow: 0 0 5px rgba(var(--neon-secondary-rgb), 0.5);
         }
 
         #stampCanvas {
             width: 240px;
             height: 315px; 
             border-radius: 4px;
-            box-shadow: 0 0 18px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             background: transparent;
         }
 
@@ -799,132 +795,11 @@
             pointer-events: none;
         }
 
-        /* =========================================
-           ÉP CHUYỂN ĐỔI GIAO DIỆN SANG LIGHT MODE (NỀN TRẮNG)
-        ========================================= */
-        /* Đổi nền màn hình chính và màn hình Logo/Loading */
-        html, body, #map, #loadingOverlay, .gallery-container {
-            background-color: #f8f9fa !important;
-            color: #111827 !important;
-        }
-
-        /* Đổi nền các Popup và Bảng thông báo Modal sang trắng */
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip, .modal-box {
-            background: rgba(255, 255, 255, 0.95) !important;
-            color: #111827 !important;
-            border-color: #e5e7eb !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        /* Chỉnh lại chữ màu xám/trắng cũ thành đen */
-        .popup-info, .popup-info p, .form-group label, .empty-gallery {
-            color: #374151 !important;
-        }
-
-        /* Chỉnh ô nhập liệu (Input) sang nền trắng */
-        .form-control {
-            background: #ffffff !important;
-            color: #111827 !important;
-            border: 1px solid #d1d5db !important;
-        }
-
-        /* Chỉnh chữ của bé mèo Loading thành đen cho dễ nhìn */
-        .loading-text {
-            color: #111827 !important;
-            text-shadow: none !important; /* Tắt phát sáng neon trên nền trắng */
-        }
-
-        /* =========================================
-           GIAO DIỆN 3D CLAYMORPHISM (BONG BÓNG NỔI KHỐI 3D)
-        ========================================= */
-        /* 1. Nút bấm nổi (Buttons) dạng 3D */
-        .location-btn, .photo-btn, .install-btn {
-            background: linear-gradient(145deg, #ffffff, #e6e9ef) !important; /* Đổ dốc nhẹ tạo độ cong */
-            color: #475569 !important; /* Chữ xanh xám hiện đại */
-            border: none !important; /* Xóa viền 2D phẳng */
-            padding: 12px 24px !important;
-            border-radius: 50px !important;
-            /* Kỹ thuật xếp lớp bóng 3D */
-            box-shadow: 
-                6px 8px 16px rgba(15, 23, 42, 0.12), /* Bóng đổ viền ngoài (nâng khối) */
-                -4px -4px 12px rgba(255, 255, 255, 0.8), /* Phản quang hắt sáng viền ngoài */
-                inset 4px 4px 8px rgba(255, 255, 255, 1), /* Khối nổi mặt trên (độ bóng của nhựa) */
-                inset -4px -4px 10px rgba(164, 175, 195, 0.4) !important; /* Khối chìm mặt dưới (tạo chiều sâu) */
-            font-weight: 900 !important;
-            font-size: 0.95rem !important;
-            letter-spacing: 0.3px !important;
-            text-shadow: none !important;
-            backdrop-filter: none !important;
-            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-        }
-
-        /* Hiệu ứng khi bấm/đưa chuột vào Nút 3D */
-        .location-btn:hover, .photo-btn:hover, .install-btn:hover, .photo-btn.active {
-            transform: translateY(-2px) scale(1.02) !important;
-            color: #0f172a !important;
-            box-shadow: 
-                8px 12px 20px rgba(15, 23, 42, 0.15),
-                -4px -4px 12px rgba(255, 255, 255, 0.9),
-                inset 4px 4px 8px rgba(255, 255, 255, 1),
-                inset -4px -4px 10px rgba(164, 175, 195, 0.5) !important;
-        }
-
-        /* 2. Nhãn Vùng/Tỉnh/Huyện dạng Bong Bóng 3D */
-        .region-label, .neon-label {
-            background: linear-gradient(145deg, #ffffff, #e6e9ef) !important;
-            color: #475569 !important; 
-            border: none !important; 
-            padding: 8px 20px !important;
-            border-radius: 50px !important; 
-            /* Tạo khối 3D cho Nhãn */
-            box-shadow: 
-                4px 6px 14px rgba(15, 23, 42, 0.1), /* Bóng ngoài */
-                -2px -2px 8px rgba(255, 255, 255, 0.8),
-                inset 3px 3px 6px rgba(255, 255, 255, 1), /* Ánh sáng mặt trên */
-                inset -3px -3px 8px rgba(164, 175, 195, 0.4) !important; /* Đổ bóng mặt dưới */
-            text-shadow: none !important; 
-            font-size: 0.85rem !important;
-            font-weight: 900 !important;
-            letter-spacing: 0.3px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            backdrop-filter: none !important; 
-            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-            
-            /* ÉP CHỮ GIÃN NGANG */
-            white-space: nowrap !important;
-            min-width: max-content !important;
-        }
-
-        /* Nhãn Quận/Huyện nhỏ gọn hơn nhưng vẫn giữ khối 3D */
-        .custom-district-icon .region-label, .custom-div-icon .neon-label {
-            padding: 5px 14px !important;
-            font-size: 0.75rem !important;
-            box-shadow: 
-                3px 4px 10px rgba(15, 23, 42, 0.1),
-                -1px -1px 6px rgba(255, 255, 255, 0.8),
-                inset 2px 2px 4px rgba(255, 255, 255, 1),
-                inset -2px -2px 6px rgba(164, 175, 195, 0.4) !important;
-        }
-
-        /* Hiệu ứng nảy 3D khi hover vào Nhãn */
-        .region-label:hover, .neon-label:hover {
-            transform: scale(1.15) translateY(-3px) !important;
-            color: #0f172a !important;
-            box-shadow: 
-                6px 10px 18px rgba(15, 23, 42, 0.15),
-                inset 3px 3px 6px rgba(255, 255, 255, 1),
-                inset -3px -3px 8px rgba(164, 175, 195, 0.5) !important;
-            cursor: pointer;
-            z-index: 1000 !important;
-        }
     </style>
 </head>
 <body>
 
     <div id="loadingOverlay">
-        <!-- Đã trả lại bé mèo neon black-rainbow-cat.svg -->
         <img src="black-rainbow-cat.svg" alt="Loading Cat" style="width: 120px; height: auto; object-fit: contain;">
         <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
     </div>
@@ -946,17 +821,16 @@
     </style>
 
     <!-- MÀN HÌNH HIỆU ỨNG CHECK-IN THÀNH CÔNG -->
-    <div id="successOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 10, 0.85); backdrop-filter: blur(5px); z-index: 30000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;">
+    <div id="successOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px); z-index: 30000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;">
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center; animation: popSuccess 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
-            <img src="Catcheck.svg" alt="Success Cat" style="width: 160px; height: auto; max-width: 80%; object-fit: contain; filter: drop-shadow(0 0 25px rgba(0, 243, 255, 0.6));">
-            <div style="margin-top: 20px; font-weight: 900; color: var(--neon-primary); font-size: 1.6rem; text-shadow: 0 0 15px var(--neon-primary); letter-spacing: 1.5px; text-transform: uppercase;">
+            <img src="Catcheck.svg" alt="Success Cat" style="width: 160px; height: auto; max-width: 80%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));">
+            <div style="margin-top: 20px; font-weight: 900; color: #2d3436; font-size: 1.6rem; letter-spacing: 1px; text-transform: uppercase;">
                 Check-in Thành Công!
             </div>
         </div>
     </div>
 
     <style>
-        /* Hiệu ứng nảy bung ra như lò xo */
         @keyframes popSuccess {
             0% { transform: scale(0.3); opacity: 0; }
             50% { transform: scale(1.1); opacity: 1; }
@@ -1000,17 +874,17 @@
 
     <div class="modal-overlay" id="stampOptionsMenu">
         <div class="modal-box" style="text-align:center; padding: 25px;">
-            <h3 style="color:var(--neon-primary); margin-bottom: 20px; text-shadow: 0 0 10px rgba(var(--neon-primary-rgb),0.6);">TÙY CHỌN MỘC BẢN</h3>
+            <h3 style="color:#2d3436; margin-bottom: 20px;">TÙY CHỌN MỘC BẢN</h3>
             
             <input type="file" id="updateStampFileInput" accept="image/*" style="display:none;">
 
             <button class="btn btn-submit" style="width:100%; margin-bottom:15px; display:block; padding: 12px; font-size: 0.95rem;" onclick="viewStampFullscreen()">
                 🔍 XEM TEM TRONG APP
             </button>
-            <button class="btn btn-submit" style="width:100%; margin-bottom:15px; display:block; padding: 12px; font-size: 0.95rem; background: linear-gradient(90deg, #bd00ff, #ff007f); box-shadow: 0 0 15px rgba(189,0,255,0.5);" onclick="triggerChangeStamp()">
+            <button class="btn btn-submit" style="width:100%; margin-bottom:15px; display:block; padding: 12px; font-size: 0.95rem; background: var(--neon-secondary); color: #fff;" onclick="triggerChangeStamp()">
                 📸 ĐỔI ẢNH MỘC BẢN KHÁC
             </button>
-            <button class="btn btn-cancel" style="width:100%; padding: 12px; font-size: 0.95rem;" onclick="closeStampOptionsMenu()">
+            <button class="btn" style="width:100%; padding: 12px; font-size: 0.95rem;" onclick="closeStampOptionsMenu()">
                 HỦY BỎ
             </button>
         </div>
@@ -1039,7 +913,7 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn" onclick="closeModal()">Hủy</button>
                     <button class="btn btn-submit" onclick="goToStep2()">Tạo Tem</button>
                 </div>
             </div>
@@ -1051,7 +925,7 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button class="btn btn-cancel" onclick="goToStep1()">Quay Lại</button>
+                    <button class="btn" onclick="goToStep1()">Quay Lại</button>
                     <button class="btn btn-submit" id="btnSubmitCheckIn" onclick="submitCheckIn()">Lưu Điểm</button>
                 </div>
             </div>
@@ -1062,7 +936,6 @@
     <script>
         // ==========================================
         // THỦ THUẬT OVERSCAN (TẢI TRƯỚC NGÓI TRÀN VIỀN NHƯ GOOGLE MAPS)
-        // Buộc Leaflet phải tải sẵn ngói bản đồ ra ngoài mép màn hình 50%
         // ==========================================
         const originalGetTiledPixelBounds = L.TileLayer.prototype._getTiledPixelBounds;
         L.TileLayer.prototype._getTiledPixelBounds = function (center) {
@@ -1192,9 +1065,9 @@
         });
 
         // ==========================================
-        // CHẾ ĐỘ NỀN TRẮNG (LIGHT MODE MAP)
+        // CHẾ ĐỘ NỀN TRẮNG (LIGHT MODE MAP) - ĐÃ TẮT CHỮ MẶC ĐỊNH
         // ==========================================
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', { 
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', { 
             maxZoom: 20,
             keepBuffer: 16,            
             updateWhenZooming: false,  
@@ -1533,6 +1406,7 @@
                     <p><b>📝 Ghi chú:</b> ${note || 'Không có ghi chú'}</p>
                     ${stampHtml}
                 </div>
+                <button class="btn-gps-checkin" onclick="document.getElementById('updateStampFileInput').click(); targetStampInfo = {name: '${safeNameStr}', lat: ${lat}, lng: ${lng}}; ">📸 Đổi Ảnh Mộc Bản</button>
             `);
             return marker;
         }
@@ -2682,7 +2556,7 @@
             modal.classList.remove('active');
         }
 
-// ==========================================
+        // ==========================================
         // HÀM HỖ TRỢ: CHỜ TẮT POPUP MỚI CẮM CỜ VÀ MỞ TEM
         // ==========================================
         function finalizeCheckInLocal(tempSpot, regionName) {
@@ -2713,7 +2587,7 @@
                             newMarker.openPopup();
                         }
                     }, 400); // 400ms là thời gian mờ đi của CSS
-                }, 4000); // <--- ĐÃ TĂNG LÊN 4 GIÂY Ở ĐÂY
+                }, 4000); // Giữ hình mèo 4 giây
             } else {
                 // Dự phòng nếu không tìm thấy HTML Overlay
                 addRegionalMarker(regionName, tempSpot.lat, tempSpot.lng, `Khu vực tạo tự động! 🏙️`);

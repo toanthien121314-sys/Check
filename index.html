@@ -924,10 +924,26 @@
 <body>
 
     <div id="loadingOverlay">
-        <!-- Đã thay thế spinner bằng ảnh động SVG con mèo đen -->
-        <img src="black-rainbow-cat.svg" alt="Loading Cat" style="width: 120px; height: auto; object-fit: contain;">
+        <!-- Đã thay thế ảnh png thành SVG mới -->
+        <img src="Cat.svg" alt="Loading Cat" style="width: 120px; height: auto; object-fit: contain;">
         <div class="loading-text">⏳ ĐANG TRUY XUẤT DỮ LIỆU...</div>
     </div>
+
+    <!-- MÀN HÌNH HIỂU ỨNG KHI TÌM VỊ TRÍ -->
+    <div id="ghibliOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 249, 250, 0.9); backdrop-filter: blur(5px); z-index: 15000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;">
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+            <img src="GibliTribute.svg" alt="Ghibli Tribute" style="width: 180px; height: auto; max-width: 80%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); animation: floatGhibli 2s ease-in-out infinite;">
+            <div style="margin-top: 15px; font-weight: bold; color: #475569; font-size: 1rem; letter-spacing: 1px;">ĐANG TÌM TỌA ĐỘ...</div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes floatGhibli {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
 
     <div id="syncToast">🔄 Đang đồng bộ dữ liệu ngầm...</div>
 
@@ -2296,6 +2312,14 @@
             const originTxt = btn.innerHTML; 
             btn.innerHTML = "📡 Đang quét...";
             btn.style.opacity = "0.7";
+
+            // 1. HIỂN THỊ ẢNH GIBLI TRIBUTE SVG
+            const ghibliOverlay = document.getElementById('ghibliOverlay');
+            if (ghibliOverlay) {
+                ghibliOverlay.style.display = 'flex';
+                // Delay 10ms để trình duyệt kịp nhận class rồi mới mờ lên (transition)
+                setTimeout(() => { ghibliOverlay.style.opacity = '1'; }, 10); 
+            }
             
             const options = {
                 enableHighAccuracy: true,
@@ -2315,16 +2339,36 @@
                         <button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>
                     `);
                     
-                    map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1 });
-                    setTimeout(() => myLocationMarker.openPopup(), 500);
-                    
-                    btn.innerHTML = originTxt;
-                    btn.style.opacity = "1";
+                    // 2. TẠO DELAY NGẮM SVG TRƯỚC KHI BAY ĐẾN VỊ TRÍ
+                    setTimeout(() => {
+                        // Tắt SVG Overlay đi
+                        if (ghibliOverlay) {
+                            ghibliOverlay.style.opacity = '0';
+                            setTimeout(() => { ghibliOverlay.style.display = 'none'; }, 400); // 400ms bằng thời gian transition CSS
+                        }
+
+                        // Thực hiện hiệu ứng Zoom mượt
+                        map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1.5 });
+                        
+                        // Trả lại trạng thái nút bấm
+                        btn.innerHTML = originTxt;
+                        btn.style.opacity = "1";
+                        
+                        // Mở popup ngay khi bay xong
+                        setTimeout(() => myLocationMarker.openPopup(), 1500);
+
+                    }, 800); // Giữ ảnh Gibli trên màn hình tối thiểu 0.8 giây
                 },
                 err => { 
                     alert("Lỗi GPS: Vui lòng bật vị trí ở điện thoại!");
                     btn.innerHTML = originTxt;
                     btn.style.opacity = "1";
+                    
+                    // Tắt overlay nếu bị lỗi GPS
+                    if (ghibliOverlay) {
+                        ghibliOverlay.style.opacity = '0';
+                        setTimeout(() => { ghibliOverlay.style.display = 'none'; }, 400);
+                    }
                 },
                 options
             );

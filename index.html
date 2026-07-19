@@ -1060,11 +1060,12 @@
             wheelPxPerZoomLevel: 80
         });
 
+// ==========================================
+        // CHẾ ĐỘ GOOGLE MAPS (XANH, TRẮNG, NƯỚC BIỂN)
         // ==========================================
-        // CHẾ ĐỘ NỀN TRẮNG (LIGHT MODE MAP) - ĐÃ TẮT CHỮ MẶC ĐỊNH
-        // ==========================================
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', { 
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { 
             maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             keepBuffer: 16,            
             updateWhenZooming: false,  
             updateWhenIdle: false,     

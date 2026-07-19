@@ -252,16 +252,18 @@
             letter-spacing: 1px;
         }
 
-        /* =========================================
+/* =========================================
            HIỆU ỨNG ĐƯỜNG VIỀN RANH GIỚI NEON
         ========================================= */
         path.neon-province-border {
-            filter: drop-shadow(0 0 3px rgba(var(--neon-primary-rgb), 0.5));
+            /* Thêm shadow đen mỏng phía sau để bóc tách viền khỏi nền sáng của bản đồ */
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.6)) drop-shadow(0 0 4px rgba(var(--neon-primary-rgb), 0.9));
             transition: fill-opacity 0.5s ease, filter 0.5s ease, opacity 0.3s ease;
         }
         
         path.neon-province-active {
-            filter: drop-shadow(0 0 6px var(--neon-secondary)) drop-shadow(0 0 12px var(--neon-secondary));
+            /* Thêm shadow đen cho vùng đã check-in */
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.7)) drop-shadow(0 0 6px var(--neon-secondary)) drop-shadow(0 0 12px var(--neon-secondary));
             transition: fill-opacity 0.5s ease, filter 0.5s ease, opacity 0.3s ease;
         }
 
@@ -1433,7 +1435,7 @@
                 .catch(err => console.log("Lỗi tải ranh giới huyện:", err));
         }
 
-        function getProvinceStyle(feature) {
+function getProvinceStyle(feature) {
             let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
             let normalized = removeVietnameseTones(propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim());
             const currentZoom = map.getZoom();
@@ -1442,7 +1444,8 @@
                 let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
                 
                 if (normalizedActiveProv !== "" && normalized !== "" && (normalized === normalizedActiveProv || normalized.includes(normalizedActiveProv) || normalizedActiveProv.includes(normalized))) {
-                    return { stroke: false, fill: false, className: '' }; 
+                    // Hiển thị viền Tỉnh thật đậm (weight: 5) để bao bọc các Huyện bên trong
+                    return { stroke: true, color: currentAppColors.primary, weight: 5, opacity: 0.9, fill: false, className: 'neon-province-border' }; 
                 }
                 
                 return { stroke: false, fill: false, className: '' };
@@ -1450,7 +1453,8 @@
             
             let region = getRegionForProvince(propName);
             if (activeRegionId && region && region.id === activeRegionId) {
-                return { stroke: true, color: currentAppColors.primary, weight: 1.5, opacity: 0.6, fill: false, className: 'neon-province-border' };
+                // Tăng độ dày viền tỉnh ở mức zoom xa (từ 1.5 lên 3)
+                return { stroke: true, color: currentAppColors.primary, weight: 3, opacity: 0.9, fill: false, className: 'neon-province-border' };
             }
 
             return { stroke: false, fill: false, className: '' };
@@ -1509,7 +1513,7 @@
             return false;
         }
 
-        function getDistrictStyle(feature) {
+function getDistrictStyle(feature) {
             let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
             
             if (!normalizedActiveProv || normalizedActiveProv === "") {
@@ -1535,13 +1539,24 @@
                 return { 
                     stroke: true, 
                     color: currentAppColors.secondary,
-                    weight: 2.5,      
+                    weight: 4,          // Làm viền rất đậm (từ 2.5 lên 4)
                     opacity: 1,       
-                    fill: false,      
+                    fill: true,         // Bật phủ nền
+                    fillColor: currentAppColors.secondary,
+                    fillOpacity: 0.15,  // Phủ màu neon mờ để phân biệt rõ khu vực đã check-in
                     className: 'neon-province-active' 
                 };
             } else {
-                return { stroke: true, color: currentAppColors.primary, weight: 1.2, opacity: 0.6, fill: false, className: 'neon-province-border' };
+                return { 
+                    stroke: true, 
+                    color: currentAppColors.primary, 
+                    weight: 2.5,        // Viền rõ nét hơn (từ 1.2 lên 2.5)
+                    opacity: 0.9,       
+                    fill: true,         
+                    fillColor: '#ffffff',
+                    fillOpacity: 0.35,  // Phủ lớp trắng mờ 35% để làm chìm các chi tiết rối rắm của Google Maps
+                    className: 'neon-province-border' 
+                };
             }
         }
 

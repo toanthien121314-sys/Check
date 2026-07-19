@@ -2682,6 +2682,51 @@
             modal.classList.remove('active');
         }
 
+// ==========================================
+        // HÀM HỖ TRỢ: CHỜ TẮT POPUP MỚI CẮM CỜ VÀ MỞ TEM
+        // ==========================================
+        function finalizeCheckInLocal(tempSpot, regionName) {
+            closeModal(); // Đóng form nhập liệu sau khi server xác nhận
+
+            const successOverlay = document.getElementById('successOverlay');
+            if (successOverlay) {
+                // Hiện popup bé mèo chúc mừng
+                successOverlay.style.display = 'flex';
+                setTimeout(() => { successOverlay.style.opacity = '1'; }, 10);
+                
+                // Đợi 4 giây (4000ms) để xem hết animation của file SVG, sau đó tắt popup
+                setTimeout(() => {
+                    successOverlay.style.opacity = '0';
+                    setTimeout(() => { 
+                        successOverlay.style.display = 'none'; 
+                        
+                        // --- ĐIỂM QUAN TRỌNG: Tắt popup xong mới bắt đầu thả cờ đỏ ---
+                        addRegionalMarker(regionName, tempSpot.lat, tempSpot.lng, `Khu vực tạo tự động! 🏙️`);
+                        globalSpotsData.push(tempSpot);
+                        const newMarker = addSpotMarker(tempSpot.name, tempSpot.lat, tempSpot.lng, tempSpot.date, tempSpot.note, tempSpot.stampUrl);
+                        
+                        // Cập nhật lại bản đồ và mở Tem Bưu Chính
+                        if (isPhotoView) {
+                            renderPhotoLayer();
+                        } else {
+                            updateLayerVisibility();
+                            newMarker.openPopup();
+                        }
+                    }, 400); // 400ms là thời gian mờ đi của CSS
+                }, 4000); // <--- ĐÃ TĂNG LÊN 4 GIÂY Ở ĐÂY
+            } else {
+                // Dự phòng nếu không tìm thấy HTML Overlay
+                addRegionalMarker(regionName, tempSpot.lat, tempSpot.lng, `Khu vực tạo tự động! 🏙️`);
+                globalSpotsData.push(tempSpot);
+                const newMarker = addSpotMarker(tempSpot.name, tempSpot.lat, tempSpot.lng, tempSpot.date, tempSpot.note, tempSpot.stampUrl);
+                if (isPhotoView) renderPhotoLayer();
+                else { updateLayerVisibility(); newMarker.openPopup(); }
+            }
+        }
+
+        // ==========================================
+        // HÀM LƯU CHECK-IN (ĐÃ ĐƯỢC TỐI ƯU THỨ TỰ HIỂN THỊ)
+        // ==========================================
         function submitCheckIn() {
             const name = placeNameInput.value.trim();
             const note = placeNoteInput.value.trim();
@@ -2693,8 +2738,6 @@
             btnSubmit.disabled = true;
 
             const regionName = currentDetectedRegion;
-            addRegionalMarker(regionName, currentClickLat, currentClickLng, `Khu vực tạo tự động! 🏙️`);
-            
             const t = new Date();
             const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
             
@@ -2711,18 +2754,8 @@
                 folderUrl: "",
                 stampUrl: stampBase64 
             };
-            
-            globalSpotsData.push(tempSpot);
-            const newMarker = addSpotMarker(name, currentClickLat, currentClickLng, todayStr, note, stampBase64);
-            
-            closeModal(); 
-            if (isPhotoView) {
-                renderPhotoLayer();
-            } else {
-                updateLayerVisibility();
-                newMarker.openPopup();
-            }
 
+            // Gửi dữ liệu lên máy chủ TRƯỚC
             fetch(GAS_API_URL, {
                 method: "POST",
                 redirect: "follow", 
@@ -2743,27 +2776,15 @@
                     const respData = JSON.parse(text);
                     btnSubmit.innerHTML = oldText; 
                     btnSubmit.disabled = false;
+                    
                     if (respData.success) {
-                        
-                        // 1. GỌI HIỆU ỨNG BÉ MÈO CATCHECK.SVG CHÚC MỪNG
-                        const successOverlay = document.getElementById('successOverlay');
-                        if (successOverlay) {
-                            successOverlay.style.display = 'flex';
-                            setTimeout(() => { successOverlay.style.opacity = '1'; }, 10);
-                            
-                            // Tự động tắt sau 2.5 giây
-                            setTimeout(() => {
-                                successOverlay.style.opacity = '0';
-                                setTimeout(() => { successOverlay.style.display = 'none'; }, 400);
-                            }, 2500);
-                        }
-
-                        // Vẫn giữ thông báo nhỏ phía trên góc cho chắc cú
                         showToast(`⚡ Đã lưu "${name}" thành công!`);
-                        
                         tempSpot.folderUrl = respData.url; 
                         if (respData.stampUrl) tempSpot.stampUrl = respData.stampUrl;
-                        if (isPhotoView) renderPhotoLayer();
+                        
+                        // Kích hoạt chuỗi hiệu ứng: Đóng Modal -> Bật Mèo -> Thả Cờ
+                        finalizeCheckInLocal(tempSpot, regionName);
+
                         fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
                             .then(r => r.json())
                             .then(newData => {
@@ -2785,11 +2806,14 @@
                         .then(newData => {
                             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
                             const savedSpot = newData.spots.find(s => s.name === name && Math.abs(s.lat - currentClickLat) < 0.0001);
+                            
                             if (savedSpot && savedSpot.folderUrl) {
                                 tempSpot.folderUrl = savedSpot.folderUrl; 
                                 if (savedSpot.stampUrl) tempSpot.stampUrl = savedSpot.stampUrl;
-                                if (isPhotoView) renderPhotoLayer();
                                 showToast(`✅ Đã đồng bộ thành công "${name}" cùng tem thư!`, 3000);
+                                
+                                // Failsafe thành công: Vẫn gọi chuỗi hiệu ứng chuẩn
+                                finalizeCheckInLocal(tempSpot, regionName);
                             } else {
                                 alert("Lỗi thực sự: Không thể tạo thư mục. Vui lòng kiểm tra lại quyền Drive!");
                             }

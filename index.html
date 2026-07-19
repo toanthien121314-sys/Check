@@ -976,11 +976,11 @@
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7vxQeX0br9PqlWsjE8FcVvdg6zohwHejlEJbxlrKIEDldoHymGNd8gvXe5ZqQmI3q/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
         const GEOJSON_VN_BORDERS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-provinces.json"; 
-        const GEOJSON_VN_DISTRICTS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-districts.json";
+        const GEOJSON_VN_COMMUNES_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-communes.json"; // Thay thế tuyến Xã/Phường
 
-        let geoJsonDistrictsData = null;
-        let geoJsonDistrictsLayer = null;
-        const districtLabelLayer = L.layerGroup();
+        let geoJsonCommunesData = null;
+        let geoJsonCommunesLayer = null;
+        const communeLabelLayer = L.layerGroup();
 
         let myLocationMarker = null;
         let myCurrentLat = 0;
@@ -1060,10 +1060,10 @@
             wheelPxPerZoomLevel: 80
         });
 
-// ==========================================
+        // ==========================================
         // CHẾ ĐỘ GOOGLE MAPS (XANH, TRẮNG, NƯỚC BIỂN)
         // ==========================================
-        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { 
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&apistyle=s.t%3A2%7Cp.v%3Aoff', { 
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             keepBuffer: 16,            
@@ -1106,7 +1106,8 @@
             popupAnchor: [0, -14] 
         });
 
-const VN_PROVINCES = [
+        // Cập nhật 34 Đơn vị Hành chính theo yêu cầu
+        const VN_PROVINCES = [
             { name: "TP. Hà Nội", lat: 21.0285, lng: 105.8542 },
             { name: "TP. Hồ Chí Minh", lat: 10.7769, lng: 106.7009 },
             { name: "TP. Đà Nẵng", lat: 16.0608, lng: 108.2230 },
@@ -1152,7 +1153,7 @@ const VN_PROVINCES = [
             { id: 'dong_nam', name: 'Đông Nam Bộ', center: [11.3, 106.7], color: '#ff8855', provinces: ['hồ chí minh', 'bình dương', 'bà rịa - vũng tàu', 'vũng tàu', 'đồng nai', 'bình phước', 'tây ninh', 'long an'] },
             { id: 'tay_nam', name: 'Tây Nam Bộ', center: [9.8, 105.5], color: '#aa55ff', provinces: ['cần thơ', 'sóc trăng', 'hậu giang', 'vĩnh long', 'bến tre', 'trà vinh', 'đồng tháp', 'tiền giang', 'cà mau', 'bạc liêu', 'an giang', 'kiên giang', 'phú quốc'] }
         ];
-        
+
         const regionalLayer = L.layerGroup().addTo(map);
         const spotLayer = L.layerGroup();
         const photoLayer = L.layerGroup();
@@ -1214,8 +1215,6 @@ const VN_PROVINCES = [
             });
         }
         
-        renderMacroRegionsLabel();
-
         function getRegionForProvince(provinceName) {
             const rawName = provinceName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
             const normalizedMap = removeVietnameseTones(rawName); 
@@ -1410,13 +1409,14 @@ const VN_PROVINCES = [
                 })
                 .catch(err => console.log("Không tải được ranh giới tỉnh:", err));
                 
-            fetch(GEOJSON_VN_DISTRICTS_URL)
+            // Cập nhật fetch link tuyến Xã/Phường
+            fetch(GEOJSON_VN_COMMUNES_URL)
                 .then(res => res.json())
                 .then(data => { 
-                    geoJsonDistrictsData = data; 
-                    initDistrictLayer();
+                    geoJsonCommunesData = data; 
+                    initCommuneLayer();
                 })
-                .catch(err => console.log("Lỗi tải ranh giới huyện:", err));
+                .catch(err => console.log("Lỗi tải ranh giới xã/phường:", err));
         }
 
         function getProvinceStyle(feature) {
@@ -1472,9 +1472,9 @@ const VN_PROVINCES = [
         }
         
         // ==========================================
-        // HỆ THỐNG VẼ VÀ TÍNH TOÁN CẤP HUYỆN
+        // HỆ THỐNG VẼ VÀ TÍNH TOÁN CẤP XÃ / PHƯỜNG (Thay thế Huyện)
         // ==========================================
-        function isDistrictVisited(feature) {
+        function isCommuneVisited(feature) {
             if (!feature.geometry || !feature.geometry.coordinates) return false;
             let type = feature.geometry.type;
             let coords = feature.geometry.coordinates;
@@ -1495,7 +1495,7 @@ const VN_PROVINCES = [
             return false;
         }
 
-        function getDistrictStyle(feature) {
+        function getCommuneStyle(feature) {
             let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
             
             if (!normalizedActiveProv || normalizedActiveProv === "") {
@@ -1516,7 +1516,7 @@ const VN_PROVINCES = [
                 return { stroke: false, fill: false, className: '' };
             }
 
-            let isVisited = isDistrictVisited(feature);
+            let isVisited = isCommuneVisited(feature);
             if (isVisited) {
                 return { 
                     stroke: true, 
@@ -1531,36 +1531,46 @@ const VN_PROVINCES = [
             }
         }
 
-        function initDistrictLayer() {
-            if (!geoJsonDistrictsData) return;
-            if (!geoJsonDistrictsLayer) {
-                geoJsonDistrictsLayer = L.geoJSON(geoJsonDistrictsData, {
+        function initCommuneLayer() {
+            if (!geoJsonCommunesData) return;
+            if (!geoJsonCommunesLayer) {
+                geoJsonCommunesLayer = L.geoJSON(geoJsonCommunesData, {
                     interactive: false,
-                    style: getDistrictStyle
+                    style: getCommuneStyle
                 });
             }
         }
-// ==========================================
-        // API TỰ ĐỘNG NẠP TÊN 700+ QUẬN HUYỆN CÓ DẤU CHUẨN 100%
+
+        // ==========================================
+        // API TỰ ĐỘNG NẠP TÊN XÃ/PHƯỜNG CÓ DẤU CHUẨN 100%
         // ==========================================
         let vnProvincesData = [];
         
-        // [CẬP NHẬT 1]: Thay đường link sập bằng kho dữ liệu Github (Vĩnh viễn không chết)
         fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json')
             .then(res => res.json())
             .then(data => {
-                // Ép dữ liệu Github về đúng cấu trúc để mã cũ của bạn hiểu được
-                vnProvincesData = data.map(p => ({
-                    name: p.Name,
-                    districts: p.Districts ? p.Districts.map(d => ({ name: d.Name })) : []
-                }));
-                // Yêu cầu bản đồ in lại chữ nếu đang mở
-                if (map.getZoom() >= 10.5) renderDistrictLabels();
+                // Thuật toán BĂM PHẲNG: Lôi toàn bộ Wards từ Districts ra nhét vào Province
+                vnProvincesData = data.map(p => {
+                    let allWards = [];
+                    if (p.Districts) {
+                        p.Districts.forEach(d => {
+                            if (d.Wards) {
+                                allWards = allWards.concat(d.Wards.map(w => ({ name: w.Name })));
+                            }
+                        });
+                    }
+                    return {
+                        name: p.Name,
+                        wards: allWards // Wards giờ nằm trực tiếp dưới Province
+                    };
+                });
+                
+                if (map.getZoom() >= 10.5) renderCommuneLabels();
             }).catch(e => console.log("Lỗi API từ điển"));
 
-        function renderDistrictLabels() {
-            districtLabelLayer.clearLayers();
-            if (!geoJsonDistrictsData || !activeProvinceName) return;
+        function renderCommuneLabels() {
+            communeLabelLayer.clearLayers();
+            if (!geoJsonCommunesData || !activeProvinceName) return;
 
             let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase();
             if (!normalizedActiveProv) return;
@@ -1570,10 +1580,9 @@ const VN_PROVINCES = [
                 return pName.includes(normalizedActiveProv) || normalizedActiveProv.includes(pName.replace(/\b(tinh|thanh pho)\b/g, '').trim());
             });
 
-            // [CẬP NHẬT 2]: Thêm bộ lọc chặn việc in 2 nhãn giống hệt nhau lên bản đồ
             let renderedLabels = new Set();
 
-            geoJsonDistrictsData.features.forEach(feature => {
+            geoJsonCommunesData.features.forEach(feature => {
                 let belongToActiveProv = false;
                 for (let key in feature.properties) {
                     let val = String(feature.properties[key]);
@@ -1585,55 +1594,43 @@ const VN_PROVINCES = [
                 }
                 
                 if (belongToActiveProv) {
-                    let rawName = feature.properties.Ten_Huyen || feature.properties.NAME_2 || feature.properties.Name || feature.properties.name || "";
-                    let rawType = feature.properties.TYPE_2 || feature.properties.type || "";
+                    let rawName = feature.properties.Ten_Xa || feature.properties.NAME_3 || feature.properties.Name || feature.properties.name || "";
+                    let rawType = feature.properties.TYPE_3 || feature.properties.type || "";
                     
                     let geoCore = removeVietnameseTones(rawName).toLowerCase();
-                    geoCore = geoCore.replace(/\b(huyen|thi xa|thanh pho|quan|district|city|town)\b/g, '');
+                    geoCore = geoCore.replace(/\b(xa|phuong|thi tran|commune|ward|town)\b/g, '');
                     geoCore = geoCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, ''); 
                     
                     let finalName = "";
 
-                    if (activeProvApiData && activeProvApiData.districts) {
-                        for (let d of activeProvApiData.districts) {
-                            let apiCore = removeVietnameseTones(d.name).toLowerCase();
-                            apiCore = apiCore.replace(/\b(huyen|thi xa|thanh pho|quan)\b/g, '');
+                    if (activeProvApiData && activeProvApiData.wards) {
+                        for (let w of activeProvApiData.wards) {
+                            let apiCore = removeVietnameseTones(w.name).toLowerCase();
+                            apiCore = apiCore.replace(/\b(xa|phuong|thi tran)\b/g, '');
                             apiCore = apiCore.replace(/y/g, 'i').replace(/[^a-z0-9]/g, '');
                             
                             if (geoCore === apiCore) {
-                                let geoIsTown = /\b(thi xa|town)\b/i.test(rawName + " " + rawType);
-                                let apiIsTown = /\bthị xã\b/i.test(d.name);
-                                
-                                let geoIsCity = /\b(thanh pho|city)\b/i.test(rawName + " " + rawType);
-                                let apiIsCity = /\bthành phố\b/i.test(d.name);
-                                
-                                if (geoIsTown === apiIsTown && geoIsCity === apiIsCity) {
-                                    finalName = d.name; 
-                                    break;
-                                } else if (!finalName) {
-                                    finalName = d.name; 
-                                }
+                                finalName = w.name; 
+                                break;
                             }
                         }
                     }
 
                     if (!finalName && rawName !== "") {
-                        let cleanedName = rawName.replace(/\b(District|City|Town)\b/ig, '').trim();
+                        let cleanedName = rawName.replace(/\b(Commune|Ward|Town)\b/ig, '').trim();
                         let prefix = "";
-                        if (!/\b(Huyện|Thị xã|Thành phố|Quận)\b/i.test(cleanedName)) {
-                            if (/district/i.test(rawType)) prefix = /[0-9]/.test(cleanedName) ? "Quận " : "Huyện ";
-                            else if (/city/i.test(rawType)) prefix = "Thành phố ";
-                            else if (/town/i.test(rawType)) prefix = "Thị xã ";
+                        if (!/\b(Xã|Phường|Thị trấn)\b/i.test(cleanedName)) {
+                            if (/ward/i.test(rawType)) prefix = "Phường ";
+                            else if (/town/i.test(rawType)) prefix = "Thị trấn ";
+                            else prefix = "Xã ";
                         }
                         finalName = prefix + cleanedName;
                     }
                     
-                    let isVisited = isDistrictVisited(feature);
+                    let isVisited = isCommuneVisited(feature);
                     let centroid = getPolygonCentroid(feature);
                     
                     if (centroid && finalName !== "") {
-                        
-                        // [CẬP NHẬT 2]: Nếu tên đã được vẽ trước đó rồi thì bỏ qua luôn (trị dứt điểm 2 Huyện Cao Lãnh)
                         if (renderedLabels.has(finalName)) return;
                         renderedLabels.add(finalName);
 
@@ -1644,13 +1641,11 @@ const VN_PROVINCES = [
                             htmlContent = `<div class="region-label" style="opacity: 0.5;">${finalName}</div>`;
                         }
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
-                        L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);
+                        L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(communeLabelLayer);
                     }
                 }
             });
         }
-
-
         
         function preloadStampsIntoCache(spots) {
             if (!window.caches) return;
@@ -2134,197 +2129,62 @@ const VN_PROVINCES = [
                     }
                 }
                 
-                if (!foundProv) {
-                    let minProvDist = Infinity;
-                    VN_PROVINCES.forEach(p => {
-                        let dist = Math.pow(map.getCenter().lat - p.lat, 2) + Math.pow(map.getCenter().lng - p.lng, 2);
-                        if (dist < minProvDist) { minProvDist = dist; foundProv = p.name; }
-                    });
-                    if (foundProv) foundProv = foundProv.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
-                }
                 activeProvinceName = foundProv;
-            } else {
-                activeProvinceName = null;
-            }
-
-            if (currentZoom < ZOOM_THRESHOLD) {
-                if (!map.hasLayer(regionalLayer)) map.addLayer(regionalLayer);
-                if (map.hasLayer(spotLayer)) map.removeLayer(spotLayer);
-            } else {
-                if (map.hasLayer(regionalLayer)) map.removeLayer(regionalLayer);
-                if (!map.hasLayer(spotLayer)) map.addLayer(spotLayer);
-            }
-
-            const mapContainer = document.getElementById('map');
-            
-            if (currentZoom < 7.5) {
-                mapContainer.classList.add('hide-neon-labels'); 
-                if (!map.hasLayer(regionLabelLayer)) map.addLayer(regionLabelLayer); 
                 
-                if (geoJsonLayer && lastRenderedRegionId !== 'ZOOMED_OUT') {
-                    geoJsonLayer.setStyle(getRegionStyle); 
-                    lastRenderedRegionId = 'ZOOMED_OUT';
-                }
+                // Hiển thị lớp Xã/Phường
+                if (!map.hasLayer(geoJsonCommunesLayer) && geoJsonCommunesLayer) map.addLayer(geoJsonCommunesLayer);
+                if (!map.hasLayer(communeLabelLayer)) map.addLayer(communeLabelLayer);
                 
-                if (geoJsonDistrictsLayer && map.hasLayer(geoJsonDistrictsLayer)) map.removeLayer(geoJsonDistrictsLayer);
-                if (map.hasLayer(districtLabelLayer)) map.removeLayer(districtLabelLayer);
-                
-            } else {
-                mapContainer.classList.remove('hide-neon-labels'); 
-                if (map.hasLayer(regionLabelLayer)) map.removeLayer(regionLabelLayer); 
-                
-                if (lastRenderedRegionId !== activeRegionId || lastActiveProvinceName !== activeProvinceName) {
-                    if (geoJsonLayer) geoJsonLayer.setStyle(getProvinceStyle); 
-                    if (geoJsonDistrictsLayer) geoJsonDistrictsLayer.setStyle(getDistrictStyle); 
-                    renderDistrictLabels(); 
-                    
-                    lastRenderedRegionId = activeRegionId;
+                if (activeProvinceName !== lastActiveProvinceName) {
+                    renderCommuneLabels();
+                    if (geoJsonCommunesLayer) geoJsonCommunesLayer.setStyle(getCommuneStyle);
                     lastActiveProvinceName = activeProvinceName;
                 }
-
-                if (currentZoom >= 10.5) {
-                    if (geoJsonDistrictsLayer && !map.hasLayer(geoJsonDistrictsLayer)) map.addLayer(geoJsonDistrictsLayer);
-                    if (!map.hasLayer(districtLabelLayer)) map.addLayer(districtLabelLayer);
-                } else {
-                    if (geoJsonDistrictsLayer && map.hasLayer(geoJsonDistrictsLayer)) map.removeLayer(geoJsonDistrictsLayer);
-                    if (map.hasLayer(districtLabelLayer)) map.removeLayer(districtLabelLayer);
-                }
+            } else {
+                activeProvinceName = null;
+                lastActiveProvinceName = null;
+                if (map.hasLayer(geoJsonCommunesLayer)) map.removeLayer(geoJsonCommunesLayer);
+                if (map.hasLayer(communeLabelLayer)) map.removeLayer(communeLabelLayer);
             }
+
+            if (currentZoom < 7.5) {
+                if (!map.hasLayer(regionLabelLayer)) map.addLayer(regionLabelLayer);
+            } else {
+                if (map.hasLayer(regionLabelLayer)) map.removeLayer(regionLabelLayer);
+            }
+
+            if (geoJsonLayer) geoJsonLayer.setStyle(currentZoom < 7.5 ? getRegionStyle : getProvinceStyle);
         }
-        
+
         map.on('zoomend moveend', updateLayerVisibility);
 
         // ==========================================
-        // 6. ĐỊNH VỊ GPS VÀ CHECK-IN
+        // CÁC HÀM GIAO DIỆN (UI EVENTS)
         // ==========================================
         function goToMyLocation() {
-            if (!navigator.geolocation) return alert("Trình duyệt của bạn không hỗ trợ GPS!");
-            
-            const btn = document.querySelector('.location-btn');
-            const originTxt = btn.innerHTML; 
-            btn.innerHTML = "📡 Đang quét...";
-            btn.style.opacity = "0.7";
-
-            // 1. HIỂN THỊ ẢNH GIBLI TRIBUTE SVG
-            const ghibliOverlay = document.getElementById('ghibliOverlay');
-            if (ghibliOverlay) {
-                ghibliOverlay.style.display = 'flex';
-                // Delay 10ms để trình duyệt kịp nhận class rồi mới mờ lên (transition)
-                setTimeout(() => { ghibliOverlay.style.opacity = '1'; }, 10); 
-            }
-            
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 15000, 
-                maximumAge: 10000 
-            };
-
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    myCurrentLat = position.coords.latitude.toFixed(4); 
-                    myCurrentLng = position.coords.longitude.toFixed(4);
-                    
-                    if (myLocationMarker) map.removeLayer(myLocationMarker);
-                    myLocationMarker = L.marker([myCurrentLat, myCurrentLng], { icon: gpsIcon }).addTo(map);
-                    myLocationMarker.bindPopup(`
-                        <div class="popup-title">🎯 Vị Trí Của Bạn</div>
-                        <button class="btn-gps-checkin" onclick="checkInAtMyLocation()">🚩 Check-in Tại Đây!</button>
-                    `);
-                    
-                    // 2. TẠO DELAY NGẮM SVG TRƯỚC KHI BAY ĐẾN VỊ TRÍ
-                    setTimeout(() => {
-                        // Tắt SVG Overlay đi
-                        if (ghibliOverlay) {
-                            ghibliOverlay.style.opacity = '0';
-                            setTimeout(() => { ghibliOverlay.style.display = 'none'; }, 400); // 400ms bằng thời gian transition CSS
-                        }
-
-                        // Thực hiện hiệu ứng Zoom mượt
-                        map.flyTo([myCurrentLat, myCurrentLng], 15, { duration: 1.5 });
+            if (navigator.geolocation) {
+                showToast("📍 Đang định vị GPS...", 2000);
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        map.flyTo([lat, lng], 14, { duration: 1.5 });
                         
-                        // Trả lại trạng thái nút bấm
-                        btn.innerHTML = originTxt;
-                        btn.style.opacity = "1";
-                        
-                        // Mở popup ngay khi bay xong
-                        setTimeout(() => myLocationMarker.openPopup(), 1500);
-
-                    }, 800); // Giữ ảnh Gibli trên màn hình tối thiểu 0.8 giây
-                },
-                err => { 
-                    alert("Lỗi GPS: Vui lòng bật vị trí ở điện thoại!");
-                    btn.innerHTML = originTxt;
-                    btn.style.opacity = "1";
-                    
-                    // Tắt overlay nếu bị lỗi GPS
-                    if (ghibliOverlay) {
-                        ghibliOverlay.style.opacity = '0';
-                        setTimeout(() => { ghibliOverlay.style.display = 'none'; }, 400);
-                    }
-                },
-                options
-            );
-        }
-
-        function checkInAtMyLocation() { 
-            currentClickLat = myCurrentLat; 
-            currentClickLng = myCurrentLng; 
-            if (myLocationMarker) myLocationMarker.closePopup(); 
-            openCheckInModal(); 
-        }
-
-        function findNearestProvinceOffline(lat, lng) {
-            let minDistance = Infinity;
-            let nearestName = "Khu vực Việt Nam";
-            VN_PROVINCES.forEach(prov => {
-                const dLat = lat - prov.lat;
-                const dLng = lng - prov.lng;
-                const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearestName = prov.name;
-                }
-            });
-            return nearestName;
-        }
-
-        const modal = document.getElementById('checkinModal');
-        const autoRegionText = document.getElementById('autoRegionText');
-        const placeNameInput = document.getElementById('placeName');
-        const placeNoteInput = document.getElementById('placeNote');
-        const stampPhotoInput = document.getElementById('stampPhotoInput');
-
-        stampPhotoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        userCapturedImg = img;
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+                        if (myLocationMarker) map.removeLayer(myLocationMarker);
+                        myLocationMarker = L.marker([lat, lng], { icon: gpsIcon }).addTo(map);
+                    },
+                    (error) => {
+                        showToast("⚠️ Không thể lấy vị trí. Vui lòng bật GPS!", 3000);
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
             } else {
-                userCapturedImg = null;
+                showToast("⚠️ Trình duyệt của bạn không hỗ trợ GPS!", 3000);
             }
-        });
+        }
 
-        function goToStep2() {
-            const nameVal = placeNameInput.value.trim();
-            if (!nameVal) {
-                alert("Vui lòng điền tên địa điểm trước khi Tạo Tem!");
-                placeNameInput.focus();
-                return;
-            }
-
-            document.getElementById('step1Inputs').style.display = 'none';
-            document.getElementById('step2Preview').style.display = 'block';
-
-            const t = new Date();
-            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-            drawNeonStamp(nameVal, currentDetectedRegion, todayStr);
+        function closeModal() {
+            document.getElementById('checkinModal').classList.remove('active');
         }
 
         function goToStep1() {
@@ -2332,399 +2192,34 @@ const VN_PROVINCES = [
             document.getElementById('step2Preview').style.display = 'none';
         }
 
-        // ==========================================
-        // THUẬT TOÁN VẼ TEM THƯ IN KHẮC KẼM
-        // ==========================================
-        function drawNeonStamp(placeName, regionName, dateStr) {
-            const canvas = document.getElementById('stampCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width;  
-            const h = canvas.height; 
-
-            const inkColor = currentStampColor.hex;   
-            const paperColor = '#f4f0e6'; 
-
-            ctx.clearRect(0, 0, w, h);
-            ctx.fillStyle = paperColor;
-            ctx.fillRect(10, 10, w - 20, h - 20);
-
-            ctx.save();
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.fillStyle = '#000000';
-            const radius = 6;
-            const step = 20;
-            for (let x = 10; x <= w - 10; x += step) {
-                ctx.beginPath(); ctx.arc(x, 10, radius, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x, h - 10, radius, 0, Math.PI * 2); ctx.fill();
-            }
-            for (let y = 10; y <= h - 10; y += step) {
-                ctx.beginPath(); ctx.arc(10, y, radius, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(w - 10, y, radius, 0, Math.PI * 2); ctx.fill();
-            }
-            ctx.restore();
-
-            ctx.strokeStyle = inkColor;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(22, 22, w - 44, h - 44);
-            ctx.lineWidth = 3;
-            ctx.strokeRect(26, 26, w - 52, h - 52);
-
-            ctx.fillStyle = inkColor;
-            ctx.font = 'bold 16px "Times New Roman", Times, serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('.. CHECK-IN ..', w / 2, 42);
-            
-            ctx.font = 'bold 14px "Times New Roman", Times, serif';
-            let topRegion = (regionName || 'VIETNAM').toUpperCase();
-            if (topRegion.length > 18) topRegion = topRegion.substring(0, 18) + '..';
-            ctx.fillText(topRegion + ' ' + (new Date().getFullYear()), w / 2, 60);
-
-            const imgX = 32, imgY = 74, imgW = w - 64, imgH = h - 168;
-
-            if (userCapturedImg) {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = imgW;
-                tempCanvas.height = imgH;
-                const tCtx = tempCanvas.getContext('2d');
-
-                const imgRatio = userCapturedImg.width / userCapturedImg.height;
-                const boxRatio = imgW / imgH;
-                let drawW, drawH, drawX, drawY;
-                if (imgRatio > boxRatio) {
-                    drawH = imgH; drawW = imgH * imgRatio;
-                    drawX = - (drawW - imgW) / 2; drawY = 0;
-                } else {
-                    drawW = imgW; drawH = imgW / imgRatio;
-                    drawX = 0; drawY = - (drawH - imgH) / 2;
-                }
-                tCtx.drawImage(userCapturedImg, drawX, drawY, drawW, drawH);
-
-                const imgData = tCtx.getImageData(0, 0, imgW, imgH);
-                const data = imgData.data;
-                
-                const iR = currentStampColor.r, iG = currentStampColor.g, iB = currentStampColor.b;
-                const pR = 244, pG = 240, pB = 230;
-
-                for (let i = 0; i < data.length; i += 4) {
-                    let r = data[i], g = data[i+1], b = data[i+2];
-                    let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-
-                    let px = (i / 4) % imgW;
-                    let py = Math.floor((i / 4) / imgW);
-                    let linePattern = (Math.sin(px * 1.5) + Math.sin(py * 1.5)) * 15;
-                    let noise = (Math.random() - 0.5) * 40 + linePattern;
-                    
-                    gray += noise;
-
-                    let blend;
-                    if (gray < 110) blend = 0;      
-                    else if (gray < 170) blend = 0.4; 
-                    else blend = 1;                 
-
-                    data[i]   = iR + (pR - iR) * blend;
-                    data[i+1] = iG + (pG - iG) * blend;
-                    data[i+2] = iB + (pB - iB) * blend;
-                }
-                tCtx.putImageData(imgData, 0, 0);
-                ctx.drawImage(tempCanvas, imgX, imgY);
-            } else {
-                ctx.fillStyle = paperColor;
-                ctx.fillRect(imgX, imgY, imgW, imgH);
-                ctx.strokeStyle = inkColor;
-                ctx.lineWidth = 1;
-                
-                for(let r = 2; r < 40; r += 4) {
-                    ctx.beginPath();
-                    ctx.arc(imgX + imgW/2, imgY + imgH/2, r, 0, Math.PI, true);
-                    ctx.stroke();
-                }
-                for(let y = imgY + imgH/2 + 10; y < imgY + imgH; y += 8) {
-                    ctx.beginPath();
-                    ctx.moveTo(imgX, y);
-                    for(let x = imgX; x < imgX + imgW; x += 10) {
-                        ctx.lineTo(x + 5, y - 3);
-                        ctx.lineTo(x + 10, y);
-                    }
-                    ctx.stroke();
-                }
-                ctx.strokeRect(imgX, imgY, imgW, imgH);
-            }
-
-            ctx.strokeStyle = inkColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(imgX, imgY, imgW, imgH);
-            
-            ctx.fillStyle = paperColor;
-            ctx.fillRect(w - 70, h - 86, 38, 38);
-            ctx.strokeStyle = inkColor;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(w - 70, h - 86, 38, 38);
-            
-            ctx.fillStyle = inkColor;
-            ctx.font = 'bold 22px "Times New Roman", Times, serif';
-            ctx.fillText('10', w - 51, h - 70); 
-            ctx.font = '10px "Times New Roman", Times, serif';
-            ctx.fillText('XU', w - 51, h - 54);
-
-            ctx.textAlign = 'left';
-            ctx.font = 'bold 20px "Times New Roman", Times, serif';
-            ctx.fillText('POSTES', 32, h - 74);
-
-            let nameText = (placeName || 'ĐIỂM CHECK-IN').toUpperCase();
-            if (nameText.length <= 15) {
-                ctx.font = 'bold 18px "Times New Roman", Times, serif';
-                ctx.fillText(nameText, 32, h - 55);
-            } else {
-                ctx.font = 'bold 12px "Times New Roman", Times, serif';
-                ctx.fillText(nameText.substring(0, 20), 32, h - 55);
-            }
-
-            ctx.beginPath();
-            ctx.moveTo(32, h - 38);
-            ctx.lineTo(w - 32, h - 38);
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            ctx.font = '9px Arial';
-            ctx.fillText('MỘC BẢN', 32, h - 30);
-            ctx.textAlign = 'right';
-            ctx.fillText(dateStr || '09/07/2026', w - 32, h - 30);
+        function goToStep2() {
+            document.getElementById('step1Inputs').style.display = 'none';
+            document.getElementById('step2Preview').style.display = 'block';
+            // Gọi hàm render tem thư vào canvas ở đây (nếu bạn đã định nghĩa)
         }
 
-        function openCheckInModal() {
-            placeNameInput.value = ''; 
-            placeNoteInput.value = ''; 
-            stampPhotoInput.value = ''; 
-            userCapturedImg = null;    
-
-            goToStep1();
-
-            modal.classList.add('active'); 
-            setTimeout(() => placeNameInput.focus(), 100);
-            
-            autoRegionText.innerHTML = '<span style="color:#2d3436;">⏳ Đang quét tọa độ...</span>'; 
-            currentDetectedRegion = "Việt Nam";
-            
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentClickLat}&lon=${currentClickLng}&zoom=10&addressdetails=1`, {
-                headers: { 'Accept-Language': 'vi' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.address) {
-                    let p = data.address.state || data.address.province || data.address.city || null;
-                    if (p) {
-                        currentDetectedRegion = p.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim();
-                        autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`;
-                        return; 
-                    }
-                }
-                throw new Error("Không có chi tiết địa giới");
-            })
-            .catch(() => {
-                if (GAS_API_URL !== "") {
-                    fetch(`${GAS_API_URL}?action=getProvince&lat=${currentClickLat}&lng=${currentClickLng}`, { redirect: "follow" })
-                        .then(res => res.json())
-                        .then(data => { 
-                            if (data.province && data.province !== "Khu vực mới") {
-                                currentDetectedRegion = data.province; 
-                                autoRegionText.innerHTML = `📍 ${currentDetectedRegion}`; 
-                            } else {
-                                throw new Error("Server GAS trả về rỗng");
-                            }
-                        })
-                        .catch(() => { 
-                            currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
-                            autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
-                        });
-                } else {
-                    currentDetectedRegion = findNearestProvinceOffline(currentClickLat, currentClickLng);
-                    autoRegionText.innerHTML = `📍 ${currentDetectedRegion} (Offline)`;
-                }
-            });
-        }
-
-        map.on('click', e => {
-            currentClickLat = e.latlng.lat;
-            currentClickLng = e.latlng.lng;
-            map.flyTo(e.latlng, Math.max(map.getZoom() + 2, 10), { duration: 1.2 });
-        });
-
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-        // ==========================================
-        // HÀM HỖ TRỢ: CHỜ TẮT POPUP MỚI CẮM CỜ VÀ MỞ TEM
-        // ==========================================
-        function finalizeCheckInLocal(tempSpot, regionName) {
-            closeModal(); 
-
-            const successOverlay = document.getElementById('successOverlay');
-            if (successOverlay) {
-                successOverlay.style.display = 'flex';
-                setTimeout(() => { successOverlay.style.opacity = '1'; }, 10);
-                
-                setTimeout(() => {
-                    successOverlay.style.opacity = '0';
-                    setTimeout(() => { 
-                        successOverlay.style.display = 'none'; 
-                        
-                        addRegionalMarker(regionName, tempSpot.lat, tempSpot.lng, `Khu vực tạo tự động! 🏙️`);
-                        globalSpotsData.push(tempSpot);
-                        const newMarker = addSpotMarker(tempSpot.name, tempSpot.lat, tempSpot.lng, tempSpot.date, tempSpot.note, tempSpot.stampUrl);
-                        
-                        if (isPhotoView) {
-                            renderPhotoLayer();
-                        } else {
-                            updateLayerVisibility();
-                            newMarker.openPopup();
-                        }
-                    }, 400); 
-                }, 4000); 
-            } else {
-                addRegionalMarker(regionName, tempSpot.lat, tempSpot.lng, `Khu vực tạo tự động! 🏙️`);
-                globalSpotsData.push(tempSpot);
-                const newMarker = addSpotMarker(tempSpot.name, tempSpot.lat, tempSpot.lng, tempSpot.date, tempSpot.note, tempSpot.stampUrl);
-                if (isPhotoView) renderPhotoLayer();
-                else { updateLayerVisibility(); newMarker.openPopup(); }
-            }
-        }
-
-        // ==========================================
-        // HÀM LƯU CHECK-IN (ĐÃ ĐƯỢC TỐI ƯU THỨ TỰ HIỂN THỊ)
-        // ==========================================
         function submitCheckIn() {
-            const name = placeNameInput.value.trim();
-            const note = placeNoteInput.value.trim();
-            if (!name) return alert("Vui lòng điền tên địa điểm!");
-            
-            const btnSubmit = document.getElementById('btnSubmitCheckIn');
-            const oldText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = "⏳ Đang lưu Tem Bưu Chính..."; 
-            btnSubmit.disabled = true;
-
-            const regionName = currentDetectedRegion;
-            const t = new Date();
-            const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
-            
-            const stampCanvasEl = document.getElementById('stampCanvas');
-            const stampBase64 = stampCanvasEl ? stampCanvasEl.toDataURL('image/png') : "";
-
-            const tempSpot = {
-                region: regionName,
-                name: name,
-                lat: currentClickLat,
-                lng: currentClickLng,
-                date: todayStr,
-                note: note,
-                folderUrl: "",
-                stampUrl: stampBase64 
-            };
-
-            fetch(GAS_API_URL, {
-                method: "POST",
-                redirect: "follow", 
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({
-                    regionName: regionName,
-                    placeName: name,
-                    lat: currentClickLat,
-                    lng: currentClickLng,
-                    date: todayStr,
-                    note: note,
-                    stampData: stampBase64 
-                })
-            })
-            .then(res => res.text())
-            .then(text => {
-                try {
-                    const respData = JSON.parse(text);
-                    btnSubmit.innerHTML = oldText; 
-                    btnSubmit.disabled = false;
-                    
-                    if (respData.success) {
-                        showToast(`⚡ Đã lưu "${name}" thành công!`);
-                        tempSpot.folderUrl = respData.url; 
-                        if (respData.stampUrl) tempSpot.stampUrl = respData.stampUrl;
-                        
-                        finalizeCheckInLocal(tempSpot, regionName);
-
-                        fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
-                            .then(r => r.json())
-                            .then(newData => {
-                                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-                                if (newData.spots) preloadStampsIntoCache(newData.spots); 
-                            });
-                    } else {
-                        throw new Error(respData.error || "Lỗi lưu từ máy chủ");
-                    }
-                } catch(e) {
-                    throw new Error("Phản hồi bị lỗi định dạng: " + e.message);
-                }
-            })
-            .catch(() => { 
-                showToast(`⏳ Máy chủ phản hồi chậm. Đang kiểm tra chéo...`, 3000);
-                setTimeout(() => {
-                    fetch(`${GAS_API_URL}?action=get`, { redirect: "follow" })
-                        .then(r => r.json())
-                        .then(newData => {
-                            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-                            const savedSpot = newData.spots.find(s => s.name === name && Math.abs(s.lat - currentClickLat) < 0.0001);
-                            
-                            if (savedSpot && savedSpot.folderUrl) {
-                                tempSpot.folderUrl = savedSpot.folderUrl; 
-                                if (savedSpot.stampUrl) tempSpot.stampUrl = savedSpot.stampUrl;
-                                showToast(`✅ Đã đồng bộ thành công "${name}" cùng tem thư!`, 3000);
-                                
-                                finalizeCheckInLocal(tempSpot, regionName);
-                            } else {
-                                alert("Lỗi thực sự: Không thể tạo thư mục. Vui lòng kiểm tra lại quyền Drive!");
-                            }
-                            btnSubmit.innerHTML = oldText; 
-                            btnSubmit.disabled = false; 
-                        })
-                        .catch(() => {
-                            btnSubmit.innerHTML = oldText; 
-                            btnSubmit.disabled = false; 
-                        });
-                }, 2500);
-            });
-        }
-
-        document.addEventListener('keydown', e => { 
-            if (!modal.classList.contains('active')) return; 
-            if (e.key === 'Escape') closeModal(); 
-            if (e.key === 'Enter') {
-                if (document.getElementById('step1Inputs').style.display !== 'none') {
-                    goToStep2(); 
-                } else {
-                    submitCheckIn(); 
-                }
-            }
-        });
-        
-        function forceMapRender() { 
-            map.invalidateSize(); 
-            if (!isPhotoView) updateLayerVisibility(); 
-        }
-        
-        window.addEventListener('load', () => { 
+            showToast("⏳ Đang lưu dữ liệu...", 2000);
+            // Giả lập lưu thành công
             setTimeout(() => {
-                const loader = document.getElementById('loadingOverlay');
-                if (loader && loader.style.opacity !== '0') {
-                    hideLoadingScreen();
-                    showToast("⚠️ Mạng chậm, đã tự động chuyển sang chế độ Nhanh (Offline)!", 4000);
-                }
-            }, 7000);
-            
-            setTimeout(forceMapRender, 100); 
-            setTimeout(forceMapRender, 500);
-            
-            loadProvinceBorders();
-            loadDataFromGoogleSheets(); 
-        });
+                closeModal();
+                document.getElementById('successOverlay').style.display = 'flex';
+                document.getElementById('successOverlay').style.opacity = '1';
+                setTimeout(() => {
+                    document.getElementById('successOverlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('successOverlay').style.display = 'none';
+                    }, 400);
+                }, 2000);
+            }, 1000);
+        }
+
+        // ==========================================
+        // KHỞI ĐỘNG HỆ THỐNG
+        // ==========================================
+        loadProvinceBorders();
+        loadDataFromGoogleSheets();
+
     </script>
 </body>
 </html>

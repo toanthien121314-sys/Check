@@ -977,8 +977,8 @@
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7vxQeX0br9PqlWsjE8FcVvdg6zohwHejlEJbxlrKIEDldoHymGNd8gvXe5ZqQmI3q/exec";
         const LOCAL_STORAGE_KEY = 'neonMapDataCache';
-        const GEOJSON_VN_BORDERS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-provinces.json"; 
-        const GEOJSON_VN_DISTRICTS_URL = "https://cdn.jsdelivr.net/gh/TungTh/tungth.github.io/data/vn-districts.json";
+        const GEOJSON_VN_BORDERS_URL = "https://raw.githubusercontent.com/toanthien121314-sys/Check/main/vn-tinh.json"; 
+        const GEOJSON_VN_DISTRICTS_URL = "https://raw.githubusercontent.com/toanthien121314-sys/Check/main/vn-huyen.json";
 
         let geoJsonDistrictsData = null;
         let geoJsonDistrictsLayer = null;
@@ -1588,24 +1588,29 @@ function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
-            let normalizedActiveProv = removeVietnameseTones(activeProvinceName).toLowerCase().replace(/[^a-z0-9]/g, '');
+            let activeProvClean = removeVietnameseTones(activeProvinceName).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            let renderedLabels = new Set();
 
             geoJsonDistrictsData.features.forEach(feature => {
                 let props = feature.properties;
-                // Lấy tên tỉnh từ GeoJSON để so sánh
+                
+                // 1. So sánh tên tỉnh từ file mới (thuộc tính ten_tinh)
                 let featureProv = removeVietnameseTones(props.ten_tinh || "").toLowerCase().replace(/[^a-z0-9]/g, '');
 
-                if (featureProv === normalizedActiveProv) {
-                    // DỮ LIỆU CHUẨN: Lấy trực tiếp từ file không qua xử lý trung gian
-                    let rawName = props.ten_huyen || "";
-                    let rawType = props.loai || "";
-                    
-                    // Ghép loại hình và tên (Vd: "Thành phố" + "Thủ Đức")
-                    let finalName = (rawType ? rawType + " " : "") + rawName;
+                if (featureProv === activeProvClean) {
+                    // 2. Dữ liệu chuẩn: Lấy trực tiếp tên và loại hình từ file
+                    let name = props.ten_huyen || "";
+                    let type = props.loai || "";
+                    let finalName = (type ? type + " " : "") + name;
                     
                     let centroid = getPolygonCentroid(feature);
                     
-                    if (centroid && finalName !== "") {
+                    if (centroid && name !== "") {
+                        // Tránh in lặp nhãn cho các vùng bị chia cắt (như đảo)
+                        if (renderedLabels.has(finalName)) return; 
+                        renderedLabels.add(finalName);
+
                         let htmlContent = `<div class="region-label">${finalName}</div>`;
                         const icon = L.divIcon({ className: 'custom-district-icon', html: htmlContent, iconSize: [160, 20], iconAnchor: [80, 10] });
                         L.marker([centroid.lat, centroid.lng], { icon: icon }).addTo(districtLabelLayer);

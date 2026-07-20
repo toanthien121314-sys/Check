@@ -2704,21 +2704,22 @@ function renderDistrictLabels() {
             if (!isPhotoView) updateLayerVisibility(); 
         }
         
-        window.addEventListener('load', () => { 
-            setTimeout(() => {
-                const loader = document.getElementById('loadingOverlay');
-                if (loader && loader.style.opacity !== '0') {
-                    hideLoadingScreen();
-                    showToast("⚠️ Mạng chậm, đã tự động chuyển sang chế độ Nhanh (Offline)!", 4000);
-                }
-            }, 7000);
-            
-            setTimeout(forceMapRender, 100); 
-            setTimeout(forceMapRender, 500);
-            
-            loadProvinceBorders();
-            loadDataFromGoogleSheets(); 
-        });
+        window.addEventListener('load', () => {
+    setTimeout(() => {
+        const loader = document.getElementById('loadingOverlay');
+        if (loader && loader.style.opacity !== '0') {
+            hideLoadingScreen();
+            // Đã tắt thông báo mạng chậm, hệ thống vẫn âm thầm xử lý
+            // showToast("⚠️ Mạng chậm, đã tự động chuyển sang chế độ Nhanh (Offline)!", 4000);
+        }
+    }, 7000);
+
+    setTimeout(forceMapRender, 100);
+    setTimeout(forceMapRender, 500);
+
+    loadProvinceBorders();
+    loadDataFromGoogleSheets();
+});
     </script>
 </body>
 </html>

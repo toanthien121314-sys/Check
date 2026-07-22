@@ -736,6 +736,8 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
         }
 
         #stampCanvas {
@@ -797,11 +799,11 @@
            TÙY CHỈNH NÚT ĐÓNG (X) TRÊN POPUP
         ========================================= */
         .leaflet-popup-close-button {
-            color: #ff4757 !important; /* Màu đỏ tươi */
-            font-size: 26px !important; /* Chữ to và rõ hơn */
+            color: #ff4757 !important;
+            font-size: 26px !important;
             font-weight: bold !important;
-            right: 16px !important; /* Dời sang trái 16px để né nếp bo tròn */
-            top: 12px !important; /* Dời xuống dưới 12px để nằm ngay ngắn */
+            right: 16px !important;
+            top: 12px !important; 
             width: 24px !important;
             height: 24px !important;
             line-height: 20px !important;
@@ -810,12 +812,35 @@
             transition: transform 0.15s ease-out, color 0.15s ease !important;
         }
 
-        /* Hiệu ứng khi bấm/chạm vào dấu X */
         .leaflet-popup-close-button:hover,
         .leaflet-popup-close-button:active {
-            color: #ff0000 !important; /* Đỏ đậm hơn */
-            transform: scale(1.2) !important; /* Phóng to nhẹ lên một chút */
+            color: #ff0000 !important;
+            transform: scale(1.2) !important;
             background: transparent !important;
+        }
+
+        /* =========================================
+           GIAO DIỆN NÚT XÚC XẮC ĐỔI XU LẮC LẮC 
+        ========================================= */
+        #dice-btn {
+            cursor: pointer;
+            display: inline-block;
+            font-size: 18px;
+            margin-left: 8px;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+
+        .shake-dice {
+            animation: shake 0.4s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-30deg) scale(1.2); }
+            50% { transform: rotate(0deg) scale(1.2); }
+            75% { transform: rotate(30deg) scale(1.2); }
+            100% { transform: rotate(0deg); }
         }
 
     </style>
@@ -943,7 +968,7 @@
 
             <div id="step2Preview" class="step-container" style="display: none;">
                 <div class="stamp-preview-container">
-                    <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸</div>
+                    <div class="stamp-preview-title">🌸 Tem Thư Kỷ Niệm 🌸 <span id="dice-btn" title="Lắc ngẫu nhiên mệnh giá xu!">🎲</span></div>
                     <canvas id="stampCanvas" width="320" height="420"></canvas>
                 </div>
 
@@ -972,7 +997,7 @@
             );
         };
 
-// ==========================================
+        // ==========================================
         // 0. HỆ THỐNG MÀU NEON THEO NGÀY (LOẠI BỎ XANH LÁ/XANH BIỂN)
         // ==========================================
         const appNeonPalettes = [
@@ -1018,6 +1043,9 @@
         let globalSpotsData = []; 
         let isPhotoView = false; 
         let userCapturedImg = null; 
+        
+        // --- BIẾN LƯU SỐ XU CỦA TEM ---
+        let currentStampXu = 10;
 
         let geoJsonBordersData = null;
         let geoJsonLayer = null;
@@ -1087,7 +1115,7 @@
             wheelPxPerZoomLevel: 80
         });
 
-// ==========================================
+        // ==========================================
         // CHẾ ĐỘ GOOGLE MAPS (XANH, TRẮNG, NƯỚC BIỂN)
         // ==========================================
         L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { 
@@ -1184,7 +1212,7 @@
             { name: "Ninh Bình", lat: 20.2500, lng: 105.9667 }
         ];
 
-const REGIONS_DATA = [
+        const REGIONS_DATA = [
             { id: 'tay_bac', name: 'Tây Bắc Bộ', center: [21.5, 103.5], color: '#ff3366', provinces: ['lai châu', 'điện biên', 'sơn la', 'hòa bình', 'yên bái', 'lào cai'] },
             { id: 'dong_bac', name: 'Đông Bắc Bộ', center: [22.0, 106.0], color: '#ffaa00', provinces: ['hà giang', 'cao bằng', 'bắc kạn', 'lạng sơn', 'tuyên quang', 'thái nguyên', 'phú thọ', 'bắc giang', 'quảng ninh'] },
             { id: 'dbs_hong', name: 'ĐB Sông Hồng', center: [20.8, 106.0], color: '#ff00ff', provinces: ['bắc ninh', 'hà nam', 'hà nội', 'hải dương', 'hải phòng', 'hưng yên', 'nam định', 'ninh bình', 'thái bình', 'vĩnh phúc'] },
@@ -1460,7 +1488,7 @@ const REGIONS_DATA = [
                 .catch(err => console.log("Lỗi tải ranh giới huyện:", err));
         }
 
-function getProvinceStyle(feature) {
+        function getProvinceStyle(feature) {
             let propName = String(feature.properties.Name || feature.properties.name || feature.properties.ten_tinh || feature.properties.NAME_1 || "");
             let normalized = removeVietnameseTones(propName.replace(/Thành phố /i, 'TP. ').replace(/Tỉnh /i, '').trim());
             const currentZoom = map.getZoom();
@@ -1538,8 +1566,7 @@ function getProvinceStyle(feature) {
             return false;
         }
 
-
-function getDistrictStyle(feature) {
+        function getDistrictStyle(feature) {
             let normalizedActiveProv = activeProvinceName ? removeVietnameseTones(activeProvinceName) : "";
             
             if (!normalizedActiveProv || normalizedActiveProv === "") {
@@ -1566,7 +1593,7 @@ function getDistrictStyle(feature) {
                     stroke: true, 
                     color: currentAppColors.secondary,
                     weight: 4,          
-                    opacity: 1,       
+                    opacity: 1,        
                     fill: false,        // Tắt phủ nền
                     className: 'neon-province-active' 
                 };
@@ -1591,7 +1618,8 @@ function getDistrictStyle(feature) {
                 });
             }
         }
-// ==========================================
+
+        // ==========================================
         // API TỰ ĐỘNG NẠP TÊN 700+ QUẬN HUYỆN CÓ DẤU CHUẨN 100%
         // ==========================================
         let vnProvincesData = [];
@@ -1609,7 +1637,7 @@ function getDistrictStyle(feature) {
                 if (map.getZoom() >= 10.5) renderDistrictLabels();
             }).catch(e => console.log("Lỗi API từ điển"));
 
-function renderDistrictLabels() {
+        function renderDistrictLabels() {
             districtLabelLayer.clearLayers();
             if (!geoJsonDistrictsData || !activeProvinceName) return;
 
@@ -1644,8 +1672,6 @@ function renderDistrictLabels() {
             });
         }
 
-
-        
         function preloadStampsIntoCache(spots) {
             if (!window.caches) return;
             caches.open('neon-stamps-cache-v1').then(cache => {
@@ -2458,7 +2484,8 @@ function renderDistrictLabels() {
             
             ctx.fillStyle = inkColor;
             ctx.font = 'bold 22px "Times New Roman", Times, serif';
-            ctx.fillText('10', w - 51, h - 70); 
+            ctx.textAlign = 'center'; /* Đã thêm để căn giữa hoàn hảo mệnh giá xu */
+            ctx.fillText(currentStampXu.toString(), w - 51, h - 70); /* Đổi 10 tĩnh thành biến ngẫu nhiên */
             ctx.font = '10px "Times New Roman", Times, serif';
             ctx.fillText('XU', w - 51, h - 54);
 
@@ -2492,6 +2519,8 @@ function renderDistrictLabels() {
             placeNoteInput.value = ''; 
             stampPhotoInput.value = ''; 
             userCapturedImg = null;    
+            
+            currentStampXu = 10; /* Reset lại xu mỗi khi mở bảng mới */
 
             goToStep1();
 
@@ -2705,21 +2734,49 @@ function renderDistrictLabels() {
         }
         
         window.addEventListener('load', () => {
-    setTimeout(() => {
-        const loader = document.getElementById('loadingOverlay');
-        if (loader && loader.style.opacity !== '0') {
-            hideLoadingScreen();
-            // Đã tắt thông báo mạng chậm, hệ thống vẫn âm thầm xử lý
-            // showToast("⚠️ Mạng chậm, đã tự động chuyển sang chế độ Nhanh (Offline)!", 4000);
-        }
-    }, 7000);
+            setTimeout(() => {
+                const loader = document.getElementById('loadingOverlay');
+                if (loader && loader.style.opacity !== '0') {
+                    hideLoadingScreen();
+                }
+            }, 7000);
 
-    setTimeout(forceMapRender, 100);
-    setTimeout(forceMapRender, 500);
+            setTimeout(forceMapRender, 100);
+            setTimeout(forceMapRender, 500);
 
-    loadProvinceBorders();
-    loadDataFromGoogleSheets();
-});
+            loadProvinceBorders();
+            loadDataFromGoogleSheets();
+        });
+
+        // ==========================================
+        // CƠ CHẾ LẮC XÚC XẮC NGẪU NHIÊN XU TEM
+        // ==========================================
+        document.addEventListener('click', function(e) {
+            // Kiểm tra xem người dùng có bấm trúng biểu tượng xúc xắc không
+            if (e.target && e.target.id === 'dice-btn') {
+                const dice = e.target;
+                
+                // Thêm hiệu ứng rung lắc
+                dice.classList.add('shake-dice');
+                
+                // Chờ nửa giây cho hiệu ứng lắc chạy xong rồi mới chốt số
+                setTimeout(() => {
+                    dice.classList.remove('shake-dice');
+                    
+                    // Ngẫu nhiên mệnh giá từ 1 đến 99
+                    currentStampXu = Math.floor(Math.random() * 99) + 1;
+                    
+                    // Lấy lại các thông tin hiện tại để in lên Tem mới
+                    const nameVal = document.getElementById('placeName').value.trim() || 'ĐIỂM CHECK-IN';
+                    const t = new Date();
+                    const todayStr = t.getDate().toString().padStart(2, '0') + '/' + (t.getMonth()+1).toString().padStart(2, '0') + '/' + t.getFullYear();
+                    
+                    // Gọi hàm vẽ lại toàn bộ Tem trên Canvas
+                    drawNeonStamp(nameVal, currentDetectedRegion, todayStr);
+                }, 500);
+            }
+        });
+
     </script>
 </body>
 </html>
